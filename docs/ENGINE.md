@@ -43,6 +43,7 @@ because that would create a feedback loop.
 | `--vad auto\|off` | `auto` | Voice-activity gating of what is sent. With `off`, every chunk is streamed. |
 | `--vad-threshold RMS` | `200` | The absolute speech level: the int16 RMS of a 100 ms chunk. |
 | `--vad-hangover MS` | `2000` | How long audio is still sent after speech ends, before the stream end. |
+| `--catch-up on\|off` | `on` | While playback is behind, drops the silence the model streams, so its next words are not queued behind it. See [LATENCY.md](LATENCY.md). |
 | `--save-dir DIR` | `~/Library/Application Support/kana` | Transcripts are written to `DIR/transcripts/`. |
 | `--no-save` | | Saves no transcripts. |
 | `--json` | | Runs the JSON-lines protocol described below. |
@@ -250,7 +251,10 @@ Capture is cut into 100 ms chunks at 16 kHz. Each chunk's level is its int16 RMS
 
 The 2 s hangover is measured. With 400 ms or 1 s of trailing audio, the Live Translate model did
 not finish the last sentence: "...いいです" became "the weather is nice," and the closing words
-were lost. With 2 s and 3 s it finished every time.
+were lost. With 2 s and 3 s it finished every time. Re-measured on 2026-11-13 with 16 clips per
+direction ([LATENCY.md](LATENCY.md)): at 1 s and 1.5 s the end of a sentence is held back and
+spoken at the start of the next utterance, in both directions; sending the trailing silence at
+once instead of in real time does not finish the sentence sooner.
 
 Measured on a 3 s Japanese sentence with 8 s of silence on each side, inbound only, 22 s run:
 
@@ -258,6 +262,17 @@ Measured on a 3 s Japanese sentence with 8 s of silence on each side, inbound on
 |---|---|---|---|
 | `off` | 20.7 | 0.0 | complete |
 | `auto` | 5.2 | 15.9 | complete |
+
+## Playback catch-up
+
+The model streams digital silence around its speech, often in bursts faster than real time. Queued
+back-to-back, that silence delays the words behind it. While any audio is still queued for
+playback, the engine drops a chunk that is entirely silent and starts an audible chunk at its first
+audible sample (any sample above 64). When playback is not behind, nothing is dropped, so pauses
+inside speech are kept. On the latency benchmark this brings the first translated audio about
+0.3-0.4 s earlier and the end of the translation about 0.25-0.3 s earlier in both directions
+([LATENCY.md](LATENCY.md)). `--catch-up off` plays everything back-to-back as before. Dumps
+(`--dump-in`, `--dump-out`) always hold the model's audio unchanged.
 
 ## Utterances and latency
 

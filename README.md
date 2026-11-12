@@ -217,6 +217,7 @@ The engine runs on its own in a terminal:
 | `--vad auto\|off` | `auto` | voice-activity gate: `auto` does not send silence; `off` streams everything |
 | `--vad-threshold N` | `200` | minimum speech level (RMS of a 100 ms int16 chunk); background noise is also learnt automatically |
 | `--vad-hangover MS` | `2000` | audio still sent after speech ends, so the model can finish the sentence |
+| `--catch-up on\|off` | `on` | drop the model's streamed silence while playback is behind, so the next words come sooner |
 | `--save-dir DIR` | `~/Library/Application Support/kana` | transcripts go to `DIR/transcripts/` |
 | `--no-save` | | do not save transcripts |
 | `--only in\|out` | both | run one direction |
@@ -301,7 +302,7 @@ Full measurements are in [docs/ENGINE.md](docs/ENGINE.md#cost).
 ## Limitations
 
 - **Preview model.** The default model is a preview. Its behaviour, price or availability can change without notice.
-- **Delay.** Interpretation starts about 3 seconds after the speaker starts. Turn-taking feels slower than a normal call. The footer shows the measured delay.
+- **Delay.** Translated speech starts about 2 seconds after the speaker starts (median in our benchmark; up to about 3 s). The model only finishes a sentence after it hears about 2 seconds of silence, so short sentences with a clear pause come through fastest. Turn-taking still feels slower than a normal call. The footer shows the measured delay; [docs/LATENCY.md](docs/LATENCY.md) has the numbers and what was tried.
 - **Register follows you.** In the default mode, casual English becomes casual Japanese. Speak neutrally, or use `--register business` and give up your voice.
 - **No speaker labels.** All remote participants arrive as one stream. Voice mirroring is the only hint of who is speaking.
 - **Manual meeting settings.** You set the microphone and speaker in each meeting app yourself, and set them back afterwards. Setup shows the checklist but cannot change them for you.

@@ -102,3 +102,26 @@ def test_reset_drops_preroll_without_end():
 def test_audible():
     assert not audible(b"") and not audible(SIL) and not audible(b"\x10\x00" * 100)
     assert audible(tone(amp=1000))
+
+
+def test_windows_are_durations_at_any_chunk_size():
+    n = 320  # 20 ms
+    sil, loud = bytes(2 * n), (3000 * np.sin(np.arange(n) / 3)).astype("<i2").tobytes()
+    v = VAD(hangover_ms=400, preroll_ms=300, chunk_ms=20)
+    assert v.hangover == 20 and v.preroll.maxlen == 15 and v.levels.maxlen == 250
+    for _ in range(50):
+        v.push(sil)
+    assert v.gated_s == 1.0
+    d = v.push(loud)
+    assert d.onset and len(d.send) == 16  # 300 ms pre-roll + the chunk
+    tail = [v.push(sil) for _ in range(21)]
+    assert [d.end for d in tail].index(True) == 19  # after 400 ms of quiet
+
+
+def test_flush_sends_silence_at_once_before_the_end():
+    v = VAD(hangover_ms=200, flush_ms=500)
+    v.push(tone())
+    d1, d2 = v.push(SIL), v.push(SIL)
+    assert d1.send == [SIL] and not d1.end
+    assert d2.end and d2.send == [SIL] + [SIL] * 5  # last hangover chunk + 500 ms of digital silence
+

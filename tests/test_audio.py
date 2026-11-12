@@ -86,3 +86,33 @@ def test_ptt_toggle_and_quit():
     assert p.handle_key("x") is None and p.muted
     assert p.handle_key("q") == "quit"
     assert len(lines) == 2 and "MUTED" in lines[-1]
+
+
+def test_ring_counts_queued_samples():
+    r = audio.Ring()
+    r.push(np.ones(5, dtype=np.int16))
+    r.push(np.ones(3, dtype=np.int16))
+    assert r.queued() == 8
+    r.read(6)
+    assert r.queued() == 2
+    r.read(10)  # underrun pads, never goes negative
+    assert r.queued() == 0
+
+
+def test_catch_up_drops_silence_only_while_behind():
+    sil = np.zeros(2400, dtype=np.int16)
+    speech = np.concatenate([np.zeros(1000, dtype=np.int16), np.full(1400, 3000, dtype=np.int16)])
+    assert audio.catch_up(sil, queued=0, max_queued=0) is sil  # not behind: keep the pause
+    assert len(audio.catch_up(sil, queued=10, max_queued=0)) == 0  # behind: drop streamed silence
+    out = audio.catch_up(speech, queued=10, max_queued=0)
+    assert len(out) == 1400 and out[0] == 3000  # behind: start at the first audible sample
+    assert len(audio.catch_up(speech, queued=10, max_queued=100)) == 2400  # within the allowance
+
+
+def test_playback_feed_skips_streamed_silence_while_behind():
+    p = audio.Playback.__new__(audio.Playback)
+    p.ring, p.rate, p.catch_up_ms = audio.Ring(), audio.OUT_RATE, 0
+    p.feed(np.zeros(2400, dtype="<i2").tobytes())  # nothing queued: silence is kept
+    p.feed(np.zeros(2400, dtype="<i2").tobytes())  # behind: dropped
+    p.feed(np.full(2400, 500, dtype="<i2").tobytes())
+    assert p.ring.queued() == 4800

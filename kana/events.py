@@ -27,8 +27,8 @@ class Emitter:
 
 
 def audio_seconds(direction) -> tuple[float, float]:
-    """Cumulative (sent, received) seconds: 100 ms chunks out, 24 kHz int16 back."""
-    return round(direction.chunks_sent * 0.1, 1), round(direction.audio_bytes / 48000, 1)
+    """Cumulative (sent, received) seconds: 16 kHz int16 out, 24 kHz int16 back."""
+    return round(direction.bytes_sent / 32000, 1), round(direction.audio_bytes / 48000, 1)
 
 
 def audio_fields(label: str, d) -> dict:

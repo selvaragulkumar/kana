@@ -30,10 +30,11 @@ def lang_name(code: str) -> str:
 
 
 def build_config(model: str, target: str, handle: str | None,
-                 instruction: str | None = None) -> types.LiveConnectConfig:
+                 instruction: str | None = None, extra: dict | None = None) -> types.LiveConnectConfig:
     """`instruction` replaces the generic translator prompt on non-translate
     models. On a translate model it is added next to translation_config (an
-    experiment: Live Translate documents no system instruction)."""
+    experiment: Live Translate documents no system instruction). `extra` adds
+    LiveConnectConfig fields (e.g. realtime_input_config) for experiments."""
     kw = dict(
         response_modalities=["AUDIO"],
         input_audio_transcription=types.AudioTranscriptionConfig(),
@@ -52,6 +53,7 @@ def build_config(model: str, target: str, handle: str | None,
         kw["system_instruction"] = (f"You are a translator. Translate everything you hear into {name}. "
                                     f"Output only the translation, nothing else. "
                                     f"If the speech is already in {name}, stay silent.")
+    kw.update(extra or {})
     return types.LiveConnectConfig(**kw)
 
 
@@ -119,11 +121,12 @@ class Direction:
     def __init__(self, label, src, dst, model, in_q, out_q=None, *, connect,
                  is_muted=lambda: False, out=print, dump=None, backoff=(1, 2, 4), emit=None,
                  vad: VAD | None = None, on_utterance=None, clock=time.monotonic, instruction=None,
-                 on_row=None):
+                 on_row=None, live_options: dict | None = None):
         self.label, self.src, self.dst, self.model = label, src, dst, model
         self.in_q, self.out_q, self.connect = in_q, out_q, connect
         self.is_muted, self.out, self.dump, self.backoff = is_muted, out, dump, backoff
         self.instruction = instruction
+        self.live_options = live_options  # extra LiveConnectConfig fields
         self.emit = emit  # JSON mode: structured events replace the plain lines
         self.vad = vad if vad is not None else VAD(gate=False)
         self.on_utterance = on_utterance  # (dir, Utterance) when an utterance closes
@@ -145,6 +148,7 @@ class Direction:
         self.session = None
         self.connects = 0
         self.chunks_sent = 0
+        self.bytes_sent = 0
         self.audio_bytes = 0
         self.in_text: list[str] = []
         self.out_text: list[str] = []
@@ -165,7 +169,7 @@ class Direction:
             while True:
                 reason = "closed"
                 try:
-                    config = build_config(self.model, self.dst, self.handle, self.instruction)
+                    config = build_config(self.model, self.dst, self.handle, self.instruction, self.live_options)
                     async with self.connect(model=self.model, config=config) as s:
                         self.connects += 1
                         if self.connects > 1:
@@ -222,6 +226,7 @@ class Direction:
                 for c in dec.send:
                     await s.send_realtime_input(audio=types.Blob(data=c, mime_type="audio/pcm;rate=16000"))
                     self.chunks_sent += 1
+                    self.bytes_sent += len(c)
                 if dec.end:
                     await s.send_realtime_input(audio_stream_end=True)
             except Exception:

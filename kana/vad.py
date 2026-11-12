@@ -1,4 +1,4 @@
-"""Energy voice-activity detection on 100 ms int16 chunks.
+"""Energy voice-activity detection on fixed-size int16 chunks (chunk_ms, 100 ms by default).
 
 speech  = rms > max(floor * ratio, threshold), where floor is the rolling noise
           floor: the lowest chunk level of the previous 5 s (0 until 5 s of history
@@ -18,9 +18,11 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-CHUNK_S = 0.1
-# Measured with the Live Translate model: it needs ~2 s of trailing audio to
-# finish the last sentence; with 400 ms or 1 s the sentence end is lost.
+# Measured with the Live Translate model (docs/LATENCY.md, 2026-11-13): with
+# less than ~2 s of trailing audio the end of the last sentence is held back
+# and spoken at the start of the next utterance (en->ja at 1-1.5 s; ja->en at
+# 1 s, e.g. "...いいですね" -> "nice," + "isn't it?" later). The silence must
+# be real time: sending it at once (flush_ms) does not finish the sentence sooner.
 DEFAULT_HANGOVER_MS = 2000
 
 
@@ -45,18 +47,26 @@ class Decision:
 
 class VAD:
     def __init__(self, gate: bool = True, threshold: float = 200.0, ratio: float = 3.0,
-                 hangover_ms: int = DEFAULT_HANGOVER_MS, preroll_ms: int = 300, floor_window_ms: int = 5000):
-        self.gate, self.threshold, self.ratio = gate, threshold, ratio
-        self.levels: collections.deque[float] = collections.deque(maxlen=max(1, round(floor_window_ms / 100)))
-        self.hangover = max(1, round(hangover_ms / 100))
-        self.preroll: collections.deque[bytes] = collections.deque(maxlen=max(0, round(preroll_ms / 100)))
+                 hangover_ms: int = DEFAULT_HANGOVER_MS, preroll_ms: int = 300, floor_window_ms: int = 5000,
+                 chunk_ms: int = 100, flush_ms: int = 0):
+        # All windows are durations, converted to chunk counts, so the detector
+        # behaves the same at any chunk size. The threshold is an RMS level and
+        # does not depend on chunk length.
+        self.gate, self.threshold, self.ratio, self.chunk_ms = gate, threshold, ratio, chunk_ms
+        self.levels: collections.deque[float] = collections.deque(maxlen=max(1, round(floor_window_ms / chunk_ms)))
+        self.hangover = max(1, round(hangover_ms / chunk_ms))
+        self.preroll: collections.deque[bytes] = collections.deque(maxlen=max(0, round(preroll_ms / chunk_ms)))
+        # flush: digital silence sent at once (faster than real time) when the
+        # hangover expires, before the stream end. A benchmark knob; it did not
+        # finish sentences sooner (docs/LATENCY.md), so kana leaves it at 0.
+        self.flush_chunks = max(0, round(flush_ms / chunk_ms))
         self.speaking = False
         self._quiet = 0
         self.gated_chunks = 0
 
     @property
     def gated_s(self) -> float:
-        return round(self.gated_chunks * CHUNK_S, 1)
+        return round(self.gated_chunks * self.chunk_ms / 1000, 1)
 
     @property
     def floor(self) -> float:
@@ -92,6 +102,8 @@ class VAD:
             if self._quiet >= self.hangover:
                 self.speaking, self._quiet = False, 0
                 d.end = self.gate
+                if self.gate and self.flush_chunks:
+                    d.send.extend([bytes(len(chunk))] * self.flush_chunks)
         elif self.gate:
             if self.preroll.maxlen:
                 self.preroll.append(chunk)

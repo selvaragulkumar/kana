@@ -5,3 +5,5 @@ __pycache__/
 *.aiff
 .pytest_cache/
 dist/
+tools/bench_out/
+tools/bench_clips/

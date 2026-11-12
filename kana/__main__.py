@@ -45,6 +45,9 @@ def parse_args(argv=None):
                    help="absolute speech level, int16 RMS of a 100 ms chunk (default: %(default)s)")
     p.add_argument("--vad-hangover", type=int, default=DEFAULT_HANGOVER_MS,
                    help="ms of audio still sent after speech ends, before the stream end (default: %(default)s)")
+    p.add_argument("--catch-up", choices=["on", "off"], default="on",
+                   help="drop the model's streamed silence while playback is behind, so its next words are not "
+                        "queued behind it (default: %(default)s; docs/LATENCY.md)")
     p.add_argument("--save-dir", default="~/Library/Application Support/kana",
                    help="transcripts go to <dir>/transcripts/YYYY-MM-DD-HHMM.md/.srt (default: %(default)s)")
     p.add_argument("--no-save", action="store_true", help="do not save transcripts")
@@ -147,7 +150,8 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
                 pcm = audio.read_wav_16k(src[0])
             else:
                 stack.enter_context(audio.Capture(src[0], in_q, loop))
-            player = stack.enter_context(audio.Playback(sink_i))
+            catch_up = audio.CATCH_UP_MS if args.catch_up == "on" else None
+            player = stack.enter_context(audio.Playback(sink_i, catch_up_ms=catch_up))
             tasks.append(asyncio.create_task(player.pump(out_q)))
             model, instruction = direction_models(args)[label]
             d = Direction(label, *langs[label], model, in_q, out_q, connect=connect, instruction=instruction,

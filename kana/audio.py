@@ -127,9 +127,16 @@ class Ring:
     def __init__(self):
         self.chunks: collections.deque[np.ndarray] = collections.deque()
         self.cur = np.zeros(0, dtype=np.int16)
+        self.pushed = 0  # samples ever pushed (producer only)
+        self.played = 0  # samples ever read out of the queue (consumer only)
 
     def push(self, x: np.ndarray) -> None:
         self.chunks.append(x)
+        self.pushed += len(x)
+
+    def queued(self) -> int:
+        """Samples waiting to be played (approximate while the consumer reads)."""
+        return max(0, self.pushed - self.played)
 
     def read(self, n: int) -> np.ndarray:
         out = np.zeros(n, dtype=np.int16)
@@ -144,22 +151,43 @@ class Ring:
             out[filled:filled + k] = self.cur[:k]
             self.cur = self.cur[k:]
             filled += k
+        self.played += filled
         return out
+
+
+def catch_up(x: np.ndarray, queued: int, max_queued: int, floor: int = 64) -> np.ndarray:
+    """What to queue of a model chunk `x` when `queued` samples already wait.
+    The model streams digital silence around its speech, often in bursts
+    faster than real time; queued back-to-back that silence delays the next
+    words. While more than `max_queued` samples wait, an inaudible chunk is
+    dropped and an audible one starts at its first audible sample. Within
+    speech nothing is dropped, so pauses shorten only while playback is behind."""
+    if queued <= max_queued:
+        return x
+    loud = np.nonzero(np.abs(x.astype(np.int32)) > floor)[0]
+    return x[:0] if len(loud) == 0 else x[loud[0]:]
+
+
+CATCH_UP_MS = 0  # see catch_up(); measured in docs/LATENCY.md
 
 
 class Playback:
     """Output stream fed from 24 kHz PCM bytes; silence on underrun."""
 
-    def __init__(self, device: int | None):
+    def __init__(self, device: int | None, catch_up_ms: int | None = CATCH_UP_MS):
         import sounddevice as sd
         self.ring = Ring()
+        self.catch_up_ms = catch_up_ms  # None: queue everything back-to-back
         self.rate = _pick_rate(sd.check_output_settings, device, OUT_RATE, "output")
         self.stream = sd.OutputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
                                       callback=self._cb)
 
     def feed(self, pcm: bytes) -> None:
         x = np.frombuffer(pcm, dtype="<i2")
-        self.ring.push(resample(x, OUT_RATE, self.rate))
+        if self.catch_up_ms is not None:
+            x = catch_up(x, self.ring.queued() * OUT_RATE // self.rate, OUT_RATE * self.catch_up_ms // 1000)
+        if len(x):
+            self.ring.push(resample(x, OUT_RATE, self.rate))
 
     def _cb(self, outdata, frames, time_info, status):
         outdata[:, 0] = self.ring.read(frames)

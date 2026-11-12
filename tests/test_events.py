@@ -56,7 +56,7 @@ def test_emitter_encodes_one_json_line(ev, fields):
 
 
 def test_audio_seconds():
-    assert events.audio_seconds(NS(chunks_sent=123, audio_bytes=48000 * 9.8)) == (12.3, 9.8)
+    assert events.audio_seconds(NS(bytes_sent=3200 * 123, audio_bytes=48000 * 9.8)) == (12.3, 9.8)
 
 
 async def aiter(lines):
@@ -297,3 +297,8 @@ async def test_unknown_model_assumes_live_translate_rates_and_warns_once():
     assert rec.of("usage")[-1]["usd"] == 0.049
     errs = rec.of("error")
     assert len(errs) == 1 and errs[0]["fatal"] is False and "some-future-live-model" in errs[0]["text"]
+
+
+def test_catch_up_playback_is_on_by_default_and_can_be_turned_off():
+    assert cli.parse_args([]).catch_up == "on"
+    assert cli.parse_args(["--catch-up", "off"]).catch_up == "off"
