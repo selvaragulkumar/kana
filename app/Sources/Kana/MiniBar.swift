@@ -208,65 +208,97 @@ enum PanelBarTransition {
     }
 
     /// Animates from `from` to `to`; `collapsing` decides which way the snapshot fades.
+    ///
+    /// Smoothness: the transition window never resizes. It covers both rectangles (plus room
+    /// for the shadow) and stays still; only Core Animation layers move inside it, so every
+    /// frame is composited on the GPU with no window redraws or per-step shadow recomputation.
+    /// The snapshot is pinned to the top-left by animating the container's bounds origin, so
+    /// the panel collapses into its header strip without the image sliding.
+    /// `completion` runs at the end while this window is still on screen; call `finish` to
+    /// remove it once whatever replaces it is visible (no gap, no blink).
     static func run(snapshot: CGImage?, from: NSRect, to: NSRect, collapsing: Bool,
-                    reduceMotion: Bool, completion: @escaping () -> Void) {
-        let w = NSWindow(contentRect: from, styleMask: [.borderless], backing: .buffered, defer: false)
+                    reduceMotion: Bool, completion: @escaping (_ finish: @escaping () -> Void) -> Void) {
+        let pad: CGFloat = 48
+        let canvas = from.union(to).insetBy(dx: -pad, dy: -pad)
+        let w = NSWindow(contentRect: canvas, styleMask: [.borderless], backing: .buffered, defer: false)
         w.isOpaque = false
         w.backgroundColor = .clear
-        w.hasShadow = true
+        w.hasShadow = false                      // the shadow is a layer that moves with the shape
+        w.ignoresMouseEvents = true
         w.level = .popUpMenu
         w.isReleasedWhenClosed = false
+        w.animationBehavior = .none
         WindowPrivacy.apply(w)
 
-        let host = NSView(frame: NSRect(origin: .zero, size: from.size))
+        let host = NSView(frame: NSRect(origin: .zero, size: canvas.size))
         host.wantsLayer = true
-        let root = host.layer!
-        root.masksToBounds = true
-        root.cornerRadius = collapsing ? 18 : 14
-        root.backgroundColor = Theme.ns(0x0E0E10).cgColor
-        root.borderColor = Theme.ns(0x26262A).cgColor
-        root.borderWidth = 1
+        host.layer?.backgroundColor = .clear
+        w.contentView = host
+
+        func local(_ r: NSRect) -> NSRect { r.offsetBy(dx: -canvas.minX, dy: -canvas.minY) }
+        let a = local(from), b = local(to)
+        let imgSize = collapsing ? from.size : to.size
+        // Container geometry for a window-space rect: anchored top-left, bounds origin chosen so
+        // sublayer y-range [imgH - h, imgH] (the top of the snapshot) is what shows.
+        func bounds(_ r: NSRect) -> CGRect { CGRect(x: 0, y: imgSize.height - r.height, width: r.width, height: r.height) }
+        func position(_ r: NSRect) -> CGPoint { CGPoint(x: r.minX, y: r.maxY) }
+        let r0: CGFloat = collapsing ? 18 : 14, r1: CGFloat = collapsing ? 14 : 18
+
+        let shadow = CALayer()
+        shadow.anchorPoint = CGPoint(x: 0, y: 1)
+        shadow.backgroundColor = Theme.ns(0x0E0E10).cgColor
+        shadow.shadowColor = NSColor.black.cgColor
+        shadow.shadowOpacity = 0.45
+        shadow.shadowRadius = 18
+        shadow.shadowOffset = CGSize(width: 0, height: -8)
+
+        let box = CALayer()
+        box.anchorPoint = CGPoint(x: 0, y: 1)
+        box.masksToBounds = true
+        box.backgroundColor = Theme.ns(0x0E0E10).cgColor
+        box.borderColor = Theme.ns(0x26262A).cgColor
+        box.borderWidth = 1
 
         let image = CALayer()
         image.contents = snapshot
-        image.contentsGravity = .topLeft
+        image.contentsGravity = .resize
         image.contentsScale = w.backingScaleFactor
-        image.isGeometryFlipped = false
-        image.frame = root.bounds
-        image.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
+        image.frame = CGRect(origin: .zero, size: imgSize)
         image.opacity = collapsing ? 1 : 0
-        root.addSublayer(image)
-        w.contentView = host
+        box.addSublayer(image)
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for l in [shadow, box] {
+            l.bounds = bounds(a); l.position = position(a); l.cornerRadius = r0
+            host.layer?.addSublayer(l)
+        }
+        host.layer?.insertSublayer(shadow, below: box)
+        CATransaction.commit()
         w.orderFrontRegardless()
+        w.displayIfNeeded()
 
         let dur = reduceMotion ? 0.15 : duration
+        let end = reduceMotion ? a : b
+        func anim(_ key: String, _ from: Any, _ to: Any) -> CABasicAnimation {
+            let x = CABasicAnimation(keyPath: key)
+            x.fromValue = from; x.toValue = to; x.duration = dur; x.timingFunction = timing
+            return x
+        }
         CATransaction.begin()
-        CATransaction.setAnimationDuration(dur)
-        CATransaction.setAnimationTimingFunction(timing)
-        let fade = CABasicAnimation(keyPath: "opacity")
-        fade.fromValue = collapsing ? 1 : 0
-        fade.toValue = collapsing ? 0 : 1
-        fade.duration = dur
-        fade.timingFunction = timing
-        image.add(fade, forKey: "fade")
-        image.opacity = collapsing ? 0 : 1
-        let radius = CABasicAnimation(keyPath: "cornerRadius")
-        radius.fromValue = collapsing ? 18 : 14
-        radius.toValue = collapsing ? 14 : 18
-        radius.duration = dur
-        root.add(radius, forKey: "radius")
-        root.cornerRadius = collapsing ? 14 : 18
-        CATransaction.commit()
-
-        NSAnimationContext.runAnimationGroup({ ctx in
-            ctx.duration = dur
-            ctx.timingFunction = timing
-            w.animator().setFrame(reduceMotion ? from : to, display: true)
-        }, completionHandler: {
+        CATransaction.setCompletionBlock {
             MainActor.assumeIsolated {
-                completion()
-                w.orderOut(nil)
+                completion { w.orderOut(nil) }
             }
-        })
+        }
+        for l in [shadow, box] {
+            l.add(anim("bounds", NSValue(rect: bounds(a)), NSValue(rect: bounds(end))), forKey: "bounds")
+            l.add(anim("position", NSValue(point: position(a)), NSValue(point: position(end))), forKey: "position")
+            l.add(anim("cornerRadius", r0, r1), forKey: "radius")
+            l.bounds = bounds(end); l.position = position(end); l.cornerRadius = r1
+        }
+        image.add(anim("opacity", collapsing ? 1 : 0, collapsing ? 0 : 1), forKey: "fade")
+        image.opacity = collapsing ? 0 : 1
+        CATransaction.commit()
     }
 }

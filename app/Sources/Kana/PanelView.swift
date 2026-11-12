@@ -46,7 +46,7 @@ struct PanelView: View {
     // by StatusController on the same clock; the content here is laid out at full height and
     // clipped by the window, so nothing reflows while it grows.
     static let compactHeight: CGFloat = 220
-    static let growStart: Double = 0.75      // fade in 0–0.15 s, quarter turns 0.15–0.75 s
+    static let growStart: Double = 1.10      // design trace 0–0.99 s, short hold, then grow
     static let growDuration: Double = 0.35   // grow + move + fade-up 0.75–1.10 s
     static var introLength: Double { growStart + growDuration }
 
@@ -58,22 +58,23 @@ struct PanelView: View {
 
     struct IntroFrame {
         var markOpacity = 1.0            // the mark fades in first
-        var rotation = 0.0               // connecting quarter turns, degrees
+        var trace1 = 1.0, trace2 = 1.0   // how much of each bracket is drawn (design k-trace)
         var move = 1.0                   // 0 → 1 while the window grows and the mark flies
         var content = 1.0                // opacity of everything but the header mark
         var markInHeader = true
         var active = false
     }
 
-    /// The intro at time t (s): the mark fades in (150 ms), rolls through four quarter turns
-    /// (the connecting motion, 150 ms per step, so it lands upright), then flies into the
-    /// header while the window grows, eased with cubic-bezier(.6,0,.3,1).
+    /// The intro at time t (s), from the design handoff's trace motion (k-trace, 1.8 s,
+    /// cubic-bezier(.6,0,.3,1)): the white bracket draws itself over 0–35 % (0–0.63 s), the red
+    /// one over 20–55 % (0.36–0.99 s); a short hold, then the mark flies into the header while
+    /// the window grows.
     static func introFrame(_ t: Double, reduceMotion: Bool) -> IntroFrame {
         if reduceMotion { return IntroFrame(content: min(max(t / 0.15, 0), 1), active: true) }
         func c(_ x: Double) -> Double { min(max(x, 0), 1) }
-        let steps = t < 0.15 ? 0 : min(floor((t - 0.15) / 0.15), 4)
+        let e = CubicBezier.trace
         let move = CubicBezier.trace(c((t - growStart) / growDuration))
-        return IntroFrame(markOpacity: c(t / 0.15), rotation: steps.truncatingRemainder(dividingBy: 4) * 90,
+        return IntroFrame(trace1: e(c(t / 0.63)), trace2: e(c((t - 0.36) / 0.63)),
                           move: move, content: move, markInHeader: t >= introLength, active: true)
     }
 
@@ -126,7 +127,7 @@ struct PanelView: View {
             panelOpened()
             if let d = actions.introStart, Date().timeIntervalSince(d) < 0.5 { startIntro(d) }
         }
-        .onChange(of: actions.introStart) { _, d in if let d { startIntro(d) } }
+        .onChange(of: actions.introStart) { _, d in if let d { startIntro(d) } else { introRunning = false } }
         .onReceive(NotificationCenter.default.publisher(for: .kanaPanelDidOpen)) { _ in panelOpened() }
         .onChange(of: engine.needsSetup) { _, need in if need { showSetup = true } }
         .onChange(of: actions.setupRequested) { _, req in
@@ -141,7 +142,8 @@ struct PanelView: View {
         let size = 96 + (24 - 96) * f.move
         let center = CGPoint(x: start.x + (end.x - start.x) * f.move, y: start.y + (end.y - start.y) * f.move)
         var frame = MarkGeometry.Frame()
-        frame.rotation = f.rotation
+        frame.trim1 = 0...f.trace1
+        frame.trim2 = 0...f.trace2
         let stroke = 20 + (26 - 20) * f.move
         return Canvas { gc, _ in
             var g = gc

@@ -298,7 +298,7 @@ Full measurements are in [docs/ENGINE.md](docs/ENGINE.md#cost).
 - **Reconnects drop audio.** Sessions are renewed about every 10 minutes. Speech during the second or two of a reconnect is not interpreted.
 - **The voice gate is energy-based.** Steady background noise is learnt within about 5 seconds, but loud or changing noise can still count as speech and be sent. A very quiet speaker can be held back. Raise or lower `--vad-threshold`, or use `--vad off`.
 - **Transcripts are plain files.** Saved transcripts are not encrypted. Anyone with access to your user account can read them.
-- **Ad-hoc signed.** macOS may forget the Accessibility grant after you rebuild the app. Switch it off and on again if the hotkey stops working.
+- **Not notarised yet.** Builds are signed with a local certificate when you have one (`build.sh` uses `KANA_SIGN_IDENTITY`, or a certificate named "kana Local Signing"), which keeps macOS permission grants across rebuilds. Without one the app is ad-hoc signed, and macOS may forget the Accessibility grant after each rebuild; switch it off and on again if the hotkey stops working.
 - **macOS only.**
 
 ## Repository layout

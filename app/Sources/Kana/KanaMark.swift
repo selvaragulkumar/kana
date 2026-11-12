@@ -87,8 +87,9 @@ enum MarkGeometry {
         case .idle:
             break
         case .connecting:
-            // rotate(360deg) over 1.6 s with steps(4, end): quarter turns every 0.4 s
-            f.rotation = floor((t.truncatingRemainder(dividingBy: 1.6)) / 0.4) * 90
+            // smooth spin: each 0.4 s eases one quarter turn (glide, never a snap); 360deg per 1.6 s
+            let q = t / 0.4
+            f.rotation = (floor(q) + CubicBezier.easeInOut(q - floor(q))).truncatingRemainder(dividingBy: 4) * 90
         case .listening:
             // 2.4 s ease-in-out breathe: b1 to (-8,-8), b2 to (8,8) at 50 %
             let p = t.truncatingRemainder(dividingBy: 2.4) / 2.4

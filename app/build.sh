@@ -74,8 +74,20 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 plutil -lint "$APP/Contents/Info.plist" >/dev/null
 
-echo "==> ad-hoc codesign"
-codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP"
+# Sign with a stable identity when one exists (KANA_SIGN_IDENTITY, else a local "kana Local
+# Signing" certificate), so macOS keeps the Accessibility and microphone grants across rebuilds.
+# Ad-hoc signing changes the app's identity on every build and macOS forgets the grants.
+IDENTITY="${KANA_SIGN_IDENTITY:-}"
+if [[ -z "$IDENTITY" ]] && security find-identity -p codesigning 2>/dev/null | grep -q '"kana Local Signing"'; then
+  IDENTITY="kana Local Signing"
+fi
+if [[ -n "$IDENTITY" ]]; then
+  echo "==> codesign with \"$IDENTITY\""
+  codesign --force --deep --sign "$IDENTITY" --identifier "$BUNDLE_ID" "$APP"
+else
+  echo "==> ad-hoc codesign (no stable identity; grants reset on rebuild)"
+  codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP"
+fi
 codesign --verify --strict "$APP"
 
 if [[ $INSTALL -eq 1 ]]; then

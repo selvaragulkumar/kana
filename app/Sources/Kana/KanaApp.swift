@@ -76,6 +76,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Launching kana again (Spotlight, Finder, Launchpad) while it runs opens the panel.
+    /// A menu-bar-only app has no Dock icon, and its status item can sit hidden behind the
+    /// notch when the frontmost app has many menus, so this is the reliable way back in.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        status?.reopen()
+        return false
+    }
+
     func applicationWillTerminate(_ notification: Notification) {
         engine?.stopForQuit()
     }

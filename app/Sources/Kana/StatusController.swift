@@ -21,6 +21,7 @@ final class StatusController: NSObject, NSWindowDelegate {
     private var bag = Set<AnyCancellable>()
     private var bar: MiniBarController!
     private var transitioning = false
+    private var introPlayed = false   // the opening intro plays once per launch
     private let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
 
     init(engine: EngineProcess, hotkey: Hotkey, prefs: Prefs, actions: AppActions) {
@@ -33,13 +34,13 @@ final class StatusController: NSObject, NSWindowDelegate {
                          backing: .buffered, defer: true)
         super.init()
 
-        panel.level = .popUpMenu
+        panel.level = .floating
         panel.isOpaque = false
         panel.backgroundColor = .clear
         panel.hasShadow = true
         panel.hidesOnDeactivate = false
         panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         panel.delegate = self
         panel.title = Theme.name
 
@@ -74,8 +75,6 @@ final class StatusController: NSObject, NSWindowDelegate {
         actions.expand = { [weak self] in self?.expand() }
         actions.closeBar = { [weak self] in self?.bar.hide() }
         bar = MiniBarController(engine: engine, actions: actions)
-        NotificationCenter.default.addObserver(self, selector: #selector(appResignedActive(_:)),
-                                               name: NSApplication.didResignActiveNotification, object: nil)
     }
 
     /// At launch: the bar if the user left kana minimized, otherwise the panel with its intro.
@@ -109,9 +108,23 @@ final class StatusController: NSObject, NSWindowDelegate {
             // Minimized: bring the bar back, or expand it if it is already showing.
             if bar.window.isVisible { expand() } else { bar.show(at: bar.savedFrame ?? defaultBarFrame(), fadeIn: true) }
         } else if panel.isVisible {
-            hide()
+            // Only the panel's × closes it; the icon just brings it forward.
+            panel.orderFrontRegardless()
         } else {
             show()
+        }
+    }
+
+    /// Brings kana to the front without toggling it closed (used when the app is launched again).
+    func reopen() {
+        guard !transitioning else { return }
+        if prefs.minimized {
+            if bar.window.isVisible { expand() } else { bar.show(at: bar.savedFrame ?? defaultBarFrame(), fadeIn: true) }
+        } else if !panel.isVisible {
+            show()
+        } else {
+            NSApp.activate(ignoringOtherApps: true)
+            panel.makeKeyAndOrderFront(nil)
         }
     }
 
@@ -124,7 +137,8 @@ final class StatusController: NSObject, NSWindowDelegate {
         setPanelHeight(full.height)
         position()
         NSApp.activate(ignoringOtherApps: true)
-        if animated && !engine.running && !reduceMotion {
+        if animated && !engine.running && !reduceMotion && !introPlayed {
+            introPlayed = true
             let start = Date()
             actions.introStart = start
             setPanelHeight(PanelView.compactHeight)
@@ -151,9 +165,6 @@ final class StatusController: NSObject, NSWindowDelegate {
         // keystroke) never lands in the API key field.
         DispatchQueue.main.async { [weak self] in self?.panel.makeFirstResponder(nil) }
         item.button?.highlight(true)
-        outsideClickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
-            MainActor.assumeIsolated { self?.hide() }
-        }
         NotificationCenter.default.post(name: .kanaPanelDidOpen, object: nil)
     }
 
@@ -190,12 +201,6 @@ final class StatusController: NSObject, NSWindowDelegate {
         panel.setFrame(frame(height: height), display: false)
     }
 
-    /// Closes when the app stops being active (the user switched apps). A key-window change on
-    /// its own is not enough: a freshly launched menu-bar app is often not active, so that rule
-    /// closed the panel a second after launch, mid-intro.
-    @objc private func appResignedActive(_ note: Notification) {
-        if panel.isVisible && !transitioning { hide() }
-    }
 
     // MARK: Minimized bar
 
@@ -220,16 +225,31 @@ final class StatusController: NSObject, NSWindowDelegate {
             bar.show(at: target, fadeIn: true)
             return
         }
+        // Minimizing during the opening intro: stop it, settle the panel at full height, and
+        // minimize on the next beat, so the snapshot is the finished panel (not a half-grown
+        // frame with the mark mid-flight).
+        if let s = actions.introStart, Date().timeIntervalSince(s) < PanelView.introLength + 0.1 {
+            actions.introStart = nil
+            panel.setFrame(frame(height: PanelView.size.height), display: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.06) { [weak self] in self?.minimize() }
+            return
+        }
         transitioning = true
         let snap = PanelBarTransition.snapshot(view)
         let from = panel.frame
-        panel.orderOut(nil)
         item.button?.highlight(false)
         if let m = outsideClickMonitor { NSEvent.removeMonitor(m); outsideClickMonitor = nil }
-        PanelBarTransition.run(snapshot: snap, from: from, to: target, collapsing: true, reduceMotion: reduceMotion) { [weak self] in
-            self?.bar.show(at: target, fadeIn: true)
-            self?.transitioning = false
+        // The transition window is on screen before the panel goes, and stays until the bar has
+        // faded in on top of it: there is never a frame with neither.
+        PanelBarTransition.run(snapshot: snap, from: from, to: target, collapsing: true, reduceMotion: reduceMotion) { [weak self] finish in
+            guard let self else { finish(); return }
+            self.bar.show(at: target, fadeIn: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.14) {
+                finish()
+                self.transitioning = false
+            }
         }
+        DispatchQueue.main.async { [weak self] in self?.panel.orderOut(nil) }
     }
 
     /// Reverse: the bar grows back into the panel.
@@ -237,16 +257,17 @@ final class StatusController: NSObject, NSWindowDelegate {
         guard !transitioning else { return }
         prefs.minimized = false
         let from = bar.window.isVisible ? bar.window.frame : defaultBarFrame()
-        bar.hide()
         setPanelHeight(PanelView.size.height)
         position()
         let to = panel.frame
         transitioning = true
         let snap = panel.contentView.flatMap(PanelBarTransition.snapshot)
-        PanelBarTransition.run(snapshot: snap, from: from, to: to, collapsing: false, reduceMotion: reduceMotion) { [weak self] in
+        PanelBarTransition.run(snapshot: snap, from: from, to: to, collapsing: false, reduceMotion: reduceMotion) { [weak self] finish in
             self?.transitioning = false
             self?.show(animated: false)
+            DispatchQueue.main.async { finish() }   // panel is up; now drop the transition layer
         }
+        DispatchQueue.main.async { [weak self] in self?.bar.hide() }
     }
 
     // MARK: Right-click menu (works while the panel is closed)
