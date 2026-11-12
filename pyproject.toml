@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kana"
+version = "0.1.0"
+description = "Two-way live voice translation for meetings, from the Mac menu bar"
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = ["google-genai", "sounddevice", "numpy", "python-dotenv"]
+
+[project.scripts]
+kana = "kana.__main__:main"
+
+[tool.setuptools]
+packages = ["kana"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: needs GEMINI_API_KEY and calls the Gemini Live API"]

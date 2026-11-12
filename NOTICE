@@ -1,0 +1,14 @@
+kana
+Copyright 2026 Selva Ragul Kumar
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes software developed by third parties. See
+THIRD_PARTY_NOTICES.md for their names, licences and links.
+
+The macOS app bundles the Inter, Noto Sans JP and Space Grotesk typefaces, licensed under
+the SIL Open Font License, Version 1.1. Their licence texts ship next to the
+font files in app/Resources/Fonts/ and inside kana.app.
+
+kana does not include or redistribute BlackHole (GPL-3.0). Users install
+BlackHole themselves from its official Homebrew casks.

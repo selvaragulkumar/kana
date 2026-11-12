@@ -1,0 +1,100 @@
+name: Bug report
+description: Something does not work as described.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. Before you paste anything, remove your `GEMINI_API_KEY` and anything said in a private meeting.
+        Security problems go through private reporting instead; see SECURITY.md.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start kana from the menu bar
+        2. Join a Meet call with Microphone = BlackHole 2ch, Speakers = BlackHole 16ch
+        3. Turn Talk on and say ...
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where did it happen?
+      options:
+        - Menu-bar app (kana.app)
+        - Engine in a terminal (python -m kana)
+        - Both
+    validations:
+      required: true
+  - type: dropdown
+    id: direction
+    attributes:
+      label: Which direction?
+      options:
+        - Inbound (meeting to your earphones)
+        - Outbound (your microphone to the meeting)
+        - Both
+        - Not audio related
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      description: Apple menu > About This Mac, or `sw_vers -productVersion`. Also say Apple silicon or Intel.
+      placeholder: "14.6, Apple silicon"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: kana version or commit
+      description: The release number, or `git rev-parse --short HEAD` if you built from source.
+    validations:
+      required: true
+  - type: input
+    id: model
+    attributes:
+      label: Model id and register
+      description: The `--model` and `--register` values, or the models the app shows for each direction. The defaults are gemini-3.5-live-translate-preview and register default.
+      placeholder: "gemini-3.5-live-translate-preview, --register default"
+    validations:
+      required: true
+  - type: input
+    id: meeting-app
+    attributes:
+      label: Meeting app and its audio settings
+      placeholder: "Google Meet in Chrome; Microphone = BlackHole 2ch, Speakers = BlackHole 16ch"
+  - type: textarea
+    id: devices
+    attributes:
+      label: Device list
+      description: Output of `.venv/bin/python -m kana --list-devices --json`. Device names only; nothing private.
+      render: json
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Engine log
+      description: |
+        The engine lines around the problem. From a terminal run, copy the output. From the app, copy the error shown in the panel.
+        Remove your API key and any transcript text you do not want public.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed my API key and private meeting content from everything above.
+          required: true
+        - label: I searched the existing issues.
+          required: true

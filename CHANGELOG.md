@@ -1,0 +1,47 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### 0.1.0 (first public release, not yet tagged)
+
+#### Added
+
+Engine (`python -m kana`):
+
+- **Two directions at once.** Inbound: meeting audio from BlackHole 16ch is interpreted and spoken into your earphones. Outbound: your microphone is interpreted and spoken into BlackHole 2ch, which the meeting app uses as its microphone. Each direction runs its own Gemini Live session.
+- **Default model** `gemini-3.5-live-translate-preview` (Gemini Live Translate, voice-preserving speech-to-speech), with `--model gemini-3.8-live` as a stable fallback driven by a translate-only system instruction.
+- **Register control.** `--register default` keeps Live Translate in both directions, with your voice and your register. `--register business` moves outbound Japanese to `gemini-3.8-live` with a keigo instruction, which guarantees です・ます and keigo in a stock voice. The evaluation is in `docs/REGISTER.md`.
+- **Any language pair** through `--in` and `--out` (BCP-47 codes). Defaults: you hear English, the meeting hears Japanese. Same-language speech is not echoed.
+- **Push-to-talk.** Outbound starts muted. Space toggles it in the terminal.
+- **Long calls.** Session resumption handles, context window compression, `go_away` handling and reconnect with 1 s / 2 s / 4 s backoff keep each direction alive past the per-connection and per-session limits.
+- **Voice-activity gating** (`--vad auto`, the default) in both directions: an energy gate with a learnt noise floor, 300 ms pre-roll and a measured 2 s hangover. Silence is not sent and not billed. `--vad off`, `--vad-threshold` and `--vad-hangover` tune it.
+- **Cost from the API's own counts.** A `usage` event reports the audio and text tokens Google counted for each direction and their price. The per-second `audio` event carries the running cost.
+- **Latency readout.** A `latency` event per utterance (speech onset to first audible translated audio, and source to translated transcript), and the running median in each `audio` event.
+- **Saved transcripts.** Each run writes a Markdown table and an SRT file to `~/Library/Application Support/kana/transcripts/`. `--no-save` and `--save-dir` control it.
+- **JSON-lines protocol** (`--json`): events on stdout (`ready`, `saved`, `talk`, `session`, `transcript`, `latency`, `audio`, `usage`, `error`, `bye`), commands on stdin (`talk`, `quit`), and `--list-devices --json`. The `ready` event names the register and the model each direction uses. The reference is `docs/ENGINE.md`.
+- **Loop guard.** The engine refuses to start when both directions would capture the same device or when the earphones and the meeting microphone are the same device.
+- **Test seams.** `--in-file` / `--out-file` WAV injection (playback starts once the session connects), `--dump-in` / `--dump-out`, `--only in|out`, unit tests including a reconnect chaos test, a register evaluation script, and one opt-in live test.
+
+App (`kana.app`, SwiftUI, macOS 14+):
+
+- **Menu-bar panel** with Start/Stop, a Talk toggle, ⌃⌥Space from any app, mic and earphone pickers, a live two-column transcript and per-direction session state. Engine errors are shown, never swallowed.
+- **Language cards** ("You hear …", "Meet hears …") with a swap button and presets pairing English with Japanese, Chinese, Korean, Spanish, French, German, Hindi or Tamil, plus a custom BCP-47 pair.
+- **Business keigo switch** under the language cards when the meeting hears Japanese. It passes `--register business`; off by default. The stock-voice trade-off is in its tooltip.
+- **Floating captions**, off by default. A small click-through strip at the bottom of the screen with the newest inbound line and the one before it, above other apps.
+- **Hidden from screen sharing** by default. The panel and the caption strip stay out of shares, recordings and screenshots unless you turn on "Visible in screen share".
+- **Setup doctor** (••• › Setup…, and automatically after a start fails with a device or key error). Checks both BlackHole devices, microphone and Accessibility access, the key and the meeting settings, shows the install line, and plays a test tone through each BlackHole device to confirm it is wired.
+- **API key in the Keychain.** The key is stored in the login Keychain and passed to the engine in its environment, never on the command line. A `.env` file still works as a fallback.
+- **Latency badge and cost meter** in the footer: median delay for each direction, running cost in USD and approximate yen from the engine's token-based figure, and the silence the voice gate skipped.
+- **Transcripts menu.** A "Save transcripts" toggle, "Open Last Transcript" and "Transcripts Folder".
+- **Fake engine** (`app/fake_engine.py`) for testing the app without audio, a key or a network.
+- Built with `app/build.sh` and the Command Line Tools only.
+
+#### Changed
+
+- Renamed from meet-translate to kana. The Python package is now `kana` (`python -m kana`, console script `kana`), and the app is `kana.app` with the bundle id `com.selvaragulkumar.kana`.
+
+[Unreleased]: https://github.com/selvaragulkumar/kana/commits/main

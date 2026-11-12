@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest a change or a new feature.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check docs/ROADMAP.md first; your idea may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What gets in your way today, in a real meeting? One concrete example helps most.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like
+      description: What kana should do instead. Describe the behaviour, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Workarounds you use now, or other tools that do this.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Setup and installation
+        - Audio routing
+        - Translation quality or languages
+        - Menu-bar app
+        - Engine or CLI
+        - Cost
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: anti-goals
+    attributes:
+      label: Anti-goals
+      description: kana will not take features that break these.
+      options:
+        - label: This does not make an audio feedback loop possible.
+          required: true
+        - label: This never sends my microphone while I believe I am muted.
+          required: true

@@ -1,0 +1,89 @@
+"""JSON line protocol for the menu-bar app (--json).
+
+Engine -> app: one JSON object per line on stdout, each with "t" (unix
+seconds) and "ev". App -> engine: JSON lines on stdin, {"cmd":"talk","on":bool}
+and {"cmd":"quit"}; EOF on stdin also means quit."""
+from __future__ import annotations
+
+import asyncio
+import json
+import sys
+import threading
+import time
+
+
+class Emitter:
+    def __init__(self, stream=None, clock=time.time):
+        self.stream = stream if stream is not None else sys.stdout
+        self.clock = clock
+
+    def __call__(self, ev: str, **fields) -> None:
+        self.emit(ev, **fields)
+
+    def emit(self, ev: str, **fields) -> None:
+        obj = {"t": round(self.clock(), 3), "ev": ev, **fields}
+        self.stream.write(json.dumps(obj, ensure_ascii=False) + "\n")
+        self.stream.flush()
+
+
+def audio_seconds(direction) -> tuple[float, float]:
+    """Cumulative (sent, received) seconds: 100 ms chunks out, 24 kHz int16 back."""
+    return round(direction.chunks_sent * 0.1, 1), round(direction.audio_bytes / 48000, 1)
+
+
+def audio_fields(label: str, d) -> dict:
+    sent, recv = audio_seconds(d)
+    return {"dir": label.lower(), "sent_s": sent, "recv_s": recv,
+            "gated_s": d.vad.gated_s, "latency_ms": d.latency_ms(), "usd": d.usd()}
+
+
+async def audio_ticker(directions: dict, emit, interval: float = 1.0) -> None:
+    while True:
+        await asyncio.sleep(interval)
+        for label, d in directions.items():
+            emit("audio", **audio_fields(label, d))
+
+
+async def stdin_lines(stream=None):
+    """Async iterator over lines of a (blocking) stream, read on a daemon
+    thread so a pending read never holds up shutdown. Works for pipes, TTYs
+    and files alike."""
+    stream = stream if stream is not None else sys.stdin
+    loop = asyncio.get_running_loop()
+    q: asyncio.Queue = asyncio.Queue()
+
+    def reader():
+        try:
+            for line in stream:
+                loop.call_soon_threadsafe(q.put_nowait, line)
+        except Exception:
+            pass
+        finally:
+            try:
+                loop.call_soon_threadsafe(q.put_nowait, None)
+            except RuntimeError:  # loop already closed
+                pass
+
+    threading.Thread(target=reader, name="stdin-commands", daemon=True).start()
+    while (line := await q.get()) is not None:
+        yield line
+
+
+async def command_loop(lines, ptt, emit) -> None:
+    """Apply app commands to the PTT until quit or EOF; returns on either."""
+    async for raw in lines:
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            cmd = json.loads(raw)
+            name = cmd.get("cmd") if isinstance(cmd, dict) else None
+        except ValueError:
+            name = None
+        if name == "quit":
+            return
+        if name == "talk" and isinstance(cmd.get("on"), bool):
+            ptt.muted = not cmd["on"]
+            emit("talk", on=not ptt.muted)
+            continue
+        emit("error", fatal=False, text=f"unknown command: {raw[:200]}")

@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kana — logo, motion, icon & panel</title>
+<!--
+  kana design handoff
+  ===================
+  Product: kana — live Japanese ⇄ English interpreter (macOS floating panel).
+
+  TOKENS
+    --bg-page      #070708   page behind the panel (demo only)
+    --bg           #0E0E10   panel background
+    --surface      #151518   inputs, cards, talk bar
+    --surface-2    #1C1C20   icon buttons
+    --line         #26262A   panel border, card borders
+    --line-soft    #222226   dividers
+    --text         #EDEDEF   primary text
+    --text-strong  #F2F2F4   translated transcript text
+    --text-2       #C8C8CE   secondary text
+    --text-3       #A0A0A8   labels
+    --text-4       #8E8E94   captions, original-language transcript arrows
+    --accent       #FF4D2E   brand red: live / talking / errors / the right bracket
+    --ok           #3DD68C   IN/OUT stream connected
+    Radii: panel 18 · talk bar 14 · cards/inputs 10–12 · chips 999
+    Type: Inter (UI), Space Grotesk 600 (wordmark only), Noto Sans JP (Japanese)
+
+  LOGO MARK
+    Two Japanese corner brackets 「 」: white top-left, red bottom-right.
+    viewBox 0 0 200 200, stroke 20 (thicken to 26–28 below 32px), linecap square.
+
+  MARK STATES (set data-state on .kana-mark)
+    idle        static
+    connecting  steps through quarter turns (engine starting / reconnecting)
+    listening   brackets breathe apart / together (session live, nobody talking)
+    talking     brackets pulse toward each other quickly (push-to-talk held)
+    translating strokes trace in sequence, white then red (output being produced)
+    error       red bracket shakes once, white dims
+  All motion stops under prefers-reduced-motion; colors still signal state.
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg-page:#070708; --bg:#0E0E10; --surface:#151518; --surface-2:#1C1C20;
+  --line:#26262A; --line-soft:#222226; --line-strong:#303036;
+  --text:#EDEDEF; --text-strong:#F2F2F4; --text-2:#C8C8CE; --text-3:#A0A0A8; --text-4:#8E8E94;
+  --accent:#FF4D2E; --accent-bg:rgba(255,77,46,.12); --accent-line:rgba(255,77,46,.4);
+  --ok:#3DD68C;
+  --ui:Inter, "Noto Sans JP", system-ui, sans-serif;
+  --brand:"Space Grotesk", Inter, sans-serif;
+  --jp:"Noto Sans JP", sans-serif;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg-page);color:var(--text);font-family:var(--ui);font-size:14px;line-height:1.5}
+a{color:var(--text-2)}a:hover{color:#fff}
+[lang="ja"]{font-family:var(--jp)}
+.page{max-width:1240px;margin:0 auto;padding:56px 24px 96px;display:flex;flex-direction:column;gap:72px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.sec-h h2{margin:0;font:600 28px/1.1 var(--brand);letter-spacing:-.02em}
+.sec-h p{margin:0;color:var(--text-4);font-size:13px}
+.card{background:#0C0C0E;border:1px solid #1E1E22;border-radius:20px}
+
+/* ---------- MARK ---------- */
+.kana-mark{display:block;overflow:visible}
+.kana-mark path{fill:none;stroke-linecap:square;stroke-width:20}
+.kana-mark .b1{stroke:#fff}
+.kana-mark .b2{stroke:var(--accent)}
+.kana-mark.thick path{stroke-width:26}
+.kana-mark .b1,.kana-mark .b2{transition:opacity .3s, transform .3s}
+
+.kana-mark[data-state="connecting"]{animation:k-turn 1.6s steps(4,end) infinite;transform-origin:50% 50%}
+@keyframes k-turn{to{transform:rotate(360deg)}}
+
+.kana-mark[data-state="listening"] .b1{animation:k-breathe-1 2.4s ease-in-out infinite}
+.kana-mark[data-state="listening"] .b2{animation:k-breathe-2 2.4s ease-in-out infinite}
+@keyframes k-breathe-1{0%,100%{transform:translate(0,0)}50%{transform:translate(-8px,-8px)}}
+@keyframes k-breathe-2{0%,100%{transform:translate(0,0)}50%{transform:translate(8px,8px)}}
+
+.kana-mark[data-state="talking"] .b1{animation:k-talk-1 .46s ease-in-out infinite alternate}
+.kana-mark[data-state="talking"] .b2{animation:k-talk-2 .46s ease-in-out infinite alternate}
+@keyframes k-talk-1{from{transform:translate(0,0)}to{transform:translate(9px,9px)}}
+@keyframes k-talk-2{from{transform:translate(0,0)}to{transform:translate(-9px,-9px)}}
+
+.kana-mark[data-state="translating"] path{stroke-dasharray:168;stroke-dashoffset:168}
+.kana-mark[data-state="translating"] .b1{animation:k-trace-1 1.8s cubic-bezier(.6,0,.3,1) infinite}
+.kana-mark[data-state="translating"] .b2{animation:k-trace-2 1.8s cubic-bezier(.6,0,.3,1) infinite}
+@keyframes k-trace-1{0%{stroke-dashoffset:168}35%,70%{stroke-dashoffset:0}100%{stroke-dashoffset:-168}}
+@keyframes k-trace-2{0%,20%{stroke-dashoffset:168}55%,85%{stroke-dashoffset:0}100%{stroke-dashoffset:-168}}
+
+.kana-mark[data-state="error"] .b1{opacity:.3}
+.kana-mark[data-state="error"] .b2{animation:k-shake .5s ease-in-out 1}
+@keyframes k-shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(3px)}}
+
+@media (prefers-reduced-motion: reduce){
+  .kana-mark,.kana-mark path,.meter i,.dots i,.live-dot::after{animation:none!important;transform:none!important}
+  .kana-mark[data-state="translating"] path{stroke-dashoffset:0}
+}
+
+/* ---------- LOGO ---------- */
+.logo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.logo-tile{padding:48px 32px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;min-height:360px}
+.wordmark{font:600 64px/1 var(--brand);letter-spacing:-.03em;color:#fff}
+.tagline{color:var(--text-4);font-size:14px;letter-spacing:.04em}
+.lockup-h{display:flex;align-items:center;gap:18px}
+.lockup-h .wordmark{font-size:56px}
+
+/* ---------- STATES ---------- */
+.states{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.state{padding:28px 20px 22px;display:flex;flex-direction:column;align-items:center;gap:16px;text-align:center}
+.state .stage{width:120px;height:120px;display:grid;place-items:center}
+.state b{font:600 14px var(--ui)}
+.state span{color:var(--text-4);font-size:12px;line-height:1.45}
+.player{margin-top:20px;padding:28px;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
+.player .stage{width:200px;height:200px;display:grid;place-items:center;flex:none}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{font:500 13px var(--ui);color:var(--text-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px;min-height:36px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:#fff;color:#0A0A0B;border-color:#fff}
+.player p{margin:12px 0 0;color:var(--text-4);font-size:13px;max-width:520px}
+
+/* ---------- ICON ---------- */
+.icon-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:20px}
+@media (max-width:820px){.icon-row{grid-template-columns:1fr}}
+.icon-hero{padding:40px;display:flex;align-items:flex-end;justify-content:center;gap:28px;flex-wrap:wrap}
+.icon-hero figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--text-4);font-size:12px}
+.icon-side{padding:28px;display:flex;flex-direction:column;gap:20px}
+.menubar{height:28px;border-radius:8px;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:0 14px;font:500 13px -apple-system,var(--ui)}
+.menubar.dark{background:#2A2A2E;color:#fff}
+.menubar.light{background:#ECECEE;color:#111}
+.menubar.dark .tpl{filter:invert(1)}
+.dock{display:flex;justify-content:center;gap:10px;padding:10px 14px;border-radius:22px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12)}
+.dock .ph{width:56px;height:56px;border-radius:13px;background:#2A2A2E}
+.dock.light{background:rgba(255,255,255,.7);border-color:rgba(0,0,0,.08)}
+.dock.light .ph{background:#D4D4D8}
+.side-label{font-size:12px;color:var(--text-4);margin-bottom:8px}
+
+/* ---------- PANEL ---------- */
+.panels{display:flex;gap:32px;flex-wrap:wrap;justify-content:center}
+.panel{width:440px;max-width:100%;height:720px;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:14px;font-size:13px;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.panel button{font-family:var(--ui)}
+.p-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.p-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.p-brand .name{font:600 20px var(--brand);letter-spacing:-.02em}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;margin-left:6px;background:var(--surface);border:1px solid #2A2A2F;color:var(--text-2)}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--text-4);position:relative}
+.pill.live{background:var(--accent-bg);border-color:var(--accent-line);color:#FFD3C9}
+.pill.live .dot{background:var(--accent)}
+.live-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2px solid var(--accent);opacity:0;animation:k-ping 1.6s ease-out infinite}
+@keyframes k-ping{0%{transform:scale(.4);opacity:.8}100%{transform:scale(1.4);opacity:0}}
+.badge{padding:3px 8px;border-radius:999px;border:1px dashed #3A3A40;font-size:11px;color:var(--text-3);white-space:nowrap}
+.btn-primary{background:#fff;color:#0A0A0B;border:none;border-radius:10px;padding:9px 18px;font-weight:600;font-size:13px;min-height:36px;cursor:pointer}
+.btn-primary:hover{background:#E6E6E8}
+.btn-ghost{display:inline-flex;align-items:center;gap:8px;background:transparent;color:#fff;border:1px solid #3A3A40;border-radius:10px;padding:8px 14px;font-weight:600;font-size:13px;min-height:36px;cursor:pointer}
+.btn-ghost:hover{border-color:#55555C}
+.btn-ghost .sq{width:9px;height:9px;border-radius:2px;background:#fff}
+.btn-small{background:#232328;color:var(--text);border:1px solid var(--line-strong);border-radius:8px;padding:6px 10px;font-weight:500;font-size:12px;cursor:pointer}
+.icon-btn{background:none;border:none;padding:4px;cursor:pointer;color:var(--text-3);display:inline-flex;min-width:28px;min-height:28px;align-items:center;justify-content:center}
+.icon-btn:hover{color:#fff}
+
+.talk{display:flex;align-items:center;gap:10px;width:100%;height:52px;padding:0 16px;border-radius:14px;background:var(--surface);border:1px solid var(--line);color:var(--text-4);font-weight:500;font-size:15px;text-align:left}
+.talk .label{flex:1}
+.talk kbd{font:400 12px var(--ui);color:var(--text-3);padding:3px 7px;border-radius:6px;border:1px solid #2E2E33}
+.talk.on{background:var(--accent-bg);border-color:var(--accent);color:#fff;cursor:pointer}
+.meter{display:flex;align-items:center;gap:3px;height:20px}
+.meter i{display:block;width:3px;border-radius:2px;background:var(--accent);height:8px;animation:k-level .9s ease-in-out infinite alternate}
+.meter i:nth-child(2){animation-delay:-.2s}.meter i:nth-child(3){animation-delay:-.5s}.meter i:nth-child(4){animation-delay:-.1s}.meter i:nth-child(5){animation-delay:-.7s}
+@keyframes k-level{0%{height:5px}100%{height:20px}}
+
+.notice{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--line);color:var(--text-2)}
+.notice .grow{flex:1}
+.alert{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(255,77,46,.10);border:1px solid rgba(255,77,46,.38)}
+.alert .grow{flex:1;display:flex;flex-direction:column;gap:2px}
+.alert strong{color:#FFE1DA;font-weight:600}
+.alert span{color:#F2C2B8;font-size:12px;line-height:1.45}
+.alert .icon-btn{color:#F2C2B8}
+
+.field{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;gap:10px}
+.field label{color:var(--text-3)}
+.select{position:relative}
+.select select{width:100%;appearance:none;-webkit-appearance:none;background:var(--surface);border:1px solid #2A2A2F;border-radius:10px;color:var(--text);padding:9px 32px 9px 12px;font:400 13px var(--ui)}
+.select svg{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none}
+
+.dir{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);align-items:center;gap:8px}
+.dir .side{padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--line);display:flex;flex-direction:column;gap:2px}
+.dir .side small{font-size:11px;color:var(--text-4)}
+.dir .side b{font-weight:500}
+.dir .side.r{text-align:right}
+.swap{width:40px;height:40px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line-strong);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.swap:hover{border-color:#55555C}
+.route{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-4)}
+
+.empty{flex:1;border-top:1px solid var(--line-soft);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center}
+.empty .t1{color:var(--text-3)}
+.empty .t2{font-size:12px;color:var(--text-4)}
+
+.tx-head{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--text-4);border-top:1px solid var(--line-soft);padding-top:12px}
+.tx-head span+span{display:flex;gap:14px}
+.tx{flex:1;display:flex;flex-direction:column;gap:14px;overflow:auto;min-height:0}
+.row{display:grid;grid-template-columns:14px minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.row .arr{color:var(--text-4)}
+.row .arr.me{color:var(--accent)}
+.row .src{color:var(--text-3);line-height:1.5}
+.row .dst{color:var(--text-strong);font-size:14px;line-height:1.45}
+.row.partial .dst{color:var(--text-2)}
+.dots{display:inline-flex;gap:3px;margin-left:4px;vertical-align:middle}
+.dots i{width:4px;height:4px;border-radius:50%;background:var(--accent);animation:k-dot 1s ease-in-out infinite}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes k-dot{0%,100%{opacity:.25}50%{opacity:1}}
+
+.foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:12px;border-top:1px solid var(--line-soft);font-size:12px;color:var(--text-3)}
+.foot .num{font-variant-numeric:tabular-nums}
+.foot .streams{display:flex;align-items:center;gap:14px}
+.foot .st{display:inline-flex;align-items:center;gap:6px}
+.foot .st i{width:6px;height:6px;border-radius:50%;background:#5A5A60}
+.foot .st.on i{background:var(--ok)}
+.quit{background:none;border:none;color:var(--text);font-weight:500;font-size:13px;cursor:pointer;padding:4px 2px}
+.quit:hover{color:#fff;text-decoration:underline}
+</style>
+</head>
+<body>
+
+<!-- Reusable mark symbol -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="kana-brackets">
+      <path class="b1" d="M44 128 V44 H128"/>
+      <path class="b2" d="M156 72 V156 H72"/>
+    </g>
+  </defs>
+</svg>
+
+<main class="page">
+
+<header style="display:flex;align-items:center;gap:14px">
+  <svg class="kana-mark thick" width="32" height="32" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg>
+  <div>
+    <div style="font:600 22px var(--brand);letter-spacing:-.02em">kana design handoff</div>
+    <div style="color:var(--text-4);font-size:13px">Logo, motion states, app icon and interpreter panel. Tokens and state names are in the comment at the top of this file.</div>
+  </div>
+</header>
+
+<!-- ================= LOGO ================= -->
+<section aria-labelledby="h-logo">
+  <div class="sec-h"><h2 id="h-logo">Logo</h2><p>Mark: Japanese corner brackets 「 」, the space between two languages.</p></div>
+  <div class="logo-grid">
+    <div class="card logo-tile">
+      <svg class="kana-mark" width="180" height="180" viewBox="0 0 200 200" role="img" aria-label="kana mark"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+        <div class="wordmark">kana</div>
+        <div class="tagline" lang="ja">かな <span lang="en">· live Japanese ⇄ English interpreting</span></div>
+      </div>
+    </div>
+    <div class="card logo-tile">
+      <div class="lockup-h">
+        <svg class="kana-mark" width="72" height="72" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg>
+        <div class="wordmark">kana</div>
+      </div>
+      <div class="tagline">Horizontal lockup · mark height = 1.3× cap height</div>
+    </div>
+    <div class="card logo-tile" style="background:#fff;border-color:#fff">
+      <svg width="140" height="140" viewBox="0 0 200 200" role="img" aria-label="kana mark on light"><path d="M44 128 V44 H128" stroke="#0A0A0B" stroke-width="20" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="20" fill="none" stroke-linecap="square"/></svg>
+      <div class="wordmark" style="color:#0A0A0B">kana</div>
+      <div class="tagline" style="color:#55555C">On light: the white bracket becomes black</div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= MOTION ================= -->
+<section aria-labelledby="h-motion">
+  <div class="sec-h"><h2 id="h-motion">Mark states</h2><p>Set <code>data-state</code> on <code>.kana-mark</code>. Pure CSS; respects reduced motion.</p></div>
+  <div class="states">
+    <div class="card state"><div class="stage"><svg class="kana-mark" data-state="idle" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div><b>idle</b><span>Static. App open, no session.</span></div>
+    <div class="card state"><div class="stage"><svg class="kana-mark" data-state="connecting" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div><b>connecting</b><span>Quarter-turn steps while the engine starts or reconnects.</span></div>
+    <div class="card state"><div class="stage"><svg class="kana-mark" data-state="listening" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div><b>listening</b><span>Slow breathe. Session live, waiting for speech.</span></div>
+    <div class="card state"><div class="stage"><svg class="kana-mark" data-state="talking" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div><b>talking</b><span>Quick pulse inward. Push-to-talk held.</span></div>
+    <div class="card state"><div class="stage"><svg class="kana-mark" data-state="translating" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div><b>translating</b><span>White traces, then red. Output being produced.</span></div>
+    <div class="card state"><div class="stage"><svg class="kana-mark" data-state="error" id="errMark" width="96" height="96" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div><b>error</b><span>One shake, white dims. <button class="icon-btn" style="font-size:12px;color:var(--text-2);text-decoration:underline;padding:0;min-height:0" onclick="replayErr()">Replay</button></span></div>
+  </div>
+
+  <div class="card player">
+    <div class="stage"><svg class="kana-mark" id="playMark" data-state="listening" width="180" height="180" viewBox="0 0 200 200" role="img" aria-label="kana mark, listening"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg></div>
+    <div>
+      <div class="seg" role="group" aria-label="Mark state">
+        <button data-s="idle" aria-pressed="false">idle</button>
+        <button data-s="connecting" aria-pressed="false">connecting</button>
+        <button data-s="listening" aria-pressed="true">listening</button>
+        <button data-s="talking" aria-pressed="false">talking</button>
+        <button data-s="translating" aria-pressed="false">translating</button>
+        <button data-s="error" aria-pressed="false">error</button>
+      </div>
+      <p>Suggested mapping: Start pressed → <b>connecting</b>; IN+OUT open → <b>listening</b>; hotkey held → <b>talking</b>; translated audio playing → <b>translating</b>; engine fatal → <b>error</b>; Stop → <b>idle</b>. Use the same state for the menu bar icon (template version, static) and the panel header mark.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ICON ================= -->
+<section aria-labelledby="h-icon">
+  <div class="sec-h"><h2 id="h-icon">App icon</h2><p>macOS grid: 824px body on a 1024 canvas, 185px corner, soft top-lit black.</p></div>
+  <div class="icon-row">
+    <div class="card icon-hero">
+      <figure>
+        <svg width="256" height="256" viewBox="0 0 1024 1024" role="img" aria-label="kana app icon">
+          <defs>
+            <linearGradient id="kBg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1D1D21"/><stop offset="1" stop-color="#0A0A0B"/></linearGradient>
+            <linearGradient id="kRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity=".03"/></linearGradient>
+          </defs>
+          <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kBg)"/>
+          <rect x="101" y="101" width="822" height="822" rx="184" fill="none" stroke="url(#kRim)" stroke-width="2"/>
+          <g transform="translate(256 256) scale(2.56)"><path d="M44 128 V44 H128" stroke="#fff" stroke-width="20" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="20" fill="none" stroke-linecap="square"/></g>
+        </svg>
+        <figcaption>1024 · App Store / Finder</figcaption>
+      </figure>
+      <figure>
+        <svg width="128" height="128" viewBox="0 0 1024 1024" aria-hidden="true"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kBg)"/><rect x="101" y="101" width="822" height="822" rx="184" fill="none" stroke="url(#kRim)" stroke-width="2"/><g transform="translate(256 256) scale(2.56)"><path d="M44 128 V44 H128" stroke="#fff" stroke-width="22" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="22" fill="none" stroke-linecap="square"/></g></svg>
+        <figcaption>128 · Dock</figcaption>
+      </figure>
+      <figure>
+        <svg width="64" height="64" viewBox="0 0 1024 1024" aria-hidden="true"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kBg)"/><g transform="translate(256 256) scale(2.56)"><path d="M44 128 V44 H128" stroke="#fff" stroke-width="26" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="26" fill="none" stroke-linecap="square"/></g></svg>
+        <figcaption>64</figcaption>
+      </figure>
+      <figure>
+        <svg width="32" height="32" viewBox="0 0 1024 1024" aria-hidden="true"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kBg)"/><g transform="translate(256 256) scale(2.56)"><path d="M44 128 V44 H128" stroke="#fff" stroke-width="30" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="30" fill="none" stroke-linecap="square"/></g></svg>
+        <figcaption>32</figcaption>
+      </figure>
+    </div>
+    <div class="card icon-side">
+      <div>
+        <div class="side-label">Menu bar (template image, 18pt)</div>
+        <div class="menubar dark" style="margin-bottom:8px">
+          <span>Wi‑Fi</span>
+          <svg class="tpl" width="18" height="18" viewBox="0 0 200 200" aria-label="kana menu bar icon" role="img"><path d="M44 128 V44 H128" stroke="#000" stroke-width="26" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#000" stroke-opacity=".6" stroke-width="26" fill="none" stroke-linecap="square"/></svg>
+          <span>Thu 20:05</span>
+        </div>
+        <div class="menubar light">
+          <span>Wi‑Fi</span>
+          <svg width="18" height="18" viewBox="0 0 200 200" aria-hidden="true"><path d="M44 128 V44 H128" stroke="#000" stroke-width="26" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#000" stroke-opacity=".6" stroke-width="26" fill="none" stroke-linecap="square"/></svg>
+          <span>Thu 20:05</span>
+        </div>
+      </div>
+      <div>
+        <div class="side-label">In the Dock, dark and light</div>
+        <div class="dock" style="margin-bottom:10px">
+          <div class="ph"></div>
+          <svg width="56" height="56" viewBox="100 100 824 824" aria-hidden="true"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kBg)"/><rect x="101" y="101" width="822" height="822" rx="184" fill="none" stroke="url(#kRim)" stroke-width="3"/><g transform="translate(256 256) scale(2.56)"><path d="M44 128 V44 H128" stroke="#fff" stroke-width="24" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="24" fill="none" stroke-linecap="square"/></g></svg>
+          <div class="ph"></div>
+        </div>
+        <div class="dock light">
+          <div class="ph"></div>
+          <svg width="56" height="56" viewBox="100 100 824 824" aria-hidden="true"><rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kBg)"/><g transform="translate(256 256) scale(2.56)"><path d="M44 128 V44 H128" stroke="#fff" stroke-width="24" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="24" fill="none" stroke-linecap="square"/></g></svg>
+          <div class="ph"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PANEL ================= -->
+<section aria-labelledby="h-panel">
+  <div class="sec-h"><h2 id="h-panel">Interpreter panel</h2><p>440 × 720 floating panel. Left: idle with warnings. Right: live session.</p></div>
+  <div class="panels">
+
+    <!-- IDLE PANEL -->
+    <div class="panel" aria-label="kana panel, idle">
+      <div class="p-head">
+        <div class="p-brand">
+          <svg class="kana-mark thick" data-state="idle" width="24" height="24" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg>
+          <span class="name">kana</span>
+          <span class="pill"><span class="dot"></span>Idle</span>
+          <span class="badge">test engine</span>
+        </div>
+        <button class="btn-primary">Start</button>
+      </div>
+
+      <button class="talk" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+        <span class="label">Hold to talk</span>
+        <kbd>⌃⌥ Space</kbd>
+      </button>
+
+      <div class="notice">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>
+        <span class="grow">Hotkey needs Accessibility access.</span>
+        <button class="btn-small">Open Settings</button>
+      </div>
+
+      <div class="alert" role="alert">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>
+        <div class="grow"><strong>Engine stopped</strong><span>fake: fatal error requested by FAKE_ENGINE_FATAL</span></div>
+        <button class="icon-btn" aria-label="Dismiss error"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="field">
+          <label for="mic1">Microphone</label>
+          <div class="select"><select id="mic1"><option>System default</option></select><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A0A0A8" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></div>
+        </div>
+        <div class="field">
+          <label for="ear1">Earphones</label>
+          <div class="select"><select id="ear1"><option>System default</option></select><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#A0A0A8" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></div>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div class="dir">
+          <div class="side"><small>You hear</small><b class="lang-a">English</b></div>
+          <button class="swap" aria-label="Swap languages" onclick="swapLang(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg></button>
+          <div class="side r"><small>Meet hears</small><b class="lang-b" lang="ja">日本語</b></div>
+        </div>
+        <div class="route">
+          <span>Meet routing: BlackHole 2ch → mic · BlackHole 16ch → speakers</span>
+          <button class="icon-btn" aria-label="Refresh audio devices"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/></svg></button>
+        </div>
+      </div>
+
+      <div class="empty">
+        <svg width="40" height="40" viewBox="0 0 200 200" aria-hidden="true" style="opacity:.5"><path d="M44 128 V44 H128" stroke="#8E8E94" stroke-width="14" fill="none" stroke-linecap="square"/><path d="M156 72 V156 H72" stroke="#8E8E94" stroke-width="14" fill="none" stroke-linecap="square"/></svg>
+        <span class="t1">Press Start to begin interpreting</span>
+        <span class="t2">Transcripts appear here, original beside translation.</span>
+      </div>
+
+      <div class="foot">
+        <span class="num">0:00 · $0.00 · ≈¥0</span>
+        <div class="streams">
+          <span class="st"><i></i>IN closed</span>
+          <span class="st"><i></i>OUT closed</span>
+          <button class="quit">Quit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIVE PANEL -->
+    <div class="panel" aria-label="kana panel, live session">
+      <div class="p-head">
+        <div class="p-brand">
+          <svg class="kana-mark thick" data-state="talking" width="24" height="24" viewBox="0 0 200 200" aria-hidden="true"><path class="b1" d="M44 128 V44 H128"/><path class="b2" d="M156 72 V156 H72"/></svg>
+          <span class="name">kana</span>
+          <span class="pill live"><span class="dot live-dot"></span>Live</span>
+          <span class="badge">test engine</span>
+        </div>
+        <button class="btn-ghost"><span class="sq"></span>Stop</button>
+      </div>
+
+      <button class="talk on" aria-pressed="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/></svg>
+        <span class="label">Talking · English → <span lang="ja">日本語</span></span>
+        <span class="meter" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+      </button>
+
+      <div class="dir">
+        <div class="side"><small>You hear</small><b class="lang-a">English</b></div>
+        <button class="swap" aria-label="Swap languages" onclick="swapLang(this)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg></button>
+        <div class="side r"><small>Meet hears</small><b class="lang-b" lang="ja">日本語</b></div>
+      </div>
+
+      <div class="tx-head"><span>Transcript</span><span><span>↓ from Meet</span><span>↑ from you</span></span></div>
+
+      <div class="tx" aria-live="polite">
+        <div class="row"><span class="arr" aria-label="From Meet">↓</span><span class="src" lang="ja">こんにちは、聞こえますか？</span><span class="dst">Hello, can you hear me?</span></div>
+        <div class="row"><span class="arr me" aria-label="From you">↑</span><span class="src">Yes, loud and clear.</span><span class="dst" lang="ja">はい、よく聞こえます。</span></div>
+        <div class="row"><span class="arr" aria-label="From Meet">↓</span><span class="src" lang="ja">今日は新しいカタログの件で相談したいです。</span><span class="dst">I'd like to talk about the new catalogue today.</span></div>
+        <div class="row"><span class="arr me" aria-label="From you">↑</span><span class="src">Sure. Shall I share my screen?</span><span class="dst" lang="ja">もちろんです。画面を共有しましょうか？</span></div>
+        <div class="row partial"><span class="arr" aria-label="From Meet">↓</span><span class="src" lang="ja">お願いします。まず価格表から…</span><span class="dst">Please. Let's start with the price list<span class="dots" aria-label="translating"><i></i><i></i><i></i></span></span></div>
+      </div>
+
+      <div class="foot">
+        <span class="num" style="color:var(--text)">12:48 · $0.31 · ≈¥47</span>
+        <div class="streams">
+          <span class="st on"><i></i>IN live</span>
+          <span class="st on"><i></i>OUT live</span>
+          <button class="quit">Quit</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<script>
+// State player
+(function(){
+  var mark = document.getElementById('playMark');
+  var btns = document.querySelectorAll('.seg button');
+  btns.forEach(function(b){
+    b.addEventListener('click', function(){
+      btns.forEach(function(x){ x.setAttribute('aria-pressed','false'); });
+      b.setAttribute('aria-pressed','true');
+      var s = b.getAttribute('data-s');
+      mark.setAttribute('data-state', 'idle');
+      void mark.getBoundingClientRect(); // restart one-shot animations
+      mark.setAttribute('data-state', s);
+      mark.setAttribute('aria-label', 'kana mark, ' + s);
+    });
+  });
+})();
+function replayErr(){
+  var m = document.getElementById('errMark');
+  m.setAttribute('data-state','idle'); void m.getBoundingClientRect(); m.setAttribute('data-state','error');
+}
+// Swap language direction within a panel
+function swapLang(btn){
+  var dir = btn.closest('.dir');
+  var a = dir.querySelector('.lang-a'), b = dir.querySelector('.lang-b');
+  var at = a.textContent, al = a.getAttribute('lang');
+  a.textContent = b.textContent; b.textContent = at;
+  var bl = b.getAttribute('lang');
+  al ? b.setAttribute('lang', al) : b.removeAttribute('lang');
+  a.removeAttribute('lang');
+  if (a.textContent === '日本語') a.setAttribute('lang','ja');
+  if (b.textContent === '日本語') b.setAttribute('lang','ja'); else b.removeAttribute('lang');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="kana app icon">
+  <defs>
+    <linearGradient id="kanaBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1D1D21"/>
+      <stop offset="1" stop-color="#0A0A0B"/>
+    </linearGradient>
+    <linearGradient id="kanaRim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.03"/>
+    </linearGradient>
+  </defs>
+  <!-- macOS icon grid: 824px body, 100px margin, ~185px corner -->
+  <rect x="100" y="100" width="824" height="824" rx="185" fill="url(#kanaBg)"/>
+  <rect x="101" y="101" width="822" height="822" rx="184" fill="none" stroke="url(#kanaRim)" stroke-width="2"/>
+  <g transform="translate(256 256) scale(2.56)">
+    <path d="M44 128 V44 H128" stroke="#FFFFFF" stroke-width="20" fill="none" stroke-linecap="square"/>
+    <path d="M156 72 V156 H72" stroke="#FF4D2E" stroke-width="20" fill="none" stroke-linecap="square"/>
+  </g>
+</svg>
