@@ -18,6 +18,10 @@ final class Prefs: ObservableObject {
     @Published var saveTranscripts: Bool {
         didSet { d.set(saveTranscripts, forKey: "saveTranscripts") }
     }
+    /// The panel is collapsed into the floating bar; kept across launches.
+    @Published var minimized: Bool {
+        didSet { d.set(minimized, forKey: "minimized") }
+    }
     /// Paths from the engine's last `saved` event, kept across launches.
     @Published var lastTranscriptMD: String? {
         didSet { d.set(lastTranscriptMD, forKey: "lastTranscriptMD") }
@@ -28,6 +32,7 @@ final class Prefs: ObservableObject {
         captionsOn = d.object(forKey: "captionsOn") as? Bool ?? false   // off until the user turns it on
         saveTranscripts = d.object(forKey: "saveTranscripts") as? Bool ?? true
         lastTranscriptMD = d.string(forKey: "lastTranscriptMD")
+        minimized = d.bool(forKey: "minimized")
     }
 }
 

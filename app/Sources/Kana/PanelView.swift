@@ -40,23 +40,93 @@ struct PanelView: View {
 
     static let size = CGSize(width: 440, height: 720)
 
-    var body: some View {
-        Group {
-            if showSetup {
-                SetupView(model: setup) { showSetup = false; setupDismissed = true }
-            } else {
-                main
-            }
+    // Opening intro (from idle). The window opens compact (440 × 220) with the mark centred
+    // and tracing itself; then the window grows to full height, anchored at the top, while the
+    // mark flies into its header slot and the content fades up. The window frame is animated
+    // by StatusController on the same clock; the content here is laid out at full height and
+    // clipped by the window, so nothing reflows while it grows.
+    static let compactHeight: CGFloat = 220
+    static let growStart: Double = 0.75      // fade in 0–0.15 s, quarter turns 0.15–0.75 s
+    static let growDuration: Double = 0.35   // grow + move + fade-up 0.75–1.10 s
+    static var introLength: Double { growStart + growDuration }
+
+    @State private var introRunning = false
+    @State private var introT0 = Date.distantPast
+    @State private var headerMarkFrame = CGRect(x: 20, y: 26, width: 24, height: 24)
+    @Environment(\.kanaIntroTime) private var fixedIntroTime
+    private let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+
+    struct IntroFrame {
+        var markOpacity = 1.0            // the mark fades in first
+        var rotation = 0.0               // connecting quarter turns, degrees
+        var move = 1.0                   // 0 → 1 while the window grows and the mark flies
+        var content = 1.0                // opacity of everything but the header mark
+        var markInHeader = true
+        var active = false
+    }
+
+    /// The intro at time t (s): the mark fades in (150 ms), rolls through four quarter turns
+    /// (the connecting motion, 150 ms per step, so it lands upright), then flies into the
+    /// header while the window grows, eased with cubic-bezier(.6,0,.3,1).
+    static func introFrame(_ t: Double, reduceMotion: Bool) -> IntroFrame {
+        if reduceMotion { return IntroFrame(content: min(max(t / 0.15, 0), 1), active: true) }
+        func c(_ x: Double) -> Double { min(max(x, 0), 1) }
+        let steps = t < 0.15 ? 0 : min(floor((t - 0.15) / 0.15), 4)
+        let move = CubicBezier.trace(c((t - growStart) / growDuration))
+        return IntroFrame(markOpacity: c(t / 0.15), rotation: steps.truncatingRemainder(dividingBy: 4) * 90,
+                          move: move, content: move, markInHeader: t >= introLength, active: true)
+    }
+
+    /// Window height during the intro (also used to render frames offscreen).
+    static func introHeight(_ t: Double) -> CGFloat {
+        let p = CubicBezier.trace(min(max((t - growStart) / growDuration, 0), 1))
+        return compactHeight + (size.height - compactHeight) * p
+    }
+
+    private func startIntro(_ d: Date) {
+        introT0 = d
+        introRunning = true
+        DispatchQueue.main.asyncAfter(deadline: d.addingTimeInterval(reduceMotion ? 0.2 : Self.introLength + 0.05).dispatchTime) {
+            if introT0 == d { introRunning = false }
         }
-        .padding(20)
-        .frame(width: Self.size.width, height: Self.size.height, alignment: .top)
-        .background(RoundedRectangle(cornerRadius: 18).fill(Theme.bg))
-        .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.line))
-        .clipShape(RoundedRectangle(cornerRadius: 18))
+    }
+
+    var body: some View {
+        let animating = introRunning && fixedIntroTime == nil
+        TimelineView(.animation(paused: !animating)) { ctx in
+            let t = fixedIntroTime ?? ctx.date.timeIntervalSince(introT0)
+            let f = (introRunning || fixedIntroTime != nil)
+                ? Self.introFrame(t, reduceMotion: reduceMotion && fixedIntroTime == nil) : IntroFrame()
+            Group {
+                if showSetup {
+                    SetupView(model: setup) { showSetup = false; setupDismissed = true }
+                        .opacity(f.content)
+                } else {
+                    main(f)
+                }
+            }
+            .padding(20)
+            .frame(width: Self.size.width, height: Self.size.height, alignment: .top)
+            .overlay(alignment: .topLeading) {
+                if f.active && !(reduceMotion && fixedIntroTime == nil) { introMark(f) }
+            }
+            // The window (not this view) decides the visible height; keep everything top-aligned.
+            .frame(width: Self.size.width, height: fixedIntroTime.map { Self.introHeight($0) }, alignment: .top)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .background(RoundedRectangle(cornerRadius: 18).fill(Theme.bg))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Theme.line))
+            .clipShape(RoundedRectangle(cornerRadius: 18))
+        }
+        .coordinateSpace(name: "kanaPanel")
+        .onPreferenceChange(HeaderMarkKey.self) { headerMarkFrame = $0 }
         .foregroundStyle(Theme.text)
         .font(Theme.ui(13))
         .environment(\.colorScheme, .dark)
-        .onAppear(perform: panelOpened)
+        .onAppear {
+            panelOpened()
+            if let d = actions.introStart, Date().timeIntervalSince(d) < 0.5 { startIntro(d) }
+        }
+        .onChange(of: actions.introStart) { _, d in if let d { startIntro(d) } }
         .onReceive(NotificationCenter.default.publisher(for: .kanaPanelDidOpen)) { _ in panelOpened() }
         .onChange(of: engine.needsSetup) { _, need in if need { showSetup = true } }
         .onChange(of: actions.setupRequested) { _, req in
@@ -64,20 +134,44 @@ struct PanelView: View {
         }
     }
 
-    private var main: some View {
+    /// The mark: 96 pt centred in the compact window, rolling, then easing into the header slot.
+    private func introMark(_ f: IntroFrame) -> some View {
+        let start = CGPoint(x: Self.size.width / 2, y: Self.compactHeight / 2)
+        let end = CGPoint(x: headerMarkFrame.midX, y: headerMarkFrame.midY)
+        let size = 96 + (24 - 96) * f.move
+        let center = CGPoint(x: start.x + (end.x - start.x) * f.move, y: start.y + (end.y - start.y) * f.move)
+        var frame = MarkGeometry.Frame()
+        frame.rotation = f.rotation
+        let stroke = 20 + (26 - 20) * f.move
+        return Canvas { gc, _ in
+            var g = gc
+            MarkGeometry.draw(in: &g, size: size, frame: frame, color1: .white, color2: Theme.accent, strokeWidth: stroke)
+        }
+        .frame(width: size, height: size)
+        .position(center)
+        .allowsHitTesting(false)
+        .opacity(f.markInHeader ? 0 : f.markOpacity)
+    }
+
+    private func main(_ f: IntroFrame) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            header
-            talkBar
-            if !hotkey.trusted { accessibilityNotice }
-            if let err = engine.lastError { errorCard(err) }
-            if !engine.running { deviceFields }
-            languageCard
-            if engine.rows.isEmpty && !engine.running {
-                emptyState
-            } else {
-                transcript
+            header(f)
+            Group {
+                if engine.isFakeEngine { fakeBanner }
+                talkBar
+                if !hotkey.trusted { accessibilityNotice }
+                if let err = engine.lastError { errorCard(err) }
+                if !engine.running { deviceFields }
+                languageCard
+                if engine.rows.isEmpty && !engine.running {
+                    emptyState
+                } else {
+                    transcript
+                }
+                footer
             }
-            footer
+            .opacity(f.content)
+            .offset(y: 8 * (1 - f.content))
         }
     }
 
@@ -91,35 +185,55 @@ struct PanelView: View {
 
     // MARK: Header
 
-    private var header: some View {
-        HStack(spacing: 12) {
+    private func header(_ f: IntroFrame) -> some View {
+        HStack(spacing: 8) {
             HStack(spacing: 10) {
                 KanaMark(state: engine.markState, size: 24)
+                    .opacity(f.markInHeader ? 1 : 0)
+                    .background(GeometryReader { g in
+                        Color.clear.preference(key: HeaderMarkKey.self, value: g.frame(in: .named("kanaPanel")))
+                    })
                 Text(Theme.name)
                     .font(Theme.brand(20))
                     .tracking(-0.4)
                     .fixedSize()
+                    .opacity(f.move)
                 StatePill(live: engine.running)
                     .fixedSize()
                     .padding(.leading, 6)
                     .help(engine.model == nil ? "" : engine.engineTooltip)
-                if let chip = engine.engineChip {
-                    DashedBadge(text: chip).fixedSize().help(engine.engineTooltip)
-                }
+                    .opacity(f.content)
             }
             Spacer(minLength: 4)
-            overflowMenu
-            if engine.running {
-                Button("Stop") { engine.stop() }
-                    .buttonStyle(GhostButtonStyle(square: true))
-                    .keyboardShortcut(.cancelAction)
-            } else {
-                Button("Start") {
-                    engine.start(mic: mic, spk: spk, inLang: inLang, outLang: outLang, business: businessKeigo)
+            Group {
+                overflowMenu
+                Button {
+                    actions.minimize()
+                } label: {
+                    Image(systemName: "minus").font(.system(size: 13, weight: .semibold))
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .keyboardShortcut(.defaultAction)
+                .buttonStyle(IconButtonStyle())
+                .help("Minimize")
+                Button {
+                    actions.hidePanel()
+                } label: {
+                    Image(systemName: "xmark").font(.system(size: 12, weight: .semibold))
+                }
+                .buttonStyle(IconButtonStyle())
+                .help("Close")
+                if engine.running {
+                    Button("Stop") { engine.stop() }
+                        .buttonStyle(GhostButtonStyle(square: true))
+                        .keyboardShortcut(.cancelAction)
+                } else {
+                    Button("Start") {
+                        engine.start(mic: mic, spk: spk, inLang: inLang, outLang: outLang, business: businessKeigo)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .keyboardShortcut(.defaultAction)
+                }
             }
+            .opacity(f.content)
         }
     }
 
@@ -193,6 +307,21 @@ struct PanelView: View {
     }
 
     // MARK: Warning cards
+
+    /// Shown whenever the fake test engine is in use, so test data is never mistaken for real.
+    private var fakeBanner: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(Theme.accent)
+            Text("FAKE ENGINE — test data, not your devices")
+                .font(Theme.ui(12, 600))
+                .foregroundStyle(Theme.alertTitle)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .alertCard()
+    }
 
     private var accessibilityNotice: some View {
         HStack(spacing: 10) {
@@ -287,12 +416,14 @@ struct PanelView: View {
                 Button("System default") { selection.wrappedValue = "" }
                 if !names.isEmpty { Divider() }
                 ForEach(names, id: \.self) { n in
-                    Button(n) { selection.wrappedValue = n }
+                    Button(engine.devicesAreFake ? "\(n) (fake)" : n) { selection.wrappedValue = n }
                 }
             } label: {
                 HStack {
                     Text(selectionLabel(selection.wrappedValue, names))
-                        .foregroundStyle(Theme.text)
+                        .foregroundStyle(engine.devicesAreFake ? Theme.text4 : Theme.text)
+                        // Inter ships no italic, so fake names use the system italic.
+                        .font(engine.devicesAreFake ? .system(size: 13).italic() : Theme.ui(13))
                         .lineLimit(1)
                     Spacer()
                     Image(systemName: "chevron.up.chevron.down")
@@ -542,6 +673,9 @@ struct PanelView: View {
         let saved = (i + o) * 0.0000875
         var s = String(format: "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved", i, o, saved)
         if engine.costIsEstimate { s += "\nEstimate from audio seconds until the engine reports token usage." }
+        if engine.model != nil {
+            s += "\n\n" + (engine.engineChip.map { "Engine: \($0)\n" } ?? "") + engine.engineTooltip
+        }
         return s
     }
 
@@ -605,5 +739,24 @@ struct TranscriptRowView: View {
         }
         .textSelection(.enabled)
         .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// Where the header mark sits, so the intro mark can land on it.
+struct HeaderMarkKey: PreferenceKey {
+    static let defaultValue = CGRect(x: 20, y: 26, width: 24, height: 24)
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+private extension Date {
+    var dispatchTime: DispatchTime { .now() + max(0, timeIntervalSinceNow) }
+}
+
+/// Fixed intro time for offscreen rendering (`kana --render-intro`); nil = live clock.
+private struct KanaIntroTimeKey: EnvironmentKey { static let defaultValue: Double? = nil }
+extension EnvironmentValues {
+    var kanaIntroTime: Double? {
+        get { self[KanaIntroTimeKey.self] }
+        set { self[KanaIntroTimeKey.self] = newValue }
     }
 }

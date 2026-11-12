@@ -80,8 +80,8 @@ def main():
     threading.Thread(target=stdin_loop, daemon=True).start()
     time.sleep(0.5)
     emit("ready",
-         **{"in": {"src": "BlackHole 16ch", "sink": arg("--spk", "default")},
-            "out": {"src": arg("--mic", "default"), "sink": "BlackHole 2ch"}},
+         **{"in": {"src": "Fake Meet capture", "sink": arg("--spk", "Fake Speaker 1")},
+            "out": {"src": arg("--mic", "Fake Mic 1"), "sink": "Fake Meet mic"}},
          model="fake", register=arg("--register", "default"),
          in_model="fake" if only in (None, "in") else None,
          out_model="fake" if only in (None, "out") else None,
@@ -170,16 +170,16 @@ def main():
 
 
 def emit_devices():
+    # Unmistakably fake names, so a test panel never looks like it shows real hardware.
     emit_raw = {
+        "fake": True,
         "inputs": [
-            {"index": 0, "name": "BlackHole 16ch"},
-            {"index": 3, "name": "MacBook Pro Microphone"},
-            {"index": 5, "name": "AirPods Pro"},
+            {"index": 0, "name": "Fake Mic 1"},
+            {"index": 1, "name": "Fake Mic 2"},
         ],
         "outputs": [
-            {"index": 1, "name": "BlackHole 2ch"},
-            {"index": 4, "name": "MacBook Pro Speakers"},
-            {"index": 5, "name": "AirPods Pro"},
+            {"index": 2, "name": "Fake Speaker 1"},
+            {"index": 3, "name": "Fake Speaker 2"},
         ],
     }
     sys.stdout.write(json.dumps(emit_raw) + "\n")

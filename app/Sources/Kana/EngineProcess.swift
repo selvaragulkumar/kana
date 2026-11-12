@@ -196,6 +196,11 @@ final class EngineProcess: ObservableObject {
     @Published private(set) var outputs: [AudioDevice] = []
     @Published private(set) var devicesError: String?
     @Published private(set) var loadingDevices = false
+    /// The device list came from the fake engine.
+    @Published private(set) var devicesAreFake = false
+
+    /// The fake test engine is in use (its `ready` model or its device list says so).
+    var isFakeEngine: Bool { model == "fake" || devicesAreFake }
 
     private var process: Process?
     private var stdinHandle: FileHandle?
@@ -248,26 +253,44 @@ final class EngineProcess: ObservableObject {
 
     // MARK: Mark state
 
-    /// The header mark and menu-bar state. Start → connecting; all running sessions connected →
-    /// listening; talk on → talking; translated audio arriving → translating; fatal → error.
+    /// The header mark and menu-bar state, kept calm on purpose:
+    /// idle = static; Start → connecting (quarter turns) until the sessions first connect;
+    /// from then on the whole session is listening (slow breathe), even through reconnects
+    /// (those show only as footer text); talking is shown by the talk bar and the menu-bar
+    /// bracket, not the mark; fatal → error (one shake, then dimmed). The state changes at
+    /// most once per 2 s.
     @Published private(set) var markState: MarkState = .idle
-    private var lastTranslatedAt: Date?
     private var markTimer: Timer?
+    private var reachedLive = false
+    private var markChangedAt = Date.distantPast
+    private var markRecheck: DispatchWorkItem?
+    static let markDebounce: TimeInterval = 2
+
+    private func desiredMarkState() -> MarkState {
+        if !running { return (lastErrorFatal && lastError != nil) ? .error : .idle }
+        if !reachedLive && ready && sessionsConnected { reachedLive = true }
+        return reachedLive ? .listening : .connecting
+    }
 
     private func updateMarkState() {
-        let new: MarkState
-        if !running {
-            new = (lastErrorFatal && lastError != nil) ? .error : .idle
-        } else if talking {
-            new = .talking
-        } else if !ready || !sessionsConnected {
-            new = .connecting
-        } else if let t = lastTranslatedAt, Date().timeIntervalSince(t) < 1.5 {
-            new = .translating
-        } else {
-            new = .listening
+        let new = desiredMarkState()
+        guard new != markState else { return }
+        let wait = Self.markDebounce - Date().timeIntervalSince(markChangedAt)
+        if wait > 0 {
+            if markRecheck == nil {
+                let item = DispatchWorkItem { [weak self] in
+                    MainActor.assumeIsolated {
+                        self?.markRecheck = nil
+                        self?.updateMarkState()
+                    }
+                }
+                markRecheck = item
+                DispatchQueue.main.asyncAfter(deadline: .now() + wait, execute: item)
+            }
+            return
         }
-        if new != markState { markState = new }
+        markState = new
+        markChangedAt = Date()
     }
 
     private var sessionsConnected: Bool {
@@ -276,13 +299,29 @@ final class EngineProcess: ObservableObject {
             && (inState == .connected || outState == .connected)
     }
 
-    private func noteTranslated() {
-        lastTranslatedAt = Date()
-        updateMarkState()
-    }
-
     private let prefs: Prefs
     init(prefs: Prefs) { self.prefs = prefs }
+
+    /// Offscreen rendering only (`kana --render-intro`): fills the published state with demo
+    /// data without starting a process.
+    func loadPreview(rows: [TranscriptRow], running: Bool, live: Bool, talking: Bool = false,
+                     inputs: [AudioDevice] = [], outputs: [AudioDevice] = [], fake: Bool = false) {
+        self.rows = rows
+        self.running = running
+        self.ready = running
+        self.talking = talking
+        self.inState = live ? .connected : (running ? .connecting : .none)
+        self.outState = self.inState
+        self.inputs = inputs
+        self.outputs = outputs
+        self.devicesAreFake = fake
+        self.model = fake ? "fake" : nil
+        self.startedAt = running ? Date().addingTimeInterval(-768) : nil
+        self.usd = running ? 0.31 : 0
+        self.costIsEstimate = false
+        self.latencyMs = live ? ["in": 1800, "out": 2100] : [:]
+        self.markState = !running ? .idle : (live ? .listening : .connecting)
+    }
 
     // MARK: Start / stop
 
@@ -350,7 +389,7 @@ final class EngineProcess: ObservableObject {
         inModel = nil
         outModel = nil
         register = nil
-        lastTranslatedAt = nil
+        reachedLive = false
         latencyMs.removeAll()
         gatedS.removeAll()
         lastUtterance.removeAll()
@@ -474,7 +513,6 @@ final class EngineProcess: ObservableObject {
         case "transcript":
             guard let dir = Direction(rawValue: e.dir ?? ""), let text = e.text, !text.isEmpty else { return }
             addTranscript(dir: dir, kind: e.kind ?? "src", text: text)
-            if e.kind == "dst" { noteTranslated() }
         case "session":
             let state = SessionState(rawValue: e.state ?? "") ?? .none
             if e.dir == "in" { inState = state } else if e.dir == "out" { outState = state }
@@ -483,7 +521,6 @@ final class EngineProcess: ObservableObject {
             }
         case "audio":
             if let dir = e.dir {
-                if (e.recv_s ?? 0) > (audioByDir[dir]?.recv ?? 0) { noteTranslated() }
                 audioByDir[dir] = (e.sent_s ?? 0, e.recv_s ?? 0)
                 if let u = e.usd { engineUsdByDir[dir] = u }
                 recomputeCost()
@@ -532,8 +569,11 @@ final class EngineProcess: ObservableObject {
 
     // MARK: Devices
 
+    /// Offscreen rendering: never spawn the engine.
+    static var previewMode = false
+
     func refreshDevices() {
-        guard !loadingDevices else { return }
+        guard !loadingDevices, !Self.previewMode else { return }
         loadingDevices = true
         devicesError = nil
         DispatchQueue.global(qos: .userInitiated).async {
@@ -544,6 +584,7 @@ final class EngineProcess: ObservableObject {
                     switch result {
                     case .success(let list):
                         self.inputs = list.inputs
+                        self.devicesAreFake = list.fake ?? false
                         self.outputs = list.outputs
                     case .failure(let err):
                         self.devicesError = err.localizedDescription

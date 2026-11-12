@@ -10,6 +10,8 @@ struct AudioDevice: Identifiable, Hashable, Decodable {
 struct DeviceList: Decodable {
     let inputs: [AudioDevice]
     let outputs: [AudioDevice]
+    /// Set by app/fake_engine.py: the names are test data, not this Mac's devices.
+    let fake: Bool?
 }
 
 /// One utterance: what was heard (source) and what the model said (translation).

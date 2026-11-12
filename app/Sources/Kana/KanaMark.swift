@@ -121,13 +121,13 @@ enum MarkGeometry {
 
     /// Draws the mark into a context sized `size`, in the given colours.
     static func draw(in ctx: inout GraphicsContext, size: CGFloat, frame f: Frame,
-                     color1: Color, color2: Color) {
+                     color1: Color, color2: Color, strokeWidth: CGFloat? = nil) {
         let s = size / 200
         ctx.translateBy(x: size / 2, y: size / 2)
         ctx.rotate(by: .degrees(f.rotation))
         ctx.translateBy(x: -size / 2, y: -size / 2)
         ctx.scaleBy(x: s, y: s)
-        let style = StrokeStyle(lineWidth: stroke(for: size), lineCap: .square, lineJoin: .miter)
+        let style = StrokeStyle(lineWidth: strokeWidth ?? stroke(for: size), lineCap: .square, lineJoin: .miter)
         for (pts, off, trim, color, alpha) in [(b1, f.off1, f.trim1, color1, f.alpha1), (b2, f.off2, f.trim2, color2, f.alpha2)] {
             guard trim.upperBound > trim.lowerBound else { continue }
             let p = path(pts).trimmedPath(from: trim.lowerBound, to: trim.upperBound)

@@ -28,6 +28,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MarkStills.render(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
             exit(0)
         }
+        // `kana --render-intro <dir>`: intro, panel, bar and transition frames, offscreen.
+        if let i = CommandLine.arguments.firstIndex(of: "--render-intro"), i + 1 < CommandLine.arguments.count {
+            IntroRender.run(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+            exit(0)
+        }
         WindowPrivacy.observe()
 
         let prefs = Prefs.shared
@@ -41,6 +46,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         captions = CaptionController(engine: engine, prefs: prefs)
         hotkey.install()
         engine.refreshDevices()
+        status.launch()
+        installTestHooks()
+    }
+
+    /// `KANA_TEST_HOOKS=1` only: drive the UI from scripts (screen recordings, smoke tests) with
+    /// distributed notifications named "kana.test", object = open|start|stop|talk|minimize|expand|close.
+    private func installTestHooks() {
+        guard ProcessInfo.processInfo.environment["KANA_TEST_HOOKS"] == "1" else { return }
+        DistributedNotificationCenter.default().addObserver(forName: Notification.Name("kana.test"), object: nil, queue: .main) { [weak self] note in
+            let cmd = note.object as? String ?? ""
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                switch cmd {
+                case "open": self.status.show()
+                case "start":
+                    let d = UserDefaults.standard
+                    self.engine.start(mic: d.string(forKey: "mic"), spk: d.string(forKey: "spk"),
+                                      inLang: d.string(forKey: "inLang") ?? "en", outLang: d.string(forKey: "outLang") ?? "ja",
+                                      business: d.bool(forKey: "businessKeigo"))
+                case "stop": self.engine.stop()
+                case "talk": self.engine.toggleTalk()
+                case "minimize": self.status.minimize()
+                case "expand": self.status.expand()
+                case "close": self.status.hide()
+                default: break
+                }
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

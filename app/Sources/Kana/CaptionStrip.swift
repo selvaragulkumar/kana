@@ -28,9 +28,10 @@ final class CaptionController: NSObject, NSWindowDelegate {
         self.engine = engine
         self.prefs = prefs
         super.init()
-        prefs.$captionsOn
+        // The minimized bar is the captions; the strip comes back on expand if it was on.
+        prefs.$captionsOn.combineLatest(prefs.$minimized)
             .receive(on: RunLoop.main)
-            .sink { [weak self] on in self?.setVisible(on) }
+            .sink { [weak self] on, minimized in self?.setVisible(on && !minimized) }
             .store(in: &bag)
     }
 

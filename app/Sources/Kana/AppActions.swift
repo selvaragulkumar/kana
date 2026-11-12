@@ -5,8 +5,13 @@ import AppKit
 final class AppActions: ObservableObject {
     /// Set to true to make the panel show its Setup page (from a menu, or a device error).
     @Published var setupRequested = false
+    /// Set when the panel opens from idle: the panel plays its opening intro from this instant.
+    @Published var introStart: Date?
     var showPanel: () -> Void = {}
     var hidePanel: () -> Void = {}
+    var minimize: () -> Void = {}
+    var expand: () -> Void = {}
+    var closeBar: () -> Void = {}
 
     private let prefs: Prefs
     init(prefs: Prefs) { self.prefs = prefs }
