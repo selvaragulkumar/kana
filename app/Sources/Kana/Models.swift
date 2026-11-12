@@ -14,7 +14,7 @@ struct DeviceList: Decodable {
     let fake: Bool?
 }
 
-/// One utterance: what was heard (source) and what the model said (translation).
+/// One row: what was heard (source) and what the model said for it (translation).
 struct TranscriptRow: Identifiable, Equatable {
     let id = UUID()
     let dir: Direction
@@ -22,6 +22,8 @@ struct TranscriptRow: Identifiable, Equatable {
     var dst: String
     /// Last time either side changed; the caption strip fades lines out from here.
     var updatedAt = Date()
+    /// The engine's row number in this direction (`row` on transcript events); the engine pairs.
+    var key: Int? = nil
 }
 
 enum Direction: String {
@@ -43,6 +45,9 @@ struct EngineEvent: Decodable {
     let kind: String?
     let text: String?
     let final: Bool?
+    let row: Int?             // transcript: the engine's row in this direction
+    let row_text: String?     // transcript: that side of the row after this event
+    let merge_into: Int?      // transcript: row `row` was folded into this row
     let state: String?
     let detail: String?
     let sent_s: Double?

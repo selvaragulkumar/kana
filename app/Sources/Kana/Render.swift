@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import ImageIO
 import SwiftUI
 import UniformTypeIdentifiers
@@ -194,5 +195,47 @@ enum IntroRender {
             c.draw(f, in: CGRect(x: gap + col * (w + gap), y: size.height - gap - h - row * (h + gap), width: w, height: h))
         }
         write(c.makeImage()!, url)
+    }
+}
+
+/// `kana --render-setup <dir>`: the Setup page in its first-launch states, drawn offscreen like
+/// IntroRender (no window). Device, key and permission states are stubbed; Accessibility shows
+/// this process's real state.
+@MainActor
+enum SetupRender {
+    static func run(to dir: URL) {
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        EngineProcess.previewMode = true
+        let prefs = Prefs.shared
+        let actions = AppActions(prefs: prefs)
+        let hotkey = Hotkey {}
+        let engine = EngineProcess(prefs: prefs)
+        engine.loadPreview(rows: [], running: false, live: false)
+        let both = [CADevice(id: 1, name: "BlackHole 2ch", inputChannels: 2, outputChannels: 2),
+                    CADevice(id: 2, name: "BlackHole 16ch", inputChannels: 16, outputChannels: 16)]
+        let states: [(String, [CADevice], KeySource, AVAuthorizationStatus, SetupModel.InstallState)] = [
+            ("setup-1-fresh", [], .missing, .notDetermined, .idle),
+            ("setup-2-installing", [], .missing, .notDetermined, .working("Waiting for your password…")),
+            ("setup-3-restart", [], .missing, .notDetermined, .needsRestart),
+            ("setup-4-key", both, .missing, .notDetermined, .done("Installed. No restart needed.")),
+            ("setup-5-ready", both, .keychain, .authorized, .idle),
+        ]
+        for (name, devices, key, mic, install) in states {
+            let model = SetupModel()
+            model.loadPreview(devices: devices, key: key, mic: mic, install: install)
+            let view = SetupView(model: model) {}
+                .environmentObject(hotkey)
+                .environmentObject(engine)
+                .environmentObject(actions)
+                .padding(20)
+                .frame(width: PanelView.size.width, height: PanelView.size.height, alignment: .top)
+                .background(RoundedRectangle(cornerRadius: 18).fill(Theme.bg))
+                .foregroundStyle(Theme.text)
+                .font(Theme.ui(13))
+            if let img = IntroRender.image(view, size: PanelView.size) {
+                IntroRender.write(img, dir.appendingPathComponent("\(name).png"))
+            }
+        }
+        print("rendered to \(dir.path)")
     }
 }

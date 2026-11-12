@@ -42,13 +42,87 @@ final class SetupModel: ObservableObject {
     var bh16: CADevice? { CoreAudioDevices.find("BlackHole 16ch", in: devices) }
     var blackholeMissing: Bool { bh2 == nil || bh16 == nil }
 
+    // First-launch steps, in order: drivers, key, permissions.
+    var driversDone: Bool { !blackholeMissing }
+    var keyDone: Bool { keySource != .missing }
+    func permissionsDone(accessibility: Bool) -> Bool { micStatus == .authorized && accessibility }
+
+    /// Something a new user must still do; the panel opens Setup by itself when true.
+    func needsFirstRun(accessibility: Bool) -> Bool {
+        !driversDone || !keyDone || micStatus != .authorized || !engineFound
+            || (!accessibility && !UserDefaults.standard.bool(forKey: "setupSeen"))
+    }
+
     func refresh() {
+        guard !previewing else { return }
         devices = CoreAudioDevices.all()
         keySource = KeySource.current()
         micStatus = MicPermission.status
         engineRoot = EngineLocation.root
-        engineFound = EngineLocation.overrideCommand != nil || engineRoot.map(EngineLocation.usable) == true
+        engineFound = EngineLocation.found
+        engineBundled = EngineLocation.bundledRoot != nil
+        engineUsesCheckout = EngineLocation.resolved.map { !$0.bundled } ?? false
     }
+
+    // MARK: Drivers
+
+    enum InstallState: Equatable {
+        case idle
+        case working(String)
+        case done(String)
+        case needsRestart
+        case failed(String)
+    }
+
+    @Published private(set) var install: InstallState = .idle
+    @Published private(set) var engineBundled = false
+    @Published private(set) var engineUsesCheckout = false
+
+    var installing: Bool { if case .working = install { return true } else { return false } }
+
+    /// One click: fetch + verify the missing BlackHole pkgs, one admin prompt, restart
+    /// coreaudiod, then wait for the devices to show up.
+    func installDrivers() {
+        guard !installing else { return }
+        let wanted = DriverInstaller.drivers.filter { CoreAudioDevices.find($0.name, in: devices) == nil }
+        guard !wanted.isEmpty else { refresh(); return }
+        install = .working(DriverInstaller.bundledDir == nil ? "Downloading from Existential Audio…" : "Preparing…")
+        Task {
+            do {
+                let pkgs = try await DriverInstaller.fetch(wanted)
+                install = .working("Waiting for your password…")
+                try await DriverInstaller.runAdmin(pkgs)
+                install = .working("Loading the drivers…")
+                let ok = await DriverInstaller.waitForDevices(wanted.map(\.name))
+                refresh()
+                install = ok ? .done("Installed. No restart needed.") : .needsRestart
+            } catch {
+                install = .failed(error.localizedDescription)
+                refresh()
+            }
+        }
+    }
+
+    // MARK: Engine choice
+
+    /// Back to the engine inside the app (Setup › Engine › Use built-in).
+    func useBundledEngine() {
+        EngineLocation.prefersCheckout = false
+        engineMessage = nil
+        refresh()
+    }
+
+    /// Offscreen rendering only (`kana --render-setup`).
+    func loadPreview(devices: [CADevice], key: KeySource, mic: AVAuthorizationStatus, install: InstallState) {
+        self.devices = devices
+        keySource = key
+        micStatus = mic
+        engineFound = true
+        engineBundled = true
+        self.install = install
+        previewing = true
+    }
+    private var previewing = false
 
     // MARK: Devices
 
@@ -175,26 +249,20 @@ struct SetupView: View {
                 Spacer()
                 Button("Done", action: onDone).buttonStyle(PrimaryButtonStyle())
             }
+            stepper
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    section("Audio devices")
+                    section("1  Audio drivers")
                     check(model.bh2 != nil, "BlackHole 2ch", model.bh2 != nil ? "Found. Meet's microphone." : "Missing. Meet's microphone.")
                     check(model.bh16 != nil, "BlackHole 16ch", model.bh16 != nil ? "Found. Meet's speakers." : "Missing. Meet's speakers.")
-                    if model.blackholeMissing { installCard }
-                    testCard
+                    if model.blackholeMissing || model.install != .idle { installCard }
+                    if !model.blackholeMissing { testCard }
 
-                    section("Engine")
-                    check(model.engineFound, model.engineFound ? "Engine found" : "Engine not found", engineText) {
-                        Button(model.engineFound ? "Change…" : "Choose Folder…") {
-                            actions.hidePanel()
-                            model.chooseEngineFolder()
-                            actions.showPanel()
-                        }
-                        .buttonStyle(SmallButtonStyle())
-                    }
-                    if let msg = model.engineMessage { check(false, "That folder is not an engine", msg) }
+                    section("2  Gemini API key")
+                    check(model.keySource != .missing, model.keySource != .missing ? "Key found" : "No key", keySourceText)
+                    keyCard
 
-                    section("Permissions")
+                    section("3  Permissions")
                     check(model.micStatus == .authorized, "Microphone", micText) {
                         if model.micStatus == .notDetermined {
                             Button("Allow") { Task { _ = await MicPermission.request(); model.refresh() } }
@@ -211,29 +279,109 @@ struct SetupView: View {
                         }
                     }
 
-                    section("Gemini API key")
-                    check(model.keySource != .missing, model.keySource != .missing ? "Key found" : "No key", keySourceText)
-                    keyCard
-
                     section("Meet settings (set these by hand)")
                     manual("Meet › Settings › Audio › Microphone", "BlackHole 2ch")
                     manual("Meet › Settings › Audio › Speakers", "BlackHole 16ch")
                     manual("macOS › Sound › Output", "your earphones")
+
+                    section("Engine")
+                    check(model.engineFound, model.engineFound ? "Engine found" : "Engine not found", EngineLocation.summary) {
+                        HStack(spacing: 6) {
+                            if model.engineBundled && model.engineUsesCheckout {
+                                Button("Use Built-in") { model.useBundledEngine() }.buttonStyle(SmallButtonStyle())
+                            }
+                            Button(model.engineBundled && !model.engineUsesCheckout ? "Use a Checkout…"
+                                   : (model.engineFound ? "Change…" : "Choose Folder…")) {
+                                actions.hidePanel()
+                                model.chooseEngineFolder()
+                                actions.showPanel()
+                            }
+                            .buttonStyle(SmallButtonStyle())
+                        }
+                    }
+                    if let msg = model.engineMessage { check(false, "That folder is not an engine", msg) }
                 }
             }
             .scrollIndicators(.never)
         }
-        .onAppear { model.refresh() }
+        .onAppear {
+            model.refresh()
+            UserDefaults.standard.set(true, forKey: "setupSeen")
+        }
+    }
+
+    // MARK: Steps
+
+    private var steps: [(String, Bool)] {
+        [("Audio drivers", model.driversDone), ("Gemini key", model.keyDone),
+         ("Permissions", model.permissionsDone(accessibility: hotkey.trusted))]
+    }
+
+    /// "Step 2 of 3 · Gemini key" with three pills, or "Ready" when everything passes.
+    private var stepper: some View {
+        let next = steps.firstIndex { !$0.1 }
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                ForEach(Array(steps.enumerated()), id: \.offset) { i, step in
+                    HStack(spacing: 5) {
+                        Image(systemName: step.1 ? "checkmark.circle.fill" : "\(i + 1).circle")
+                            .foregroundStyle(step.1 ? Theme.ok : (i == next ? Theme.accent : Theme.text4))
+                        Text(step.0)
+                            .font(Theme.ui(12, i == next ? 600 : 500))
+                            .foregroundStyle(i == next ? Theme.text : Theme.text3)
+                    }
+                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .surfaceCard(radius: 99, border: i == next ? Theme.accentLine : Theme.line)
+                }
+                Spacer(minLength: 0)
+            }
+            Text(next.map { "Step \($0 + 1) of 3 · " + nextHint($0) } ?? "Ready. Press Done, then Start in the panel.")
+                .font(Theme.ui(12))
+                .foregroundStyle(Theme.text3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private func nextHint(_ i: Int) -> String {
+        switch i {
+        case 0: return "Install the two free BlackHole audio drivers."
+        case 1: return "Paste your Gemini API key."
+        default: return "Allow the microphone and Accessibility."
+        }
     }
 
     // MARK: Cards
 
     private var installCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .center, spacing: 10) {
+                Text(DriverInstaller.bundledDir == nil
+                     ? "Downloads Existential Audio's signed installers (about 200 KB) and asks for your Mac password once."
+                     : "Installs both drivers from the copies inside kana and asks for your Mac password once.")
+                    .font(Theme.ui(12))
+                    .foregroundStyle(Theme.text3)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Button(model.installing ? "Installing…" : "Install audio drivers") { model.installDrivers() }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(model.installing || !model.blackholeMissing)
+            }
+            switch model.install {
+            case .idle: EmptyView()
+            case .working(let msg): resultLine(true, msg)
+            case .done(let msg): resultLine(true, msg)
+            case .failed(let msg): resultLine(false, msg)
+            case .needsRestart:
+                resultLine(false, "Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again.")
+            }
+            Text("Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole).")
+                .font(Theme.ui(11))
+                .foregroundStyle(Theme.text4)
+                .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
-                Text(SetupModel.brewLine)
-                    .font(.system(size: 12, design: .monospaced))
-                    .foregroundStyle(Theme.text)
+                Text("Or in Terminal: " + SetupModel.brewLine)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(Theme.text4)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Button(copied ? "Copied" : "Copy") {
@@ -243,10 +391,6 @@ struct SetupView: View {
                 }
                 .buttonStyle(SmallButtonStyle())
             }
-            Text("Run it in Terminal (it asks for your Mac password), then log out or restart so macOS loads the drivers.")
-                .font(Theme.ui(12))
-                .foregroundStyle(Theme.text4)
-                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
         .surfaceCard()
@@ -291,7 +435,11 @@ struct SetupView: View {
                 Spacer()
             }
             if let msg = model.keyMessage { resultLine(model.keyMessageOK, msg) }
-            Text("Stored in your login Keychain and passed to the engine in its environment, never on the command line. A .env file still works when no Keychain key is set.")
+            Link("Get a free key at aistudio.google.com/apikey ↗", destination: URL(string: "https://aistudio.google.com/apikey")!)
+                .font(Theme.ui(12, 500))
+                .foregroundStyle(Theme.accent)
+            Text("Stored in your login Keychain and passed to the engine in its environment, never on the command line."
+                 + (model.engineUsesCheckout ? " A .env file still works when no Keychain key is set." : ""))
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.text4)
                 .fixedSize(horizontal: false, vertical: true)
@@ -365,12 +513,6 @@ struct SetupView: View {
         .surfaceCard()
     }
 
-    private var engineText: String {
-        if EngineLocation.overrideCommand != nil { return "An override command is in use." }
-        guard let root = model.engineRoot else { return "Choose the folder that holds the engine (.venv and the kana package)." }
-        return model.engineFound ? root.path : "No engine in \(root.path)."
-    }
-
     private var micText: String {
         switch model.micStatus {
         case .authorized: return "Granted."
@@ -384,7 +526,9 @@ struct SetupView: View {
         case .keychain: return "In use: Keychain."
         case .dotenv(let path): return "In use: \(path)."
         case .environment: return "In use: GEMINI_API_KEY from the environment."
-        case .missing: return "Paste a key below, or put GEMINI_API_KEY in the engine's .env."
+        case .missing: return model.engineUsesCheckout
+            ? "Paste a key below, or put GEMINI_API_KEY in the engine's .env."
+            : "Paste a key below. It is free to create and starts with AIza."
         }
     }
 

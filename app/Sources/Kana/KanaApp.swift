@@ -33,6 +33,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             IntroRender.run(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
             exit(0)
         }
+        // `kana --render-setup <dir>`: the Setup page in its first-launch states, offscreen.
+        if let i = CommandLine.arguments.firstIndex(of: "--render-setup"), i + 1 < CommandLine.arguments.count {
+            SetupRender.run(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+            exit(0)
+        }
+        // `kana --driver-install-dry-run`: fetch + verify the BlackHole pkgs and print the admin
+        // command the Install button would run. Installs nothing, opens no window.
+        if CommandLine.arguments.contains("--driver-install-dry-run") {
+            Task { @MainActor in
+                let status = await DriverInstaller.dryRun()
+                fflush(stdout)
+                exit(status)
+            }
+            return
+        }
         WindowPrivacy.observe()
 
         let prefs = Prefs.shared

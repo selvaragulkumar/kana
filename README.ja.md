@@ -85,13 +85,13 @@ kana にあって、他では組み合わせとして見つからなかったも
 
 ## インストール
 
-### ダウンロード (予定)
+### ダウンロード
 
-[Releases](https://github.com/selvaragulkumar/kana/releases) ページで、署名と公証を済ませた DMG と SHA-256 の `checksums.txt` を配布する予定。[docs/ROADMAP.md](docs/ROADMAP.md) を参照。それまではソースからビルドする。
+[Releases](https://github.com/selvaragulkumar/kana/releases) ページから `kana-<version>.dmg` (Apple silicon) か `kana-<version>-intel.dmg` をダウンロードし、DMG を開いて **kana** を **アプリケーション** にドラッグする。公証前のリリースは、初回だけ macOS 14 では右クリック › **開く**、macOS 15 以降ではシステム設定 › プライバシーとセキュリティ › **このまま開く** が必要。起動すると **Setup** が順番に案内する: (1) **Install audio drivers** を押し、Mac のパスワードを一度入力すると BlackHole 2ch と 16ch が入る (Existential Audio の署名付きインストーラをダウンロードし、Homebrew の cask と同じ SHA-256 を確認する。再起動は不要)。(2) [Google AI Studio](https://aistudio.google.com/apikey) で作った Gemini API キーを貼って **Save**。(3) マイクとアクセシビリティを許可する。Python などのインストールは要らない (アプリに同梱、約 140 MB)。詳しくは [英語版 README](README.md#download)。
 
 ### Homebrew (予定)
 
-BlackHole の 2 つのドライバも一緒に入る tap の cask を用意する予定。それまではソースからビルドする。
+BlackHole の 2 つのドライバも一緒に入る tap の cask を用意する予定。それまでは DMG かソースからのビルドを使う。
 
 ### ソースからビルド
 

@@ -78,9 +78,11 @@ enum KeySource: Equatable {
         return .missing
     }
 
-    /// GEMINI_API_KEY from `<engine root>/.env`, if set and non-empty.
+    /// GEMINI_API_KEY from `<engine root>/.env`, if set and non-empty. A checkout only: the
+    /// bundled engine reads no .env, its key comes from the Keychain.
     static func dotenvValue() -> String? {
-        guard let env = EngineLocation.root?.appendingPathComponent(".env"),
+        guard let resolved = EngineLocation.resolved, !resolved.bundled,
+              let env = Optional(resolved.root.appendingPathComponent(".env")),
               let text = try? String(contentsOf: env, encoding: .utf8) else { return nil }
         for raw in text.split(whereSeparator: \.isNewline) {
             var line = raw.trimmingCharacters(in: .whitespaces)

@@ -74,7 +74,7 @@ Capture never blocks. Each direction's input queue holds at most 50 chunks (5 se
 
 Between the queue and the session sits the voice-activity gate (`--vad auto`, the default, in both directions). A 100 ms chunk counts as speech when its level is above both `--vad-threshold` and three times the quietest chunk of the previous 5 seconds, so steady background noise is learnt. At speech onset the last 300 ms are released too, so word starts are not clipped. After speech ends, 2 seconds more are sent (the model needs them to finish the sentence), then one end-of-audio marker. Silence in between is not sent and not billed.
 
-The same onsets drive the latency readout and saved transcripts. An utterance runs from a speech onset until the next onset or 1.5 seconds of quiet. When it closes, the engine emits a `latency` event (onset to first translated audio, and source transcript to translated transcript) and appends one row to the saved Markdown and SRT files. The per-second `audio` event carries the median latency and the seconds the gate held back.
+The same onsets drive the latency readout and saved transcripts. An utterance runs from a speech onset until the next onset or 1.5 seconds of quiet. When it closes, the engine emits a `latency` event (onset to first translated audio, and source transcript to translated transcript). Transcript rows are paired by timing and length in `kana/pairing.py`, not by order; the app shows them by row id and the same rows are appended to the saved Markdown and SRT files once final. The per-second `audio` event carries the median latency and the seconds the gate held back.
 
 ## Why the routing cannot loop
 

@@ -1,7 +1,15 @@
 #!/bin/bash
 # Builds kana.app with Command Line Tools only (no Xcode).
-#   app/build.sh            -> app/build/kana.app
-#   app/build.sh --install  -> also copies it to /Applications and records this repo as engine_path if none is set
+#   app/build.sh                  -> app/build/kana.app (engine: a checkout, as before)
+#   app/build.sh --install        -> also copies it to /Applications and records this repo as engine_path if none is set
+#   app/build.sh --bundle-engine  -> also puts a self-contained Python engine inside the app (app/bundle_engine.sh)
+#   app/build.sh --arch x86_64    -> builds for another architecture (default: this Mac's)
+# Environment:
+#   KANA_SIGN_IDENTITY   signing identity ("-" = ad-hoc); default: "kana Local Signing" if present, else ad-hoc
+#   KANA_HARDENED=1      hardened runtime + secure timestamp + entitlements (for notarisation; release.sh sets it)
+#   KANA_REUSE_ENGINE=1  reuse app/build/engine-<arch> instead of rebuilding it
+#   KANA_BUNDLE_DRIVERS=1  put the BlackHole pkgs inside the app. Only with Existential Audio's
+#                        permission: their compiled installers are not GPL (see app/drivers/README.md).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -13,16 +21,22 @@ OUT="$HERE/build"
 APP="$OUT/$NAME.app"
 
 INSTALL=0
-for arg in "$@"; do
-  case "$arg" in
-    --install) INSTALL=1 ;;
-    *) echo "usage: $0 [--install]" >&2; exit 64 ;;
+BUNDLE_ENGINE=0
+ARCH="$(uname -m)"
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --install) INSTALL=1; shift ;;
+    --bundle-engine) BUNDLE_ENGINE=1; shift ;;
+    --arch) ARCH="${2:-}"; shift 2 ;;
+    --print-version) echo "$VERSION"; exit 0 ;;
+    *) echo "usage: $0 [--install] [--bundle-engine] [--arch arm64|x86_64]" >&2; exit 64 ;;
   esac
 done
+case "$ARCH" in arm64|x86_64) ;; *) echo "unknown arch: $ARCH" >&2; exit 64 ;; esac
 
-echo "==> swift build -c release"
-swift build -c release --package-path "$HERE"
-BIN="$(swift build -c release --package-path "$HERE" --show-bin-path)/$PRODUCT"
+echo "==> swift build -c release ($ARCH)"
+swift build -c release --arch "$ARCH" --package-path "$HERE"
+BIN="$(swift build -c release --arch "$ARCH" --package-path "$HERE" --show-bin-path)/$PRODUCT"
 
 echo "==> assembling $APP"
 rm -rf "$APP"
@@ -30,6 +44,24 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/$NAME"
 if [[ -d "$HERE/Resources" ]]; then
   cp -R "$HERE/Resources/." "$APP/Contents/Resources/"   # fonts + their OFL licences
+fi
+
+if [[ $BUNDLE_ENGINE -eq 1 ]]; then
+  ENGINE_SRC="$OUT/engine-$ARCH"
+  if [[ "${KANA_REUSE_ENGINE:-0}" != 1 || ! -x "$ENGINE_SRC/python/bin/python3" ]]; then
+    "$HERE/bundle_engine.sh" --arch "$ARCH"
+  else
+    echo "==> reusing $ENGINE_SRC"
+  fi
+  echo "==> bundling the engine"
+  mkdir -p "$APP/Contents/Resources/engine"
+  ditto "$ENGINE_SRC/python" "$APP/Contents/Resources/engine/python"
+  cp "$ENGINE_SRC/VERSION" "$ENGINE_SRC/requirements.lock.txt" "$APP/Contents/Resources/engine/"
+fi
+
+if [[ "${KANA_BUNDLE_DRIVERS:-0}" == 1 ]]; then
+  echo "==> bundling the BlackHole installers"
+  "$HERE/fetch_drivers.sh" "$APP/Contents/Resources/drivers"
 fi
 
 if [[ ! -f "$HERE/icon.png" ]]; then
@@ -81,14 +113,42 @@ IDENTITY="${KANA_SIGN_IDENTITY:-}"
 if [[ -z "$IDENTITY" ]] && security find-identity -p codesigning 2>/dev/null | grep -q '"kana Local Signing"'; then
   IDENTITY="kana Local Signing"
 fi
-if [[ -n "$IDENTITY" ]]; then
-  echo "==> codesign with \"$IDENTITY\""
-  codesign --force --deep --sign "$IDENTITY" --identifier "$BUNDLE_ID" "$APP"
-else
-  echo "==> ad-hoc codesign (no stable identity; grants reset on rebuild)"
-  codesign --force --deep --sign - --identifier "$BUNDLE_ID" "$APP"
+[[ -z "$IDENTITY" ]] && IDENTITY="-"
+SIGN=(codesign --force --sign "$IDENTITY")
+APP_ENT=()
+ENGINE_ENT=()
+if [[ "${KANA_HARDENED:-0}" == 1 ]]; then
+  SIGN+=(--options runtime --timestamp)
+  APP_ENT=(--entitlements "$HERE/entitlements/kana.entitlements")
+  ENGINE_ENT=(--entitlements "$HERE/entitlements/engine.entitlements")
 fi
-codesign --verify --strict "$APP"
+if [[ "$IDENTITY" == "-" ]]; then
+  echo "==> ad-hoc codesign (no stable identity; grants reset on rebuild)"
+else
+  echo "==> codesign with \"$IDENTITY\"${KANA_HARDENED:+ (hardened runtime)}"
+fi
+
+# Nested code first, inside out: every Mach-O in the bundled engine (extension modules,
+# dylibs, then the interpreter), because codesign --deep does not reach Contents/Resources.
+ENGINE_DIR="$APP/Contents/Resources/engine"
+if [[ -d "$ENGINE_DIR" ]]; then
+  LIBS=() EXES=()
+  while IFS= read -r -d '' f; do
+    if file -b "$f" | grep -q "Mach-O"; then
+      if [[ -x "$f" && "$f" != *.so && "$f" != *.dylib ]]; then EXES+=("$f"); else LIBS+=("$f"); fi
+    fi
+  done < <(find "$ENGINE_DIR" -type f -print0)
+  echo "    $((${#LIBS[@]})) libraries, ${#EXES[@]} executable(s) in the engine"
+  printf '%s\0' "${LIBS[@]}" | xargs -0 -n 50 "${SIGN[@]}" >/dev/null
+  for f in "${EXES[@]}"; do
+    "${SIGN[@]}" ${ENGINE_ENT[@]+"${ENGINE_ENT[@]}"} --identifier "$BUNDLE_ID.engine" "$f"
+  done
+fi
+"${SIGN[@]}" ${APP_ENT[@]+"${APP_ENT[@]}"} --identifier "$BUNDLE_ID" "$APP"
+codesign --verify --strict --deep "$APP"
+if [[ -d "$ENGINE_DIR" ]]; then
+  codesign --verify --strict "$ENGINE_DIR/python/bin/python3"
+fi
 
 if [[ $INSTALL -eq 1 ]]; then
   echo "==> installing to /Applications"
@@ -96,7 +156,8 @@ if [[ $INSTALL -eq 1 ]]; then
   cp -R "$APP" "/Applications/$NAME.app"
   echo "installed /Applications/$NAME.app"
   # An installed copy is no longer under <repo>/app/build, so record this repo as the engine
-  # folder unless the user already chose one (Setup › Engine › Change… rewrites it).
+  # folder unless the user already chose one (Setup › Engine › Change… rewrites it). A build
+  # with --bundle-engine prefers its own engine unless Setup says to use the checkout.
   ENGINE_FILE="$HOME/Library/Application Support/$NAME/engine_path"
   REPO="$(cd "$HERE/.." && pwd)"
   if [[ ! -s "$ENGINE_FILE" && -x "$REPO/.venv/bin/python" ]]; then
@@ -105,4 +166,5 @@ if [[ $INSTALL -eq 1 ]]; then
     echo "engine_path -> $REPO"
   fi
 fi
+du -sh "$APP" | awk '{print "app size: " $1}'
 echo "done: $APP"

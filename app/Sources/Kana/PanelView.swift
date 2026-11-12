@@ -182,7 +182,13 @@ struct PanelView: View {
         hotkey.recheck()
         setup.refresh()
         // The main panel never nags about BlackHole; Setup lists it. Setup opens by itself
-        // only when a start fails with a device or key error (engine.needsSetup).
+        // when a start fails with a device or key error (engine.needsSetup), and on the first
+        // open of a launch while something a new user must do is still missing (drivers, key,
+        // microphone, engine). Done dismisses it until the next launch.
+        if !setupDismissed && !engine.running && EngineLocation.overrideCommand == nil && !EngineProcess.previewMode
+            && setup.needsFirstRun(accessibility: hotkey.trusted) {
+            showSetup = true
+        }
     }
 
     // MARK: Header

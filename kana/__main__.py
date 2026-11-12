@@ -136,8 +136,8 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
     writer = None if args.no_save else TranscriptWriter(Path(args.save_dir).expanduser(),
                                                         title=f"{args.out_lang} ↔ {args.in_lang}")
 
-    def save(direction, u):
-        writer.add(direction, " ".join(u.src), " ".join(u.dst), u.first, u.last)
+    def save(direction, row):  # one row per paired source/translation (kana/pairing.py)
+        writer.add(direction, row.src_text, row.dst_text, row.first, row.last)
     tasks = []
     directions = {}
     with contextlib.ExitStack() as stack:
@@ -154,7 +154,7 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
                           is_muted=(lambda: ptt.muted) if label == "OUT" else (lambda: False),
                           dump=dumps[label], emit=emit,
                           vad=VAD(gate=args.vad == "auto", threshold=args.vad_threshold, hangover_ms=args.vad_hangover),
-                          on_utterance=save if writer else None)
+                          on_row=save if writer else None)
             directions[label] = d
             tasks.append(asyncio.create_task(d.run()))
             if kind == "file":

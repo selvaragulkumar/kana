@@ -23,6 +23,15 @@ Steps for making the repository public and tagging 0.1.0. Work top to bottom and
 - [ ] `app/build.sh` builds `kana.app`.
 - [ ] `.venv/bin/python -m pytest -m live -s` passes with a real key.
 - [ ] The app runs against `app/fake_engine.py` and against the real engine.
+- [ ] `app/build.sh --bundle-engine` builds, and the bundled engine runs from inside the app:
+  ```sh
+  P=app/build/kana.app/Contents/Resources/engine/python/bin/python3
+  (cd / && env -i PYTHONSAFEPATH=1 PYTHONDONTWRITEBYTECODE=1 "$OLDPWD/$P" -m kana --help)
+  (cd / && env -i PYTHONSAFEPATH=1 PYTHONDONTWRITEBYTECODE=1 "$OLDPWD/$P" -m kana --list-devices --json)
+  codesign --verify --strict --deep app/build/kana.app
+  ```
+- [ ] `app/build/kana.app/Contents/MacOS/kana --driver-install-dry-run` downloads and verifies both BlackHole installers and prints the admin command. It installs nothing.
+- [ ] `app/build/kana.app/Contents/MacOS/kana --render-setup /tmp/kana-setup` renders the five Setup states; look at them.
 - [ ] **First live Google Meet call.** Run one real call in each direction. Then update the "Status" line near the top of both READMEs.
 
 ## Assets
@@ -40,6 +49,17 @@ Steps for making the repository public and tagging 0.1.0. Work top to bottom and
 - [ ] **Actions:** disable them (Settings › Actions › General). The project has no workflows by decision.
 - [ ] **Issues:** on. Wiki and Projects: off unless needed.
 
+## DMG
+
+- [ ] Versions agree: `VERSION` in `app/build.sh`, `version` in `pyproject.toml`, the CHANGELOG heading.
+- [ ] BlackHole is still at the version pinned in `app/Sources/Kana/DriverInstaller.swift` and `app/fetch_drivers.sh`, with the sums from `https://formulae.brew.sh/api/cask/blackhole-2ch.json` and `…/blackhole-16ch.json`. If not, update both files and `app/drivers/` (see its README).
+- [ ] Consider a newer python-build-standalone release (pin `PBS_TAG`, `PY_VERSION` and both SHA-256 values in `app/bundle_engine.sh` from the release's `SHA256SUMS`).
+- [ ] Build: `app/release.sh --arch all` makes `dist/kana-<version>.dmg` (Apple silicon), `dist/kana-<version>-intel.dmg` and `dist/checksums.txt`. Signing identity: `KANA_SIGN_IDENTITY`, else the local "kana Local Signing" certificate, else ad-hoc.
+- [ ] Notarised build, once there is a Developer ID: `xcrun notarytool store-credentials kana-notary` once, then `KANA_SIGN_IDENTITY="Developer ID Application: … (TEAMID)" KANA_NOTARY_PROFILE=kana-notary app/release.sh --arch all`. It turns on the hardened runtime with `app/entitlements/`, notarises and staples. Without both variables the script skips notarisation and says so.
+- [ ] Mount the DMG without Finder (`hdiutil attach -nobrowse -readonly <dmg>`) and check: `kana.app` and an `Applications` link, `codesign --verify --strict --deep`, and the bundled engine command above from the mounted path.
+- [ ] Fresh-Mac test, on a Mac or VM that has never had kana, BlackHole or Python from Homebrew: download the DMG from the draft release, drag to Applications, open (Gatekeeper steps from the README if not notarised), press **Install audio drivers**, and confirm that both devices appear without a log-out. Then save a key, allow the microphone and Accessibility, and run one Meet call. Note the macOS version in the release notes.
+- [ ] Attach both DMGs and `checksums.txt` to the GitHub release. Say "not notarised: right-click › Open (macOS 14) or Privacy & Security › Open Anyway (macOS 15+)" next to the links until a Developer ID build exists.
+
 ## Tag the release
 
 - [ ] In [CHANGELOG.md](../CHANGELOG.md), turn "0.1.0 (first public release, not yet tagged)" into `## [0.1.0] - YYYY-MM-DD` and add the compare link.
@@ -48,4 +68,5 @@ Steps for making the repository public and tagging 0.1.0. Work top to bottom and
 
 ## Optional
 
-- [ ] **Apple Developer ID** (USD 99 per year) for a signed, notarised DMG with `checksums.txt`. Until then the README says "Download (coming)". See [ROADMAP.md](ROADMAP.md).
+- [ ] **Apple Developer ID** (USD 99 per year) so the DMG is notarised and opens without the Gatekeeper steps. `app/release.sh` is ready for it (see DMG above). See [ROADMAP.md](ROADMAP.md).
+- [ ] **Licence from Existential Audio** to ship the BlackHole installers inside the DMG (then `KANA_BUNDLE_DRIVERS=1 app/release.sh`, and the install works offline). Without it, Setup downloads them from the vendor. See [app/drivers/README.md](../app/drivers/README.md).

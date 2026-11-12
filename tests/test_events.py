@@ -142,8 +142,9 @@ async def test_direction_emits_transcripts_and_session_states():
             await task
     assert plain == []  # nothing plain in JSON mode
     assert rec.of("transcript") == [
-        {"dir": "in", "kind": "src", "text": "こんにちは。", "final": True},
-        {"dir": "in", "kind": "dst", "text": "Hello, nice weather.", "final": True}]
+        {"dir": "in", "kind": "src", "text": "こんにちは。", "row": 1, "row_text": "こんにちは。", "final": True},
+        {"dir": "in", "kind": "dst", "text": "Hello, nice weather.", "row": 1, "row_text": "Hello, nice weather.",
+         "final": True}]
     assert rec.of("session") == [
         {"dir": "in", "state": "connected", "detail": ""},
         {"dir": "in", "state": "reconnecting", "detail": "go_away"},

@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 
 from google.genai import types
 
+from .pairing import Pairer
 from .vad import VAD, audible
 
 DEFAULT_MODEL = "gemini-3.5-live-translate-preview"
@@ -93,6 +94,7 @@ class Utterance:
     dst_final_at: float | None = None
     src: list[str] = field(default_factory=list)
     dst: list[str] = field(default_factory=list)
+    seq: int = 0  # numbers utterances within a direction; pairing never folds text across them
 
     def touch(self, now: float) -> None:
         self.last = max(self.last, now)
@@ -116,7 +118,8 @@ class Direction:
 
     def __init__(self, label, src, dst, model, in_q, out_q=None, *, connect,
                  is_muted=lambda: False, out=print, dump=None, backoff=(1, 2, 4), emit=None,
-                 vad: VAD | None = None, on_utterance=None, clock=time.monotonic, instruction=None):
+                 vad: VAD | None = None, on_utterance=None, clock=time.monotonic, instruction=None,
+                 on_row=None):
         self.label, self.src, self.dst, self.model = label, src, dst, model
         self.in_q, self.out_q, self.connect = in_q, out_q, connect
         self.is_muted, self.out, self.dump, self.backoff = is_muted, out, dump, backoff
@@ -126,6 +129,10 @@ class Direction:
         self.on_utterance = on_utterance  # (dir, Utterance) when an utterance closes
         self.clock = clock
         self.utt: Utterance | None = None
+        self._utt_seq = 0
+        # Source/translation rows, paired by timing (kana/pairing.py); on_row(dir, Row)
+        # receives each row once it can no longer change (saved transcripts).
+        self.pairer = Pairer(on_row=(lambda r: on_row(label.lower(), r)) if on_row else None)
         self.latencies: list[int] = []
         # Server-reported tokens. Every usage_metadata message is a delta: Live
         # Translate reports each 1-2 s of streaming, the general model each turn
@@ -188,6 +195,7 @@ class Direction:
                 await pump
             self._flush()
             self.close_utterance()
+            self._seal(force=True)
 
     async def _pump(self) -> None:
         """Always drains in_q so capture never blocks; only sends while a
@@ -224,12 +232,14 @@ class Direction:
     def _onset(self) -> None:
         now = self.clock()
         self.close_utterance()
-        self.utt = Utterance(onset=now, first=now, last=now)
+        self._utt_seq += 1
+        self.utt = Utterance(onset=now, first=now, last=now, seq=self._utt_seq)
 
     def _current(self) -> Utterance:
         if self.utt is None:  # a transcript or audio with no onset seen (e.g. right after a reconnect)
             now = self.clock()
-            self.utt = Utterance(onset=None, first=now, last=now)
+            self._utt_seq += 1
+            self.utt = Utterance(onset=None, first=now, last=now, seq=self._utt_seq)
         return self.utt
 
     def maybe_close_utterance(self) -> None:
@@ -237,6 +247,15 @@ class Direction:
         if u is not None and not self.vad.speaking and self.clock() - u.last >= UTTERANCE_QUIET_S:
             self._flush()  # text without a sentence end still belongs to this utterance
             self.close_utterance()
+        self._seal()
+
+    def _seal(self, force: bool = False) -> None:
+        for op in self.pairer.seal(self.clock(), force=force):
+            self._emit_transcript(op)
+
+    def _emit_transcript(self, op: dict) -> None:
+        if self.emit is not None:
+            self.emit("transcript", dir=self.label.lower(), **op, final=True)
 
     def close_utterance(self) -> None:
         u, self.utt = self.utt, None
@@ -343,9 +362,11 @@ class Direction:
             else:
                 u.dst.append(text)
                 u.dst_final_at = now
+            pair = self.pairer.src if kind == "in" else self.pairer.dst
+            ops = pair(text, now, u.seq)
             if self.emit is not None:
-                self.emit("transcript", dir=self.label.lower(), kind="src" if kind == "in" else "dst",
-                          text=text, final=True)
+                for op in ops:
+                    self._emit_transcript(op)
             else:
                 self.out(f"{self.prefix} {'=> ' if kind == 'out' else ''}{text}")
 

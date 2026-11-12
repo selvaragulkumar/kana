@@ -12,11 +12,22 @@ enum AppID {
 }
 
 /// Where the engine lives and how to launch it. Lookup order:
-/// 1. `~/Library/Application Support/<app>/engine_path` (written by Setup's folder picker),
-/// 2. `Contents/Resources/engine/` inside the app bundle (a future bundled engine),
+/// 1. a checkout chosen in Setup (`~/Library/Application Support/<app>/engine_path`), when the
+///    user picked it over the bundled engine (defaults key `engineUseCheckout`) or when the app
+///    has no bundled engine (built from source with `build.sh --install`),
+/// 2. the bundled engine, `Contents/Resources/engine/python/bin/python3` (DMG builds),
 /// 3. the repo the running binary was built in (`<repo>/app/build/…` or `<repo>/app/.build/…`),
 /// 4. none: Setup shows "Engine not found" with a folder picker.
 enum EngineLocation {
+    /// A resolved engine: the interpreter that runs `-m kana`, and the folder it runs in.
+    struct Resolved: Equatable {
+        let python: URL
+        let root: URL
+        let bundled: Bool
+    }
+
+    static let useCheckoutKey = "engineUseCheckout"
+
     static var supportDir: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Application Support")
@@ -25,31 +36,72 @@ enum EngineLocation {
 
     static var engineFile: URL { supportDir.appendingPathComponent("engine_path") }
 
-    static var root: URL? {
-        if let raw = try? String(contentsOf: engineFile, encoding: .utf8) {
-            let path = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !path.isEmpty {
-                return URL(fileURLWithPath: (path as NSString).expandingTildeInPath, isDirectory: true)
-            }
+    /// `Contents/Resources/engine` when this app carries its own Python runtime.
+    static var bundledRoot: URL? {
+        guard let dir = Bundle.main.resourceURL?.appendingPathComponent("engine", isDirectory: true),
+              FileManager.default.isExecutableFile(atPath: bundledPython(dir).path) else { return nil }
+        return dir
+    }
+
+    private static func bundledPython(_ dir: URL) -> URL { dir.appendingPathComponent("python/bin/python3") }
+
+    /// Python version of the bundled engine, from its VERSION file ("3.13.18 20261110 arm64").
+    static var bundledVersion: String? {
+        guard let dir = bundledRoot,
+              let raw = try? String(contentsOf: dir.appendingPathComponent("VERSION"), encoding: .utf8) else { return nil }
+        return raw.split(separator: " ").first.map(String.init)
+    }
+
+    /// The checkout recorded in engine_path, if any.
+    static var checkoutRoot: URL? {
+        guard let raw = try? String(contentsOf: engineFile, encoding: .utf8) else { return nil }
+        let path = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else { return nil }
+        return URL(fileURLWithPath: (path as NSString).expandingTildeInPath, isDirectory: true)
+    }
+
+    /// The user picked a checkout over the bundled engine (Setup › Engine).
+    static var prefersCheckout: Bool {
+        get { UserDefaults.standard.bool(forKey: useCheckoutKey) }
+        set { UserDefaults.standard.set(newValue, forKey: useCheckoutKey) }
+    }
+
+    static var resolved: Resolved? {
+        let bundled = bundledRoot
+        if let checkout = checkoutRoot, prefersCheckout || bundled == nil {
+            return Resolved(python: checkout.appendingPathComponent(".venv/bin/python"), root: checkout, bundled: false)
         }
-        if let bundled = Bundle.main.resourceURL?.appendingPathComponent("engine", isDirectory: true),
-           isDirectory(bundled) {
-            return bundled
+        if let bundled {
+            // The bundle is read-only and signed: the engine runs in the support folder.
+            return Resolved(python: bundledPython(bundled), root: supportDir, bundled: true)
         }
         let exe = Bundle.main.executableURL?.resolvingSymlinksInPath().path ?? ""
         for marker in ["/app/build/", "/app/.build/"] {
             if let r = exe.range(of: marker) {
-                return URL(fileURLWithPath: String(exe[..<r.lowerBound]), isDirectory: true)
+                let repo = URL(fileURLWithPath: String(exe[..<r.lowerBound]), isDirectory: true)
+                return Resolved(python: repo.appendingPathComponent(".venv/bin/python"), root: repo, bundled: false)
             }
         }
         return nil
     }
 
-    /// Validates a chosen folder (has `.venv/bin/python` and an engine package) and records it.
+    /// The engine folder: a checkout, or the support folder for the bundled engine. `.env` lives here.
+    static var root: URL? { resolved?.root }
+
+    /// An engine can be launched.
+    static var found: Bool {
+        if overrideCommand != nil { return true }
+        guard let r = resolved else { return false }
+        return r.bundled || usable(r.root)
+    }
+
+    /// Validates a chosen folder (has `.venv/bin/python` and an engine package), records it and
+    /// uses it from now on, also over a bundled engine.
     static func choose(_ folder: URL) throws {
         guard usable(folder) else { throw EngineError.notAnEngine(folder.path) }
         try FileManager.default.createDirectory(at: supportDir, withIntermediateDirectories: true)
         try (folder.path + "\n").write(to: engineFile, atomically: true, encoding: .utf8)
+        prefersCheckout = true
     }
 
     static func usable(_ folder: URL) -> Bool {
@@ -76,28 +128,46 @@ enum EngineLocation {
     /// when no engine is found.
     static func makeProcess(arguments: [String], extraEnv: [String: String] = [:]) throws -> Process {
         let p = Process()
-        let root = self.root
+        let resolved = self.resolved
+        var env = ProcessInfo.processInfo.environment
         if let cmd = overrideCommand {
             // `sh -c '<cmd> "$@"' name args...` keeps the override's own quoting and appends ours.
             p.executableURL = URL(fileURLWithPath: "/bin/sh")
             p.arguments = ["-c", "exec \(cmd) \"$@\"", "engine"] + arguments
         } else {
-            guard let root else { throw EngineError.notFound }
-            let python = root.appendingPathComponent(".venv/bin/python")
-            guard FileManager.default.isExecutableFile(atPath: python.path) else {
-                throw EngineError.missingPython(python.path)
+            guard let resolved else { throw EngineError.notFound }
+            guard FileManager.default.isExecutableFile(atPath: resolved.python.path) else {
+                throw EngineError.missingPython(resolved.python.path)
             }
-            p.executableURL = python
+            p.executableURL = resolved.python
             p.arguments = ["-m", AppID.engineModule] + arguments
+            if resolved.bundled {
+                // Self-contained: nothing from the user's own Python setup leaks in, and no
+                // bytecode is written into the signed bundle (it ships precompiled).
+                for name in ["PYTHONPATH", "PYTHONHOME", "PYTHONSTARTUP", "PYTHONUSERBASE", "VIRTUAL_ENV"] {
+                    env.removeValue(forKey: name)
+                }
+                env["PYTHONNOUSERSITE"] = "1"
+                env["PYTHONDONTWRITEBYTECODE"] = "1"
+                env["PYTHONSAFEPATH"] = "1"
+                try? FileManager.default.createDirectory(at: resolved.root, withIntermediateDirectories: true)
+            }
         }
-        if let root, isDirectory(root) { p.currentDirectoryURL = root }
-        var env = ProcessInfo.processInfo.environment
+        if let root = resolved?.root, isDirectory(root) { p.currentDirectoryURL = root }
         env["PYTHONUNBUFFERED"] = "1"
         env["PYTHONIOENCODING"] = "utf-8"
         for name in AppID.engineCommandEnv { env.removeValue(forKey: name) }
         env.merge(extraEnv) { _, new in new }
         p.environment = env
         return p
+    }
+
+    /// One line for Setup › Engine.
+    static var summary: String {
+        if overrideCommand != nil { return "An override command is in use." }
+        guard let r = resolved else { return "Choose the folder that holds the engine (.venv and the kana package)." }
+        if r.bundled { return "Built in" + (bundledVersion.map { " (Python \($0))" } ?? "") + "." }
+        return usable(r.root) ? r.root.path : "No engine in \(r.root.path)."
     }
 }
 
@@ -512,7 +582,8 @@ final class EngineProcess: ObservableObject {
             talking = e.on ?? false
         case "transcript":
             guard let dir = Direction(rawValue: e.dir ?? ""), let text = e.text, !text.isEmpty else { return }
-            addTranscript(dir: dir, kind: e.kind ?? "src", text: text)
+            addTranscript(dir: dir, kind: e.kind ?? "src", text: text,
+                          row: e.row, rowText: e.row_text, mergeInto: e.merge_into)
         case "session":
             let state = SessionState(rawValue: e.state ?? "") ?? .none
             if e.dir == "in" { inState = state } else if e.dir == "out" { outState = state }
@@ -546,9 +617,45 @@ final class EngineProcess: ObservableObject {
         }
     }
 
-    /// Pairs source and translation lines into rows. A `src` opens a row in its direction;
-    /// a `dst` fills the oldest row in that direction still missing its translation.
-    private func addTranscript(dir: Direction, kind: String, text: String) {
+    /// Places a transcript line. The engine pairs sources with translations (kana/pairing.py)
+    /// and names the row: `row` is the row in this direction, `row_text` that side of it after
+    /// the change, and `merge_into` means row `row` was folded into another row.
+    /// Events without `row` (an older engine) open or fill rows in order.
+    private func addTranscript(dir: Direction, kind: String, text: String,
+                               row: Int?, rowText: String?, mergeInto: Int?) {
+        guard let row else { return addTranscriptInOrder(dir: dir, kind: kind, text: text) }
+        if let into = mergeInto {
+            rows.removeAll { $0.dir == dir && $0.key == row }
+            if let i = rows.firstIndex(where: { $0.dir == dir && $0.key == into }) {
+                rows[i].src = rowText ?? joined(rows[i].src, text)
+                rows[i].updatedAt = Date()
+            }
+            return
+        }
+        if let i = rows.firstIndex(where: { $0.dir == dir && $0.key == row }) {
+            if kind == "dst" {
+                rows[i].dst = rowText ?? joined(rows[i].dst, text)
+            } else {
+                rows[i].src = rowText ?? joined(rows[i].src, text)
+            }
+            rows[i].updatedAt = Date()
+        } else {
+            let side = rowText ?? text
+            rows.append(TranscriptRow(dir: dir, src: kind == "dst" ? "" : side, dst: kind == "dst" ? side : "",
+                                      key: row))
+        }
+        trimRows()
+    }
+
+    private func joined(_ a: String, _ b: String) -> String { a.isEmpty ? b : a + " " + b }
+
+    private func trimRows() {
+        if rows.count > Self.maxRows { rows.removeFirst(rows.count - Self.maxRows) }
+    }
+
+    /// Fallback for events without row ids: a `src` opens a row; a `dst` fills the oldest row
+    /// in that direction still missing its translation.
+    private func addTranscriptInOrder(dir: Direction, kind: String, text: String) {
         if kind == "dst" {
             if let i = rows.firstIndex(where: { $0.dir == dir && $0.dst.isEmpty }) {
                 rows[i].dst = text
@@ -564,7 +671,7 @@ final class EngineProcess: ObservableObject {
                 rows.append(TranscriptRow(dir: dir, src: text, dst: ""))
             }
         }
-        if rows.count > Self.maxRows { rows.removeFirst(rows.count - Self.maxRows) }
+        trimRows()
     }
 
     // MARK: Devices

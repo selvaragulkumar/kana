@@ -104,10 +104,42 @@ latest resumption handle.
 **`transcript`**: one finished sentence. `kind` is `src` for what was heard and `dst` for what
 the model spoke. A sentence is flushed when it ends with `. ? ! 。 ？ ！`, when the model ends its
 turn, when the connection drops, or when its utterance closes. `final` is always `true`.
+`row` is the transcript row the sentence belongs to (numbered from 1 per direction) and
+`row_text` is that side of the row after it was added, so the app sets it and never pairs.
 ```json
-{"t": 1794481308.975, "ev": "transcript", "dir": "in", "kind": "src", "text": "こんにちは。今日は天気がいいですね。", "final": true}
-{"t": 1794481309.378, "ev": "transcript", "dir": "in", "kind": "dst", "text": "Hello. Today the weather is nice, isn't it?", "final": true}
+{"t": 1794481308.975, "ev": "transcript", "dir": "in", "kind": "src", "text": "こんにちは。今日は天気がいいですね。", "row": 1, "row_text": "こんにちは。今日は天気がいいですね。", "final": true}
+{"t": 1794481309.378, "ev": "transcript", "dir": "in", "kind": "dst", "text": "Hello. Today the weather is nice, isn't it?", "row": 1, "row_text": "Hello. Today the weather is nice, isn't it?", "final": true}
 ```
+A `src` event with `merge_into` moves a sentence that was shown as its own row: row `row` is
+removed and `row_text` is the new source side of row `merge_into`. This happens when the model
+translated a short tag such as "Right?" together with the sentence before it:
+```json
+{"t": 1794481312.004, "ev": "transcript", "dir": "out", "kind": "src", "text": "Right?", "row": 4, "merge_into": 3, "row_text": "I think it's sort of slow. Right?", "final": true}
+```
+
+### Pairing
+
+The model does not translate sentence by sentence, so the engine pairs sources and translations
+by timing and length (`kana/pairing.py`), not by order. When a translation arrives:
+
+1. If the last row's translation has no sentence end yet, it continues that row.
+2. If no source is waiting, it is the second half of a split translation (the last row's
+   translation is still much shorter than its source and came under 4 s ago) or a row of its own.
+   A source that comes within 4 s and fits its length fills that row (the translation was early).
+3. While two or more sources wait, the oldest is short (3 words or 6 CJK characters at most), it
+   ended before the row above got its translation, both are in the same utterance, and the new
+   translation fits it badly by length but the next one better: it is folded into the row above.
+4. While two or more sources wait and the oldest is stale (3 s older than the measured lag, with
+   the next one ended at least a lag later and half a lag ago), and the translation is not a clear
+   length match for it: it is left untranslated (a dropped translation).
+5. If the row above is still short of its translation and this one completes it while fitting
+   the oldest waiting source badly, it is appended to the row above (a split).
+6. Otherwise it goes to the oldest waiting source.
+
+A source with no sentence end (cut by a turn end or a reconnect) is continued by the next source.
+A row is final 12 s after its last change; a short source still waiting then is folded into the
+row above if that row's translation arrived after it. Nothing is dropped, and nothing is folded
+across utterances.
 
 **`latency`**: sent once per utterance, when it closes. Either field is `null` when it could not
 be measured. The definitions are below.
@@ -232,8 +264,7 @@ Measured on a 3 s Japanese sentence with 8 s of silence on each side, inbound on
 An **utterance** runs from a voice-activity onset until the next onset, or until 1.5 s pass with
 no new transcript or audible model audio while the speaker is silent. Text and audio that arrive
 with no onset, for example right after a reconnect, open an utterance with no onset. When an
-utterance closes, its unfinished sentences are flushed into it, a `latency` event is sent, and a
-transcript row is saved.
+utterance closes, its unfinished sentences are flushed into it and a `latency` event is sent.
 
 - **`onset_to_audio_ms`** is the time from the onset to the first audible audio received from the
   model. Audible means any sample above 64. The model streams digital silence between
@@ -246,8 +277,9 @@ transcript row is saved.
 ## Saved transcripts
 
 At start the engine creates `<save-dir>/transcripts/YYYY-MM-DD-HHMM.md` and `.srt`, named by
-local start time. If those names exist, it adds `-2`, `-3` and so on. A row is appended and
-flushed as each utterance closes, so a crash loses at most the utterance in progress.
+local start time. If those names exist, it adds `-2`, `-3` and so on. The rows are the same
+rows the app shows (see Pairing). A row is appended and flushed once it is final, 12 s after its
+last change, and all rows when the run ends, so a crash loses at most the last 12 s.
 
 Markdown, with ↓ for inbound and ↑ for outbound:
 ```markdown
@@ -260,8 +292,8 @@ ja ↔ en
 | 20:01:44 | ↓ | こんにちは。今日は天気がいいですね。 | Hello. Today the weather is nice, isn't it? |
 ```
 
-SRT: an index, a time range relative to the start of the run from the utterance's first event to
-its last event (at least 0.5 s long), and the text "source → translation":
+SRT: an index, a time range relative to the start of the run from the row's first sentence to
+its last (at least 0.5 s long), and the text "source → translation":
 ```
 1
 00:00:08,144 --> 00:00:13,850

@@ -14,17 +14,26 @@ These files are copied into `kana.app/Contents/Resources/Fonts/` by `app/build.s
 
 The OFL allows bundling the fonts with software. The fonts are not sold on their own, and their reserved names are not used for anything else.
 
-## Installed by the user, never bundled
+## Bundled inside the DMG build of kana.app
+
+`app/release.sh` (via `app/bundle_engine.sh`) puts a Python runtime and the engine's dependencies into `kana.app/Contents/Resources/engine/python/`. Each keeps its licence: the CPython licence is at `lib/python3.13/LICENSE.txt` and each package's licence files are in `lib/python3.13/site-packages/<package>.dist-info/`. The exact versions are listed in `Contents/Resources/engine/requirements.lock.txt`.
+
+| Component | Licence | Source |
+|---|---|---|
+| CPython 3.13, built by [python-build-standalone](https://github.com/astral-sh/python-build-standalone) | PSF License (CPython); python-build-standalone is MPL-2.0 (build scripts only). The runtime includes OpenSSL (Apache-2.0), SQLite (public domain), libffi (MIT), XZ (0BSD), zlib (Zlib), bzip2 (bzip2 licence), libedit/ncurses (BSD/MIT-style) | [python.org](https://www.python.org/), [github.com/astral-sh/python-build-standalone](https://github.com/astral-sh/python-build-standalone) |
+| The Python packages listed under [Python engine dependencies](#python-engine-dependencies) and their dependencies (pydantic, httpx2, websockets, cryptography, cffi, google-auth and others) | each its own: MIT, BSD, Apache-2.0 | PyPI |
+
+## Installed on the user's request, never bundled
 
 | Component | Licence | How it gets onto your Mac |
 |---|---|---|
-| [BlackHole](https://github.com/ExistentialAudio/BlackHole) 2ch and 16ch virtual audio drivers, by Existential Audio | [GPL-3.0](https://github.com/ExistentialAudio/BlackHole/blob/master/LICENSE) | You install them with the official Homebrew casks: `brew install --cask blackhole-2ch blackhole-16ch`. |
+| [BlackHole](https://github.com/ExistentialAudio/BlackHole) 2ch and 16ch virtual audio drivers, by Existential Audio | Source: [GPL-3.0](app/drivers/BlackHole-LICENSE.txt). Official compiled installers: all rights reserved by Existential Audio | Setup's **Install audio drivers** downloads Existential Audio's official installers from `existential.audio` (the URLs and SHA-256 of the Homebrew casks) and runs them with your password. Or install them yourself: `brew install --cask blackhole-2ch blackhole-16ch`. |
 
-kana does not contain, modify, fork or redistribute any BlackHole code or binary. It only opens the two devices by name through the normal macOS audio APIs, like any other audio app. If a future release ever ships a driver of its own, that component will be distributed under GPL-3.0 with its source.
+kana does not contain, modify or fork any BlackHole code, and the DMG does not contain the BlackHole installers: their licence reserves the compiled installers, so kana fetches them from the vendor on the user's request, as Homebrew does. kana only opens the two devices by name through the normal macOS audio APIs. Source for BlackHole 0.7.1: [github.com/ExistentialAudio/BlackHole/tree/v0.7.1](https://github.com/ExistentialAudio/BlackHole/tree/v0.7.1). Details: [app/drivers/README.md](app/drivers/README.md).
 
 ## Python engine dependencies
 
-Installed into your virtual environment by `pip` from PyPI. They are not vendored in this repository.
+Installed into your virtual environment by `pip` from PyPI for a source build, or into the app's own runtime for the DMG. They are not vendored in this repository.
 
 | Package | Licence | Source |
 |---|---|---|

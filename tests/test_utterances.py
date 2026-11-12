@@ -183,7 +183,7 @@ async def test_reconnect_chaos_mid_utterance(tmp_path):
     in_q, out_q = asyncio.Queue(), asyncio.Queue()
     d = Direction("IN", "ja", "en", "m-translate", in_q, out_q, connect=connect, emit=rec, clock=clock,
                   backoff=(0.3,), vad=VAD(hangover_ms=400),
-                  on_utterance=lambda dir_, u: writer.add(dir_, " ".join(u.src), " ".join(u.dst), u.first, u.last))
+                  on_row=lambda dir_, r: writer.add(dir_, r.src_text, r.dst_text, r.first, r.last))
     fed = [tone(amp=3000 + 10 * k) for k in range(40)]  # every chunk distinct
     assert len(set(fed)) == len(fed)
     task = asyncio.create_task(d.run())
@@ -235,15 +235,16 @@ async def test_reconnect_chaos_mid_utterance(tmp_path):
     assert "socket dropped" in rec.of("session")[1]["detail"]
 
     texts = [(t["kind"], t["text"]) for t in rec.of("transcript")]
+    assert [t["row"] for t in rec.of("transcript")] == [1, 1, 2, 2, 2]  # the cut sentence continues its row
     assert texts == [("src", "一つ目の文です。"), ("dst", "First sentence."), ("src", "二つ目の"),
                      ("src", "文です。"), ("dst", "Second sentence.")]
     md_rows = [l for l in writer.md.read_text().splitlines() if l.startswith("| ") and "↓" in l]
     srt_blocks = [b for b in writer.srt.read_text().split("\n\n") if b.strip()]
-    assert len(md_rows) == len(srt_blocks) == len(rec.of("latency")) >= 1
+    assert len(md_rows) == len(srt_blocks) == 2
     assert [int(b.split("\n")[0]) for b in srt_blocks] == list(range(1, len(srt_blocks) + 1))
     # every sentence saved exactly once; the sentence cut by the drop stays one row
     assert [r.split(" | ", 2)[2] for r in md_rows] == ["一つ目の文です。 | First sentence. |",
-                                                        "二つ目の 文です。 | Second sentence. |"]
+                                                        "二つ目の文です。 | Second sentence. |"]
     for b in srt_blocks:
         a, z = re.match(r"\d+\n(\S+) --> (\S+)\n", b).groups()
         assert a < z

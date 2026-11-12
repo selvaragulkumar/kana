@@ -13,7 +13,7 @@ Already shipped in 0.1.0 and therefore not listed: the Setup doctor, the Keychai
 ## Distribution
 
 4. **Bundled Python.** Ship the engine inside the app with python-build-standalone and vendored wheels. The app already looks for a bundled engine. *Why:* no venv and no Homebrew Python, which a downloadable app needs.
-5. **Notarised DMG.** Developer ID signing, notarisation, a DMG and `checksums.txt` on each release. *Why:* no Gatekeeper warning, and macOS stops forgetting the Accessibility grant after every rebuild.
+5. **Notarised DMG.** `app/release.sh` already builds the DMG (bundled engine, one-click drivers) and `checksums.txt`, and notarises when given a Developer ID; what is missing is the Developer ID itself. *Why:* no Gatekeeper warning, and macOS stops forgetting the Accessibility grant after every rebuild.
 6. **Homebrew tap.** `brew install --cask` from a tap that depends on the BlackHole casks. *Why:* one line installs the app and both drivers.
 7. **Sparkle updates.** In-app updates from an appcast published with each release. *Why:* users get fixes without visiting GitHub.
 

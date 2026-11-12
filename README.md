@@ -78,23 +78,32 @@ What kana does that we did not find combined anywhere else:
 | What | Version or detail |
 |---|---|
 | macOS | 14 Sonoma or later |
-| Mac | Apple silicon (verified); Intel untested |
-| Python | 3.13 (for the engine) |
-| Xcode Command Line Tools | for building the app (`xcode-select --install`); full Xcode is not needed |
-| [Homebrew](https://brew.sh) | to install BlackHole |
-| BlackHole 2ch and BlackHole 16ch | free virtual audio drivers ([BlackHole](https://github.com/ExistentialAudio/BlackHole), GPL-3.0, installed separately) |
+| Mac | Apple silicon (verified); an Intel DMG is built but untested |
+| BlackHole 2ch and BlackHole 16ch | free virtual audio drivers ([BlackHole](https://github.com/ExistentialAudio/BlackHole), GPL-3.0); kana's Setup installs them with one click |
+| Python 3.13, Xcode Command Line Tools, [Homebrew](https://brew.sh) | only when building from source; the DMG carries its own Python |
 | Gemini API key | from [Google AI Studio](https://aistudio.google.com/apikey); Google bills your account |
 | Earphones | required; speakers let the interpretation leak back into your mic |
 
 ## Install
 
-### Download (coming)
+### Download
 
-A signed and notarised DMG on the [Releases](https://github.com/selvaragulkumar/kana/releases) page, with a `checksums.txt` of SHA-256 sums, is planned. See [docs/ROADMAP.md](docs/ROADMAP.md). Until then, build from source.
+1. Download `kana-<version>.dmg` (Apple silicon) or `kana-<version>-intel.dmg` from the [Releases](https://github.com/selvaragulkumar/kana/releases) page. `checksums.txt` next to it has the SHA-256 sums.
+2. Open the DMG and drag **kana** onto **Applications**.
+3. Open kana from Applications. Until releases are notarised, macOS blocks the first open of a downloaded app:
+   - macOS 14: right-click (or Control-click) kana › **Open** › **Open**.
+   - macOS 15 and later: open it once, then go to System Settings › Privacy & Security, press **Open Anyway** next to kana, and confirm.
+4. kana sits in the menu bar. Its panel opens with **Setup**, one step at a time:
+   1. **Audio drivers.** Press **Install audio drivers** and enter your Mac password once. kana downloads Existential Audio's signed BlackHole 2ch and 16ch installers (about 200 KB, checked against the Homebrew casks' SHA-256 and the vendor's signature), installs both and reloads macOS audio, so no restart is needed. If the devices still do not appear, Setup says so: restart the Mac.
+   2. **Gemini API key.** Create a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey), paste it and press **Save**. It goes into your login Keychain.
+   3. **Permissions.** Allow the microphone, and turn on kana in Accessibility for the ⌃⌥Space hotkey.
+5. Set Meet's microphone to BlackHole 2ch and its speakers to BlackHole 16ch (see [Wiring](#wiring)), put on earphones and press **Start**.
+
+The app is about 140 MB because it carries its own Python 3.13 runtime and the engine; nothing else is installed besides the two drivers.
 
 ### Homebrew (coming)
 
-A cask in a tap that also installs both BlackHole drivers is planned. Until then, build from source.
+A cask in a tap that also installs both BlackHole drivers is planned. Until then, use the DMG or build from source.
 
 ### Build from source
 
@@ -115,6 +124,8 @@ open /Applications/kana.app
 
 `build.sh --install` records this checkout as the engine folder, unless one is already set. If you move the checkout, pick the folder again on the app's Setup page.
 
+A DMG build carries its own engine and uses it. To run a checkout with it instead (engine development), press **Use a Checkout…** under Setup › Engine and pick the folder; **Use Built-in** switches back. To build the DMG yourself: `app/release.sh` (see [docs/RELEASE_CHECKLIST.md](docs/RELEASE_CHECKLIST.md)).
+
 **API key.** Open **Setup…** from the panel's ••• menu, paste your Gemini key and press **Save**. The key goes into your login Keychain. For the command line, or as a fallback when no Keychain key is set, the engine also reads a `.env` file:
 
 ```sh
@@ -124,7 +135,7 @@ chmod 600 .env
 
 `sounddevice` ships its own PortAudio library on macOS, so no separate PortAudio install is needed. Install `ffmpeg` (`brew install ffmpeg`) only if you want to run the tests or the WAV examples below.
 
-The app is ad-hoc signed. The first time, macOS may ask you to confirm opening it.
+A source build is signed with your local "kana Local Signing" certificate if you have one, otherwise ad-hoc. The first time, macOS may ask you to confirm opening it.
 
 ## Wiring
 
@@ -149,7 +160,7 @@ Set the meeting app once:
 
 Leave the macOS sound output on your earphones (System Settings › Sound › Output). In kana, pick your real microphone and your earphones. The two BlackHole devices are fixed and need no setting.
 
-The app's **Setup** page, under ••• › **Setup…**, checks the wiring for you. It also opens by itself when a start fails with a device or key error. The main panel does not show routing or BlackHole warnings; Setup does. It shows both BlackHole devices, microphone and Accessibility access, the key, the meeting settings and the install line. **Test devices** plays a 1-second tone into each BlackHole device and listens for it. Do not run it during a call.
+The app's **Setup** page, under ••• › **Setup…**, checks the wiring for you. It also opens by itself on the first open after a launch while a driver, the key or microphone access is missing, and when a start fails with a device or key error. The main panel does not show routing or BlackHole warnings; Setup does. It shows the three first-run steps (audio drivers with the **Install audio drivers** button, the key, microphone and Accessibility access), the meeting settings and the engine in use. **Test devices** plays a 1-second tone into each BlackHole device and listens for it. Do not run it during a call.
 
 Zoom and Teams need the same two settings as Meet, but we have not tried them yet.
 
@@ -177,7 +188,7 @@ A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in 
 
 **Transcripts.** Each call is saved as Markdown and SRT unless you turn off **Save transcripts** in the ••• menu. **Open Last Transcript** and **Transcripts Folder** are in the same menu.
 
-**Setup.** ••• › **Setup…** shows both BlackHole devices with the install line, a loopback test, the engine folder, the microphone and Accessibility permissions, and the API key. See [Wiring](#wiring).
+**Setup.** ••• › **Setup…** walks through three steps: both BlackHole devices with a one-click install and a loopback test, the API key, and the microphone and Accessibility permissions. Below them are the meeting settings and the engine (built in, or a checkout). See [Wiring](#wiring).
 
 <p align="center"><img src="docs/images/setup.png" width="360" alt="The Setup page with BlackHole 16ch missing and the install line"></p>
 
@@ -240,9 +251,9 @@ Tell the other people in the call that their audio goes to an interpreting servi
 | Component | Host | What for |
 |---|---|---|
 | Engine (Python) | `generativelanguage.googleapis.com` | the two Gemini Live sessions (WebSocket over TLS) |
-| App (Swift) | none | it only talks to the engine over stdin and stdout |
+| App (Swift) | `existential.audio` | only when you press **Install audio drivers**: downloads the two BlackHole installers (the URLs the Homebrew casks use) |
 
-There is no telemetry, no analytics, no crash reporting and no update check. Installing from source also contacts Homebrew, GitHub and PyPI, as any install does.
+Otherwise the app only talks to the engine over stdin and stdout. There is no telemetry, no analytics, no crash reporting and no update check. Installing from source also contacts Homebrew, GitHub and PyPI, as any install does.
 
 ## Models
 
@@ -298,7 +309,7 @@ Full measurements are in [docs/ENGINE.md](docs/ENGINE.md#cost).
 - **Reconnects drop audio.** Sessions are renewed about every 10 minutes. Speech during the second or two of a reconnect is not interpreted.
 - **The voice gate is energy-based.** Steady background noise is learnt within about 5 seconds, but loud or changing noise can still count as speech and be sent. A very quiet speaker can be held back. Raise or lower `--vad-threshold`, or use `--vad off`.
 - **Transcripts are plain files.** Saved transcripts are not encrypted. Anyone with access to your user account can read them.
-- **Not notarised yet.** Builds are signed with a local certificate when you have one (`build.sh` uses `KANA_SIGN_IDENTITY`, or a certificate named "kana Local Signing"), which keeps macOS permission grants across rebuilds. Without one the app is ad-hoc signed, and macOS may forget the Accessibility grant after each rebuild; switch it off and on again if the hotkey stops working.
+- **Not notarised yet.** Releases are not signed with an Apple Developer ID, so the first open needs the Gatekeeper steps under [Download](#download). Source builds are signed with a local certificate when you have one (`build.sh` uses `KANA_SIGN_IDENTITY`, or a certificate named "kana Local Signing"), which keeps macOS permission grants across rebuilds; an ad-hoc signed build can make macOS forget the Accessibility grant, so switch it off and on again if the hotkey stops working.
 - **macOS only.**
 
 ## Repository layout
@@ -316,7 +327,12 @@ kana/
 ├── app/                  Swift menu-bar app
 │   ├── Sources/          panel, caption strip, Setup, Keychain, engine process, hotkey, brand
 │   ├── Resources/Fonts/  Inter, Noto Sans JP and Space Grotesk (SIL OFL), bundled into the app
-│   ├── build.sh          builds kana.app with Command Line Tools only
+│   ├── build.sh          builds kana.app with Command Line Tools only (--bundle-engine: with its own Python)
+│   ├── bundle_engine.sh  relocatable Python 3.13 + the engine, from python-build-standalone
+│   ├── release.sh        the DMG: build, sign, optional notarisation, checksums
+│   ├── fetch_drivers.sh  BlackHole installers into the app (only with Existential Audio's permission)
+│   ├── drivers/          BlackHole licence and why the installers are downloaded, not shipped
+│   ├── entitlements/     hardened-runtime entitlements for notarised builds
 │   ├── fake_engine.py    stands in for the engine when testing the app
 │   └── icon.png          app icon, rendered from design/kana-app-icon.svg
 ├── design/               logo, mark, menu-bar template and app icon (SVG), design notes
@@ -343,13 +359,23 @@ tccutil reset Accessibility com.selvaragulkumar.kana
 tccutil reset Microphone com.selvaragulkumar.kana
 ```
 
-Set your meeting apps back to your real microphone and speaker first, then remove the drivers if nothing else uses them:
+Set your meeting apps back to your real microphone and speaker first, then remove the drivers if nothing else uses them. If Homebrew installed them:
 
 ```sh
 brew uninstall --cask blackhole-2ch blackhole-16ch
 ```
 
-Finally, delete the cloned folder (it may hold a `.env`) and, if you no longer need it, delete the API key in Google AI Studio.
+If kana's Setup installed them:
+
+```sh
+rm -rf ~/Library/Caches/kana
+sudo rm -rf /Library/Audio/Plug-Ins/HAL/BlackHole2ch.driver /Library/Audio/Plug-Ins/HAL/BlackHole16ch.driver
+sudo pkgutil --forget audio.existential.BlackHole2ch
+sudo pkgutil --forget audio.existential.BlackHole16ch
+sudo killall coreaudiod
+```
+
+Finally, delete the cloned folder if you built from source (it may hold a `.env`) and, if you no longer need it, delete the API key in Google AI Studio.
 
 ## 日本語
 

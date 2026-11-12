@@ -108,10 +108,13 @@ def main():
     lat = {"in": [], "out": []}
     srt_n = [0]
 
+    rows = {"in": 0, "out": 0}
+
     def utterance(d, src, dst, onset_ms):
-        emit("transcript", dir=d, kind="src", text=src, final=True)
+        rows[d] += 1  # the real engine pairs by timing and names the row (kana/pairing.py)
+        emit("transcript", dir=d, kind="src", text=src, row=rows[d], row_text=src, final=True)
         time.sleep(0.4)
-        emit("transcript", dir=d, kind="dst", text=dst, final=True)
+        emit("transcript", dir=d, kind="dst", text=dst, row=rows[d], row_text=dst, final=True)
         lat[d].append(onset_ms)
         emit("latency", dir=d, onset_to_audio_ms=onset_ms, src_final_to_dst_final_ms=400 + onset_ms // 6)
         recv[d] += 2.0
