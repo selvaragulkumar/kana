@@ -42,6 +42,7 @@ Installed into your virtual environment by `pip` from PyPI for a source build, o
 | PortAudio (shipped inside the sounddevice wheel on macOS as `libportaudio.dylib`) | PortAudio licence (MIT-style) | [portaudio.com](https://www.portaudio.com/license.html), [github.com/PortAudio/portaudio](https://github.com/PortAudio/portaudio) |
 | [numpy](https://pypi.org/project/numpy/) | BSD-3-Clause (with bundled parts under 0BSD, MIT, Zlib, CC0-1.0) | [github.com/numpy/numpy](https://github.com/numpy/numpy) |
 | [python-dotenv](https://pypi.org/project/python-dotenv/) | BSD-3-Clause | [github.com/theskumar/python-dotenv](https://github.com/theskumar/python-dotenv) |
+| [websockets](https://pypi.org/project/websockets/) (the OpenAI provider's connection) | BSD-3-Clause | [github.com/python-websockets/websockets](https://github.com/python-websockets/websockets) |
 
 `google-genai` pulls in its own dependencies (for example `httpx`, `pydantic`, `websockets`, `google-auth`). Run `pip-licenses` or `pip show <name>` inside the venv for the full transitive list.
 

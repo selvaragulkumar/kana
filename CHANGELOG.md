@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- **OpenAI as a second engine (opt-in).** `--provider openai` (or `--model gpt-realtime-translate`) runs both directions on OpenAI's realtime translation model over its websocket, with the same voice gate, transcripts, pairing, latency events and playback. It needs `OPENAI_API_KEY` (a missing key is one fatal error); `--env-file` reads keys from another `.env`. Cost is priced at $0.034 per minute of audio sent and marked `est: true` on `usage` and `audio` events, because the endpoint reports no usage. No register control: `--register business` is refused on it. Gemini stays the default and is unchanged.
+- `tools/latency_bench.py --provider openai` measures it on the same clips.
+- App: ••• › Engine (Gemini / OpenAI), persisted; an optional OpenAI key card in Setup, stored in the login Keychain (account `OPENAI_API_KEY`); Business keigo is disabled while OpenAI is chosen, and the cost shows "est.".
+
 ### 0.1.0 (first public release, not yet tagged)
 
 #### Added
@@ -42,6 +48,8 @@ App (`kana.app`, SwiftUI, macOS 14+):
 
 - **One-shot install.** `app/release.sh` builds a DMG with the Python engine bundled inside `kana.app` (`app/bundle_engine.sh`, a pinned relocatable Python 3.13), so no Homebrew, Python or terminal is needed. First launch runs a Setup flow: one click downloads and installs both BlackHole drivers with a single administrator prompt (installer SHA-256 and signer checked), then the Gemini key, then microphone and Accessibility access. `kana --driver-install-dry-run` prints the admin command without installing.
 - **Playback catch-up** (`--catch-up on`, the default). While playback is behind the model, its streamed silence is skipped, so the first translated audio arrives sooner: median speech onset to audio 1954 → 1632 ms (en→ja) and 2360 → 1961 ms (ja→en) in the benchmark. `tools/latency_bench.py` and `docs/LATENCY.md` hold the method, every candidate tried and the numbers.
+- **Faster meeting capture** (`--capture-latency low`, the default). The BlackHole 16ch input opens at PortAudio latency `low` with 10 ms blocks, collected into 100 ms chunks, so each chunk of meeting audio reaches the model about 60 ms sooner (67 → 7 ms after its last sample, measured on the BlackHole loopback with `tools/capture_latency.py`). Microphones keep the defaults. `--capture-latency default` restores the old capture.
+- **`--backend developer|vertex`** (default `developer`). `vertex` runs the same Live Translate sessions on Vertex AI at location `global` with Google Cloud application-default credentials and `--gcp-project`; `ready` reports the models with an `@vertex` suffix. Measured against the Developer API in `docs/LATENCY.md`.
 - **Transcript rows paired by timing**, not order, so a short tag the model folds into the previous sentence no longer shifts every later row.
 - **App polish.** Opening animation from the design handoff (brackets trace in, once per launch), eased connecting spin, flicker-free minimize and expand, panel stays open until ×, launching kana again opens the panel, and builds sign with a stable local identity so macOS keeps the Accessibility grant across rebuilds.
 

@@ -251,6 +251,12 @@ struct PanelView: View {
             Toggle("Visible in screen share", isOn: $prefs.visibleInShare)
             Toggle("Save transcripts", isOn: $prefs.saveTranscripts)
             Divider()
+            Picker("Engine", selection: $prefs.engineProvider) {
+                Text("Gemini · your own voice").tag("gemini")
+                Text("OpenAI · faster, no business keigo").tag("openai")
+            }
+            .disabled(engine.running)
+            Divider()
             Button("Open Last Transcript") { actions.openLastTranscript() }
                 .disabled(actions.lastTranscriptURL == nil)
             Button("Transcripts Folder") { actions.openTranscriptsFolder() }
@@ -570,9 +576,12 @@ struct PanelView: View {
                 .toggleStyle(.switch)
                 .controlSize(.mini)
                 .tint(Theme.accent)
-                .disabled(engine.running)
+                .disabled(engine.running || prefs.usesOpenAI)
         }
-        .help("Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours.")
+        .opacity(prefs.usesOpenAI ? 0.5 : 1)
+        .help(prefs.usesOpenAI
+              ? "Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction."
+              : "Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours.")
     }
 
     // MARK: Transcript
@@ -680,7 +689,11 @@ struct PanelView: View {
         let i = engine.gatedS["in"] ?? 0, o = engine.gatedS["out"] ?? 0
         let saved = (i + o) * 0.0000875
         var s = String(format: "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved", i, o, saved)
-        if engine.costIsEstimate { s += "\nEstimate from audio seconds until the engine reports token usage." }
+        if engine.costIsEstimate {
+            s += prefs.usesOpenAI
+                ? "\nEstimate: OpenAI bills $0.034 per minute of audio sent and reports no usage."
+                : "\nEstimate from audio seconds until the engine reports token usage."
+        }
         if engine.model != nil {
             s += "\n\n" + (engine.engineChip.map { "Engine: \($0)\n" } ?? "") + engine.engineTooltip
         }

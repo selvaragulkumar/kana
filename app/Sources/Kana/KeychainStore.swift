@@ -5,6 +5,8 @@ import Security
 enum KeychainStore {
     static let service = "com.selvaragulkumar.kana"
     static let geminiAccount = "GEMINI_API_KEY"
+    /// The OpenAI engine's key (••• › Engine › OpenAI); same service, its own account.
+    static let openaiAccount = "OPENAI_API_KEY"
 
     enum KeychainError: LocalizedError {
         case status(OSStatus)

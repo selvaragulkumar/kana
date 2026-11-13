@@ -11,6 +11,8 @@ Speaks the engine's --json protocol (docs/superpowers/specs/2026-11-12-menubar-a
          per-utterance latency events, gated_s/latency_ms on the audio tick, and a
          saved event; the Markdown/SRT files are written to <tmp>/kana-fake/transcripts
          (or --save-dir) unless --no-save is given.
+  --provider openai: usage is priced per minute of audio sent and marked est (no token counts),
+         as the real engine does for gpt-realtime-translate; --register business is then fatal.
   FAKE_ENGINE_FATAL=1 makes it exit with a fatal error after ~6 s.
 Stdlib only.
 """
@@ -77,6 +79,12 @@ def main():
 
     in_lang, out_lang = arg("--in", "en"), arg("--out", "ja")
     only = arg("--only", None)
+    openai = arg("--provider", "gemini") == "openai"
+    if openai and arg("--register", "default") == "business":
+        text = "--register business is not available with gpt-realtime-translate. Use --provider gemini."
+        print(text, file=sys.stderr)
+        emit("error", fatal=True, text=text)
+        return 2
     threading.Thread(target=stdin_loop, daemon=True).start()
     time.sleep(0.5)
     emit("ready",
@@ -150,6 +158,14 @@ def main():
             med = statistics.median(lat[d]) if lat[d] else None
             in_tok, out_tok = int(sent[d] * 25), int(recv[d] * 25)  # 25 tokens per audio second
             usd = round(in_tok * 3.5e-6 + out_tok * 21e-6, 5)
+            if openai:  # $0.034 per minute sent, no server counts
+                usd = round(sent[d] / 60 * 0.034, 6)
+                if sent[d] and (sent[d], 0) != last_usage[d]:
+                    last_usage[d] = (sent[d], 0)
+                    emit("usage", dir=d, model="fake", sent_s=round(sent[d], 1), usd=usd, est=True)
+                emit("audio", dir=d, sent_s=round(sent[d], 1), recv_s=round(recv[d], 1),
+                     gated_s=round(gated[d], 1), latency_ms=med, usd=usd, est=True)
+                continue
             if (in_tok, out_tok) != last_usage[d]:
                 last_usage[d] = (in_tok, out_tok)
                 emit("usage", dir=d, model="fake", in_audio_tokens=in_tok, out_audio_tokens=out_tok,

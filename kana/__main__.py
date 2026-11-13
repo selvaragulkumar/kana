@@ -10,9 +10,10 @@ import sys
 import wave
 from pathlib import Path
 
-from . import audio, events
+from . import audio, backend, events
+from .openai_session import OPENAI_MODEL, OpenAIDirection
 from .ptt import PTT
-from .session import DEFAULT_MODEL, FALLBACK_MODEL, KEIGO_INSTRUCTION, Direction
+from .session import AUDIO_RATES_PER_MIN, DEFAULT_MODEL, FALLBACK_MODEL, KEIGO_INSTRUCTION, Direction
 from .transcripts import TranscriptWriter
 from .vad import DEFAULT_HANGOVER_MS, VAD
 
@@ -28,7 +29,12 @@ def parse_args(argv=None):
     p.add_argument("--meet-spk", default="BlackHole 16ch", help="device Meet uses as Speakers (default: %(default)s)")
     p.add_argument("--in", dest="in_lang", default="en", help="language you hear (BCP-47, default: %(default)s)")
     p.add_argument("--out", dest="out_lang", default="ja", help="language Meet hears (BCP-47, default: %(default)s)")
-    p.add_argument("--model", default=DEFAULT_MODEL, help="Live model (default: %(default)s; fallback: gemini-3.8-live)")
+    p.add_argument("--provider", choices=["gemini", "openai"],
+                   help="translation engine: gemini = Gemini Live Translate, your own voice (default); "
+                        f"openai = OpenAI {OPENAI_MODEL}, needs OPENAI_API_KEY (docs/ENGINE.md)")
+    p.add_argument("--model", help=f"model (default: {DEFAULT_MODEL}; fallback: gemini-3.8-live; "
+                                   f"{OPENAI_MODEL} implies --provider openai)")
+    p.add_argument("--env-file", help="also read API keys from this .env file")
     p.add_argument("--register", choices=["default", "business"], default="default",
                    help="outbound Japanese register: default = Live Translate with your own voice, mirroring "
                         "your register; business = keigo guaranteed via the general Live model, stock voice "
@@ -48,12 +54,39 @@ def parse_args(argv=None):
     p.add_argument("--catch-up", choices=["on", "off"], default="on",
                    help="drop the model's streamed silence while playback is behind, so its next words are not "
                         "queued behind it (default: %(default)s; docs/LATENCY.md)")
+    p.add_argument("--capture-latency", choices=["low", "default"], default="low",
+                   help="BlackHole capture: low = PortAudio latency low with 10 ms blocks, so each 100 ms chunk "
+                        "reaches the engine ~60 ms sooner; other inputs keep the defaults "
+                        "(default: %(default)s; docs/LATENCY.md)")
+    p.add_argument("--backend", choices=backend.BACKENDS, default="developer",
+                   help="where the Live sessions run: developer = Gemini Developer API with GEMINI_API_KEY; "
+                        "vertex = Vertex AI at location global with gcloud application-default credentials "
+                        "(default: %(default)s; docs/LATENCY.md)")
+    p.add_argument("--gcp-project", help="Google Cloud project for --backend vertex "
+                                         "(default: GOOGLE_CLOUD_PROJECT, then `gcloud config get-value project`)")
     p.add_argument("--save-dir", default="~/Library/Application Support/kana",
                    help="transcripts go to <dir>/transcripts/YYYY-MM-DD-HHMM.md/.srt (default: %(default)s)")
     p.add_argument("--no-save", action="store_true", help="do not save transcripts")
     p.add_argument("--json", action="store_true",
                    help="JSON lines on stdout, commands on stdin (protocol for the menu-bar app)")
-    return p.parse_args(argv)
+    return resolve_provider(p.parse_args(argv))
+
+
+def resolve_provider(args):
+    """Fills args.provider and args.model. `--model gpt-...` implies openai, and
+    `--provider openai` alone picks gpt-realtime-translate. A contradiction is kept in
+    args.provider_error and reported by main() as a fatal error (JSON mode needs an event)."""
+    args.provider_error = None
+    model_says = None if args.model is None else ("openai" if args.model.startswith("gpt-") else "gemini")
+    if args.provider and model_says and args.provider != model_says:
+        args.provider_error = f"--model {args.model} is not a {args.provider} model"
+    args.provider = args.provider or model_says or "gemini"
+    if args.model is None:
+        args.model = OPENAI_MODEL if args.provider == "openai" else DEFAULT_MODEL
+    if args.provider == "openai" and args.register == "business" and not args.provider_error:
+        args.provider_error = (f"--register business is not available with {OPENAI_MODEL}: it takes no "
+                               "instruction, so keigo cannot be asked for. Use --provider gemini.")
+    return args
 
 
 def open_dump(path):
@@ -102,7 +135,8 @@ def direction_models(args) -> dict:
     register moves the outbound Japanese direction to the general Live model with
     a keigo instruction. Inbound always stays on --model."""
     out = (args.model, None)
-    if args.register == "business" and args.out_lang.split("-")[0].lower() == "ja":
+    if (getattr(args, "provider", "gemini") == "gemini" and args.register == "business"
+            and args.out_lang.split("-")[0].lower() == "ja"):
         out = (FALLBACK_MODEL if "translate" in args.model else args.model, KEIGO_INSTRUCTION)
     return {"IN": (args.model, None), "OUT": out}
 
@@ -122,9 +156,10 @@ def ready_fields(args, dirs) -> dict:
         (src, (_, sink)) = dirs[label]
         return {"src": f"file {src[1]}" if src[0] == "file" else src[2], "sink": sink}
     models = direction_models(args)
+    be = getattr(args, "backend", "developer")
     return {"in": side("IN"), "out": side("OUT"), "model": args.model, "register": args.register,
-            "in_model": models["IN"][0] if "IN" in dirs else None,
-            "out_model": models["OUT"][0] if "OUT" in dirs else None,
+            "in_model": backend.model_label(models["IN"][0], be) if "IN" in dirs else None,
+            "out_model": backend.model_label(models["OUT"][0], be) if "OUT" in dirs else None,
             "in_lang": args.in_lang, "out_lang": args.out_lang}
 
 
@@ -149,12 +184,14 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
             if kind == "file":
                 pcm = audio.read_wav_16k(src[0])
             else:
-                stack.enter_context(audio.Capture(src[0], in_q, loop))
+                stack.enter_context(audio.Capture(src[0], in_q, loop,
+                                                  **audio.capture_options(src[1], args.capture_latency)))
             catch_up = audio.CATCH_UP_MS if args.catch_up == "on" else None
             player = stack.enter_context(audio.Playback(sink_i, catch_up_ms=catch_up))
             tasks.append(asyncio.create_task(player.pump(out_q)))
             model, instruction = direction_models(args)[label]
-            d = Direction(label, *langs[label], model, in_q, out_q, connect=connect, instruction=instruction,
+            cls = OpenAIDirection if getattr(args, "provider", "gemini") == "openai" else Direction
+            d = cls(label, *langs[label], model, in_q, out_q, connect=connect, instruction=instruction,
                           is_muted=(lambda: ptt.muted) if label == "OUT" else (lambda: False),
                           dump=dumps[label], emit=emit,
                           vad=VAD(gate=args.vad == "auto", threshold=args.vad_threshold, hangover_ms=args.vad_hangover),
@@ -199,12 +236,13 @@ def summary(args, dirs) -> None:
     def src(s):
         return f"file {s[1]}" if s[0] == "file" else s[2]
     models = direction_models(args)
-    print(f"kana  register={args.register}  in={models['IN'][0]}  out={models['OUT'][0]}")
+    print(f"kana  register={args.register}  in={models['IN'][0]}  out={models['OUT'][0]}  backend={args.backend}")
     if "IN" in dirs:
         print(f"  IN  {args.out_lang}->{args.in_lang}: {src(dirs['IN'][0])} -> {dirs['IN'][1][1]}")
     if "OUT" in dirs:
         print(f"  OUT {args.in_lang}->{args.out_lang}: {src(dirs['OUT'][0])} -> {dirs['OUT'][1][1]}")
-    print(f"  cost ~$0.04/min per direction (~${0.04 * len(dirs):.2f}/min now)")
+    rate = AUDIO_RATES_PER_MIN[OPENAI_MODEL] if args.provider == "openai" else 0.04
+    print(f"  cost ~${rate:.3f}/min of audio sent per direction (~${rate * len(dirs):.3f}/min now)")
     print("  keys: space = toggle talk, q = quit (Ctrl-C also quits)")
 
 
@@ -226,10 +264,25 @@ def main(argv=None) -> int:
         else:
             print(sd.query_devices())
         return 0
+    if args.provider_error:
+        return fatal(args.provider_error)
     from dotenv import load_dotenv
     load_dotenv(ROOT / ".env")
     load_dotenv()
-    if not os.environ.get("GEMINI_API_KEY"):
+    if args.env_file:
+        load_dotenv(Path(args.env_file).expanduser())
+    project = None
+    if args.provider == "openai":
+        if args.backend == "vertex":
+            return fatal("--backend vertex applies to the Gemini provider only.")
+        if not os.environ.get("OPENAI_API_KEY"):
+            return fatal(f"OPENAI_API_KEY is not set: put OPENAI_API_KEY=... in {ROOT / '.env'} or export it.")
+    elif args.backend == "vertex":
+        project = backend.gcp_project(args.gcp_project)
+        if not project:
+            return fatal("--backend vertex needs a Google Cloud project: pass --gcp-project, set "
+                         "GOOGLE_CLOUD_PROJECT or run `gcloud config set project ...`.")
+    elif not os.environ.get("GEMINI_API_KEY"):
         return fatal(f"GEMINI_API_KEY is not set: put GEMINI_API_KEY=... in {ROOT / '.env'} or export it.")
     try:
         dirs = plan(args)
@@ -237,10 +290,13 @@ def main(argv=None) -> int:
         return fatal(str(e))
     if emit is None:
         summary(args, dirs)
-    from google import genai
-    client = genai.Client(http_options={"api_version": "v1beta"})
+    if args.provider == "openai":
+        from .openai_session import make_connect
+        connect = make_connect(os.environ["OPENAI_API_KEY"])
+    else:
+        connect = backend.make_client(args.backend, project).aio.live.connect
     try:
-        asyncio.run(amain(args, dirs, client.aio.live.connect, emit=emit))
+        asyncio.run(amain(args, dirs, connect, emit=emit))
     except KeyboardInterrupt:
         pass
     except Exception as e:  # device open failures etc.: report, exit 2

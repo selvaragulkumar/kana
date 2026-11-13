@@ -62,6 +62,11 @@ AUDIO_RATES_PER_M = {
     "gemini-3.5-live-translate-preview": (3.50, 21.00),
     "gemini-3.8-live": (3.00, 12.00),
 }
+# USD per minute of audio sent, by model, for models billed by audio duration
+# (OpenAI realtime translation reports no token counts; docs/ENGINE.md "Cost").
+AUDIO_RATES_PER_MIN = {
+    "gpt-realtime-translate": 0.034,
+}
 
 
 def audio_rates(model: str) -> tuple[tuple[float, float], bool]:
@@ -169,7 +174,7 @@ class Direction:
             while True:
                 reason = "closed"
                 try:
-                    config = build_config(self.model, self.dst, self.handle, self.instruction, self.live_options)
+                    config = self._config()
                     async with self.connect(model=self.model, config=config) as s:
                         self.connects += 1
                         if self.connects > 1:
@@ -201,6 +206,14 @@ class Direction:
             self.close_utterance()
             self._seal(force=True)
 
+    def _config(self):
+        """What connect(config=) gets for the next connection. A subclass for another
+        provider returns its own (kana/openai_session.py)."""
+        return build_config(self.model, self.dst, self.handle, self.instruction, self.live_options)
+
+    def _on_sent(self) -> None:
+        """Called after audio was sent; a subclass that prices sent audio reports here."""
+
     async def _pump(self) -> None:
         """Always drains in_q so capture never blocks; only sends while a
         session is up and the direction is not muted."""
@@ -227,6 +240,8 @@ class Direction:
                     await s.send_realtime_input(audio=types.Blob(data=c, mime_type="audio/pcm;rate=16000"))
                     self.chunks_sent += 1
                     self.bytes_sent += len(c)
+                if dec.send:
+                    self._on_sent()
                 if dec.end:
                     await s.send_realtime_input(audio_stream_end=True)
             except Exception:

@@ -1,15 +1,19 @@
 # kana engine
 
-The engine is the Python package `kana`. It runs one Gemini Live session per translation
-direction and moves audio between your devices and the model. It runs on its own in a terminal,
+The engine is the Python package `kana`. It runs one live translation session per direction
+(Gemini Live Translate by default, or OpenAI's `gpt-realtime-translate` with `--provider openai`)
+and moves audio between your devices and the model. It runs on its own in a terminal,
 and the menu-bar app drives it through a JSON-lines protocol on stdin and stdout.
 
 ```
 python -m kana [flags]             # or the console script: kana [flags]
 ```
 
-The API key comes from `GEMINI_API_KEY`. The engine reads it from the environment, from `.env`
-in the current directory, or from `.env` in the repository root.
+The API key comes from `GEMINI_API_KEY`, or `OPENAI_API_KEY` with `--provider openai`. The engine
+reads it from the environment, from `.env` in the current directory, from `.env` in the repository
+root, or from the file named by `--env-file`. A missing key is one fatal error naming the variable.
+With `--backend vertex` no Gemini key is needed: the sessions run on Vertex AI with Google Cloud
+application-default credentials (`gcloud auth application-default login`).
 
 ## Directions
 
@@ -32,8 +36,10 @@ because that would create a feedback loop.
 | `--meet-spk NAME` | `BlackHole 16ch` | The device the meeting app uses as its speakers. |
 | `--in LANG` | `en` | The language you hear (BCP-47). |
 | `--out LANG` | `ja` | The language the meeting hears (BCP-47). |
-| `--model ID` | `gemini-3.5-live-translate-preview` | The Live model. Models without "translate" in the name get a translator system instruction instead. |
-| `--register default\|business` | `default` | The outbound Japanese register. `default` keeps Live Translate, with your own voice and your own register: casual English becomes casual Japanese. `business` (opt-in) sends the outbound direction to `gemini-3.8-live` with a keigo instruction, which guarantees です・ます and keigo but uses a stock voice. Inbound always uses `--model`. See [REGISTER.md](REGISTER.md). |
+| `--provider gemini\|openai` | `gemini` | The translation engine. `openai` uses `gpt-realtime-translate` (see [OpenAI provider](#openai-provider)). |
+| `--model ID` | `gemini-3.5-live-translate-preview` | The model. On Gemini, models without "translate" in the name get a translator system instruction instead. A `gpt-` model implies `--provider openai`; `--provider openai` alone picks `gpt-realtime-translate`. A model of the other provider is a fatal error. |
+| `--env-file PATH` | none | Also reads API keys from this `.env` file. |
+| `--register default\|business` | `default` | The outbound Japanese register (Gemini only; with `--provider openai`, `business` is a fatal error). `default` keeps Live Translate, with your own voice and your own register: casual English becomes casual Japanese. `business` (opt-in) sends the outbound direction to `gemini-3.8-live` with a keigo instruction, which guarantees です・ます and keigo but uses a stock voice. Inbound always uses `--model`. See [REGISTER.md](REGISTER.md). |
 | `--in-file WAV` | none | A 16-bit WAV that replaces the meeting capture. Used for tests and dry runs. It starts playing once its session has connected. |
 | `--out-file WAV` | none | A 16-bit WAV that replaces your microphone. Push-to-talk then starts on. |
 | `--dump-in WAV` | none | Also writes the inbound translated audio (24 kHz mono) to this file. |
@@ -44,6 +50,9 @@ because that would create a feedback loop.
 | `--vad-threshold RMS` | `200` | The absolute speech level: the int16 RMS of a 100 ms chunk. |
 | `--vad-hangover MS` | `2000` | How long audio is still sent after speech ends, before the stream end. |
 | `--catch-up on\|off` | `on` | While playback is behind, drops the silence the model streams, so its next words are not queued behind it. See [LATENCY.md](LATENCY.md). |
+| `--backend developer\|vertex` | `developer` | Where the Live sessions run. `developer` is the Gemini Developer API (`generativelanguage.googleapis.com`) with `GEMINI_API_KEY`. `vertex` is Vertex AI at location `global` (the only location serving Live Translate) with application-default credentials; the Live config is the same. `ready` then reports `in_model` / `out_model` with an `@vertex` suffix. Measured side by side in [LATENCY.md](LATENCY.md). |
+| `--gcp-project ID` | `GOOGLE_CLOUD_PROJECT`, then `gcloud config get-value project` | The Google Cloud project for `--backend vertex`. Without one the engine exits with a fatal error. |
+| `--capture-latency low\|default` | `low` | With `low`, a BlackHole capture device (the meeting audio) is opened at PortAudio latency `low` with 10 ms blocks, collected into the 100 ms chunks the session gets. Each chunk then reaches the engine about 7 ms after its last sample instead of about 67 ms. Other inputs (your microphone) keep the defaults: they were not measured. `default` opens every input as before. See [LATENCY.md](LATENCY.md). |
 | `--save-dir DIR` | `~/Library/Application Support/kana` | Transcripts are written to `DIR/transcripts/`. |
 | `--no-save` | | Saves no transcripts. |
 | `--json` | | Runs the JSON-lines protocol described below. |
@@ -76,8 +85,9 @@ Any other line produces a non-fatal `error` event and is otherwise ignored.
 ### Events (stdout), in the order they first appear
 
 **`ready`**: the devices are open. A direction that is not running is `null`, and so is its model.
-A file source is shown as `file <path>`. `model` is the `--model` flag. `in_model` and `out_model`
-are the models each direction actually uses, and `register` is the `--register` flag.
+A file source is shown as `file <path>`. `model` is the `--model` flag, or the provider's default model when it is not given (`gpt-realtime-translate` names the OpenAI provider; no separate provider field). `in_model` and `out_model`
+are the models each direction actually uses (with an `@vertex` suffix under `--backend vertex`),
+and `register` is the `--register` flag.
 ```json
 {"t": 1794481886.512, "ev": "ready", "in": {"src": "BlackHole 16ch", "sink": "MacBook Pro Speakers"}, "out": {"src": "MacBook Pro Microphone", "sink": "BlackHole 2ch"}, "model": "gemini-3.5-live-translate-preview", "register": "default", "in_model": "gemini-3.5-live-translate-preview", "out_model": "gemini-3.5-live-translate-preview", "in_lang": "en", "out_lang": "ja"}
 ```
@@ -161,6 +171,7 @@ be measured. The definitions are below.
 | `gated_s` | Seconds of captured audio not sent because the voice-activity detector judged it silence. |
 | `latency_ms` | The running median of `onset_to_audio_ms` for this direction, or `null` before the first measurement. |
 | `usd` | The running cost of this direction, computed from the server's token counts, not from seconds. See Cost. |
+| `est` | Present and `true` only when `usd` is priced from audio sent rather than server counts (`--provider openai`). |
 
 **`usage`**: the server's token counts for a direction changed. Counts are cumulative for the
 run. `model` is the model the direction actually uses, and `usd` is priced at that model's audio
@@ -172,6 +183,13 @@ rates (see Cost). `in_text_tokens` is informational: the general Live model used
 ```
 When a direction uses a model with no known rate, the engine prices it at Live Translate's rates
 and sends one non-fatal `error` saying so.
+
+With `--provider openai` the server reports no usage, so the engine prices the audio it sent
+($0.034 per minute) and marks the figure `est: true`. The event is sent once per second of audio
+sent, carries `sent_s` instead of token counts, and the `audio` event carries `est: true` too:
+```json
+{"t": 1794482202.427, "ev": "usage", "dir": "in", "model": "gpt-realtime-translate", "sent_s": 12.0, "usd": 0.0068, "est": true}
+```
 
 **`error`**: with `fatal: true` the engine is exiting with code 2. With `fatal: false` it keeps
 running, for example after an unknown command.
@@ -200,6 +218,7 @@ Audio is about 25 tokens per second. Prices are per million audio tokens and liv
 |---|---|---|
 | `gemini-3.5-live-translate-preview` | $3.50 | $21.00 |
 | `gemini-3.8-live` | $3.00 | $12.00 |
+| `gpt-realtime-translate` | $0.034 per minute of audio sent, in `AUDIO_RATES_PER_MIN` | |
 | any other model | priced as Live Translate, with one non-fatal `error` event | |
 
 The app shows yen at a constant ¥150 per dollar, marked as approximate.
@@ -230,6 +249,37 @@ as audio counters. `usd` and the `usage` event are the cost figures.
 
 The server's counts are what the engine shows. The Google Cloud billing console remains the final
 word.
+
+## OpenAI provider
+
+`--provider openai` runs each direction on OpenAI's realtime translation model,
+`gpt-realtime-translate` (`kana/openai_session.py`, the
+[translation guide](https://developers.openai.com/api/docs/guides/realtime-translation)). It is a
+websocket to `wss://api.openai.com/v1/realtime/translations?model=gpt-realtime-translate`, wrapped
+so the same `Direction` code runs: voice gate, utterances, latency, pairing, transcripts, playback
+catch-up and the JSON events are unchanged.
+
+- **Session**: one per direction, configured with `session.audio.output.language` = the target
+  language's base code (`ja`, `en`). The source language is detected. The model stays silent when
+  the speech is already in the target language.
+- **Audio in**: the 16 kHz chunks are resampled to 24 kHz PCM16 and sent as
+  `session.input_audio_buffer.append`. The voice gate still applies (`--vad auto`). OpenAI's guide
+  asks for continuous audio including silence; `--vad off` does that, at the cost of billing the
+  silence. There is no stream-end message, so the gate's `audio_stream_end` is not sent; the 2 s
+  hangover is the only end-of-speech signal.
+- **Audio out**: `session.output_audio.delta`, 24 kHz PCM16, into the same playback queue.
+- **Transcripts**: `session.output_transcript.delta` becomes `kind: dst`. `kind: src` comes from
+  `session.input_transcript.delta`, which the engine turns on with input transcription
+  (`gpt-realtime-whisper`, the model the guide names). Whether OpenAI bills that transcription
+  separately is not documented.
+- **No register control, no voice choice, no instruction.** The voice follows the speaker's tone
+  but is not a copy of it. `--register business` is refused.
+- **Reconnects**: there is no session resumption. A dropped socket or an `error` event starts a
+  fresh session with the same 1, 2, 4 s backoff, and the `session` events are the same. On exit
+  the engine sends `session.close`.
+- **Cost**: $0.034 per minute of audio sent, per direction (about $2 per hour of speech with the
+  gate on), reported with `est: true` (see `usage`). OpenAI returns no usage counts on this
+  endpoint, so whether sent silence is billed in full could not be read from the API.
 
 ## Voice-activity gating
 

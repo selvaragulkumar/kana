@@ -218,6 +218,8 @@ The engine runs on its own in a terminal:
 | `--vad-threshold N` | `200` | minimum speech level (RMS of a 100 ms int16 chunk); background noise is also learnt automatically |
 | `--vad-hangover MS` | `2000` | audio still sent after speech ends, so the model can finish the sentence |
 | `--catch-up on\|off` | `on` | drop the model's streamed silence while playback is behind, so the next words come sooner |
+| `--capture-latency low\|default` | `low` | BlackHole capture at low PortAudio latency with 10 ms blocks: meeting audio reaches the model about 60 ms sooner. Microphones are unchanged |
+| `--backend developer\|vertex` | `developer` | run the sessions on the Gemini Developer API (`GEMINI_API_KEY`) or on Vertex AI at `global` (gcloud application-default credentials, `--gcp-project`) |
 | `--save-dir DIR` | `~/Library/Application Support/kana` | transcripts go to `DIR/transcripts/` |
 | `--no-save` | | do not save transcripts |
 | `--only in\|out` | both | run one direction |
@@ -252,6 +254,7 @@ Tell the other people in the call that their audio goes to an interpreting servi
 | Component | Host | What for |
 |---|---|---|
 | Engine (Python) | `generativelanguage.googleapis.com` | the two Gemini Live sessions (WebSocket over TLS) |
+| Engine (Python), only with `--provider openai` | `api.openai.com` | the two OpenAI realtime translation sessions (WebSocket over TLS) instead |
 | App (Swift) | `existential.audio` | only when you press **Install audio drivers**: downloads the two BlackHole installers (the URLs the Homebrew casks use) |
 
 Otherwise the app only talks to the engine over stdin and stdout. There is no telemetry, no analytics, no crash reporting and no update check. Installing from source also contacts Homebrew, GitHub and PyPI, as any install does.
@@ -262,6 +265,9 @@ Otherwise the app only talks to the engine over stdin and stdout. There is no te
 |---|---|---|
 | `gemini-3.5-live-translate-preview` | both directions by default | Gemini Live Translate. Direct speech-to-speech with voice mirroring, so the interpretation sounds like the speaker. Preview: Google may change or retire it. Available on the Gemini Developer API only, not on Vertex AI. |
 | `gemini-3.8-live` | outbound with `--register business`, or both with `--model gemini-3.8-live` | Generally available Live model, driven by a system instruction. Speaks in a stock voice. |
+| `gpt-realtime-translate` | both directions with `--provider openai` (opt-in) | OpenAI's realtime translation model. Needs `OPENAI_API_KEY`. |
+
+**OpenAI instead of Gemini (opt-in).** `--provider openai` runs both directions on OpenAI's `gpt-realtime-translate` instead of Gemini Live Translate. You trade your own voice for, reportedly, speed: OpenAI's voice follows the speaker's tone but is not a copy of it, while Gemini's sounds like you. It has no instruction, so there is no business keigo (`--register business` is refused) and the Japanese register is whatever the model chooses. You need an OpenAI API key (`OPENAI_API_KEY`). It costs $0.034 per minute of audio sent per direction, about $2 per hour of speech per direction with the voice gate on; OpenAI reports no usage on this endpoint, so kana's figure is an estimate. In the app, pick it under ••• › Engine and paste the key in Setup (it is kept in the login Keychain). We have not measured it ourselves yet: [docs/LATENCY.md](docs/LATENCY.md) has the benchmark commands and will carry the numbers and a read of its Japanese once a key is in place; the engine details are in [docs/ENGINE.md](docs/ENGINE.md#openai-provider).
 
 ### Register
 

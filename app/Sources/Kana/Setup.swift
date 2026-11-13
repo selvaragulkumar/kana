@@ -36,6 +36,10 @@ final class SetupModel: ObservableObject {
     @Published private(set) var testing = false
     @Published private(set) var testResults: [LoopbackTester.Outcome] = []
     @Published var keyMessage: String?
+    /// The OpenAI engine's key (optional): present in the Keychain, and the last save/remove result.
+    @Published private(set) var openaiKeySaved = false
+    @Published var openaiMessage: String?
+    @Published var openaiMessageOK = false
     @Published var keyMessageOK = false
 
     var bh2: CADevice? { CoreAudioDevices.find("BlackHole 2ch", in: devices) }
@@ -44,7 +48,9 @@ final class SetupModel: ObservableObject {
 
     // First-launch steps, in order: drivers, key, permissions.
     var driversDone: Bool { !blackholeMissing }
-    var keyDone: Bool { keySource != .missing }
+    /// The key of the engine in use: Gemini's, or OpenAI's when ••• › Engine is OpenAI (a .env or
+    /// environment OPENAI_API_KEY also works; the app only sees the Keychain one).
+    var keyDone: Bool { Prefs.shared.usesOpenAI ? (openaiKeySaved || keySource != .missing) : keySource != .missing }
     func permissionsDone(accessibility: Bool) -> Bool { micStatus == .authorized && accessibility }
 
     /// Something a new user must still do; the panel opens Setup by itself when true.
@@ -57,6 +63,7 @@ final class SetupModel: ObservableObject {
         guard !previewing else { return }
         devices = CoreAudioDevices.all()
         keySource = KeySource.current()
+        openaiKeySaved = KeychainStore.exists(account: KeychainStore.openaiAccount)
         micStatus = MicPermission.status
         engineRoot = EngineLocation.root
         engineFound = EngineLocation.found
@@ -162,6 +169,27 @@ final class SetupModel: ObservableObject {
         refresh()
     }
 
+    func saveOpenAIKey(_ key: String) {
+        let k = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !k.isEmpty else { return }
+        do {
+            try KeychainStore.save(k, account: KeychainStore.openaiAccount)
+            openaiMessage = "Saved to the login Keychain."
+            openaiMessageOK = true
+        } catch {
+            openaiMessage = error.localizedDescription
+            openaiMessageOK = false
+        }
+        refresh()
+    }
+
+    func removeOpenAIKey() {
+        KeychainStore.delete(account: KeychainStore.openaiAccount)
+        openaiMessage = "Removed from the Keychain."
+        openaiMessageOK = true
+        refresh()
+    }
+
     func removeKey() {
         KeychainStore.delete(account: KeychainStore.geminiAccount)
         keyMessage = "Removed from the Keychain."
@@ -239,6 +267,7 @@ struct SetupView: View {
     var onDone: () -> Void
 
     @State private var keyField = ""
+    @State private var openaiField = ""
     @State private var copied = false
 
     var body: some View {
@@ -261,6 +290,7 @@ struct SetupView: View {
                     section("2  Gemini API key")
                     check(model.keySource != .missing, model.keySource != .missing ? "Key found" : "No key", keySourceText)
                     keyCard
+                    openaiCard
 
                     section("3  Permissions")
                     check(model.micStatus == .authorized, "Microphone", micText) {
@@ -440,6 +470,40 @@ struct SetupView: View {
                 .foregroundStyle(Theme.accent)
             Text("Stored in your login Keychain and passed to the engine in its environment, never on the command line."
                  + (model.engineUsesCheckout ? " A .env file still works when no Keychain key is set." : ""))
+                .font(Theme.ui(12))
+                .foregroundStyle(Theme.text4)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(12)
+        .surfaceCard()
+    }
+
+    /// Optional: only the OpenAI engine (••• › Engine) uses it.
+    private var openaiCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Text("OpenAI key (optional)")
+                    .font(Theme.ui(13, 600))
+                Spacer()
+                Text(model.openaiKeySaved ? "In the Keychain" : "Not set")
+                    .font(Theme.ui(12))
+                    .foregroundStyle(Theme.text3)
+            }
+            HStack(spacing: 8) {
+                SecureField("Paste an OpenAI API key", text: $openaiField)
+                    .textFieldStyle(.plain)
+                    .padding(.horizontal, 10).padding(.vertical, 7)
+                    .surfaceCard(radius: 10, border: Theme.lineInput)
+                Button("Save") { model.saveOpenAIKey(openaiField); openaiField = "" }
+                    .buttonStyle(SmallButtonStyle())
+                    .disabled(openaiField.trimmingCharacters(in: .whitespaces).isEmpty)
+                if model.openaiKeySaved {
+                    Button("Remove") { model.removeOpenAIKey() }.buttonStyle(SmallButtonStyle())
+                }
+            }
+            if let msg = model.openaiMessage { resultLine(model.openaiMessageOK, msg) }
+            Text("Only for ••• › Engine › OpenAI: faster, but a voice adapted to the speaker rather than yours, "
+                 + "and no business keigo. About $2 per hour of speech per direction.")
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.text4)
                 .fixedSize(horizontal: false, vertical: true)

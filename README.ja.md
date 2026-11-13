@@ -204,6 +204,8 @@ Zoom と Teams も Meet と同じ 2 つの設定が必要だが、まだ試し�
 | `--vad-threshold N` | `200` | 発話とみなす最小の音量 (100 ms の int16 チャンクの RMS)。背景雑音も自動で学習する |
 | `--vad-hangover MS` | `2000` | 発話の終わった後も送り続ける時間。モデルが文を言い終えるため |
 | `--catch-up on\|off` | `on` | 再生が遅れている間、モデルが流す無音を捨てて次の訳を早く聞かせる |
+| `--capture-latency low\|default` | `low` | BlackHole の録音を低レイテンシ・10 ms ブロックで開く。会議の音声が約 60 ms 早くモデルに届く。マイクは変わらない |
+| `--backend developer\|vertex` | `developer` | セッションを Gemini Developer API (`GEMINI_API_KEY`) か Vertex AI の `global` (gcloud のアプリケーションデフォルト認証情報、`--gcp-project`) で動かす |
 | `--save-dir DIR` | `~/Library/Application Support/kana` | 文字起こしの保存先は `DIR/transcripts/` |
 | `--no-save` | | 文字起こしを保存しない |
 | `--only in\|out` | 両方 | 片方向だけ動かす |

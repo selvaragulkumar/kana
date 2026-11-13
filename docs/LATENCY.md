@@ -69,6 +69,8 @@ catch-up playback.
 | 2026-11-13 | 0df775c | baseline-c | 3 | skip | – | – | – | – | 2070 / 3439 | 2493 / 3548 | 0/24 | 55 s, $0.033 |
 | 2026-11-13 | 0df775c | translate-aad-b | 3 | skip | – | – | – | – | 1924 / 2834 | 2604 / 3252 | 0/24 | 55 s, $0.033 |
 | 2026-11-13 | 0df775c | translate-aad-ja2 (held out) | 3 | skip | – | – | – | – | 2152 / 3238 | 2932 / 3282 | 0/24 | 48 s, $0.029 |
+| 2026-11-13 | 5564da4 | dev-ab (Developer API, A/B with the next row) | 3 | skip | 1670 / 3409 | 3421 / 4456 | 2/24 | 46 s, $0.028, 1 silent | 1932 / 3304 | 2670 / 3369 | 0/24 | 55 s, $0.033 |
+| 2026-11-13 | 5564da4 | vertex-global (`--backend vertex`, location `global`) | 3 | skip | 1900 / 3316 | 3216 / 4533 | 1/24 | 46 s, $0.028 | 1865 / 3299 | 2474 / 3177 | 0/24 | 55 s, $0.033 |
 
 ### Summary, 2026-11-13
 
@@ -102,9 +104,53 @@ the speaker starts, and the network round trip is about 17 ms.
 | Network | — | TCP connect to generativelanguage.googleapis.com, aiplatform.googleapis.com and asia-northeast1-aiplatform.googleapis.com: 17, 17 and 19 ms (median of 6) | not a lever |
 | Sounddevice `latency="low"` | sounddevice docs | Reported device latencies (no stream opened): output low/high 1.3/10.7 ms (BlackHole), 18/27 ms (MacBook speakers); input 10/100 ms (BlackHole 16ch), 33/42 ms (MacBook mic) | not shipped: output gains ≤ 10 ms with an underrun risk; capture of BlackHole 16ch could gain ~90 ms on inbound but was not measured, because measuring needs opening real devices |
 | Session drift | research notes (latency creeping up over minutes) | one 19-minute session (8 loops): onset median 1.4, 1.9, 1.9, 1.9, 2.3, 2.1, 1.9, 1.9 s; tail 3.3, 3.3, 3.6, 3.4, 2.8, 2.6, 2.8, 2.9 s; no cuts | no drift; no restart logic needed |
+| Vertex global (`--backend vertex`) | brief; the translate model is served on Vertex only at `global` | Same Live config accepted unchanged (TranslationConfig, both transcriptions, resumption, compression). Runs interleaved A/B/A/B with the Developer API, 3 + 3: out onset 1900 vs 1670 ms (+230), in onset 1865 vs 1932 (−67), tail −205 / −196 ms; p90s within ±100 ms except out onset; all inside the run-to-run spread of the two baselines above (~220 ms). Session ready is slower: 0.73-2.2 s on Vertex (bench median ~1.9 s, probe median 942 ms) vs 0.29-0.51 s (median ~0.4 s) on the Developer API, paid at start and on every reconnect. TCP/TLS handshakes are 10-40 ms on both hosts. Quality reads the same, with different slips: Vertex rendered "second week of December" as "2回目に延期" in 3/3 runs and misheard 予算 once; the Developer API heard "lunch" 2/3 times and once lost a clip, whose translation came with the next. | not adopted; `--backend vertex` kept as an opt-in for Vertex's enterprise data terms, default stays `developer` |
+| Capture `latency="low"` on BlackHole 16ch | sounddevice docs; the reported 10 vs 100 ms input latency above | Measured on the BlackHole loopback (`tools/capture_latency.py`: a click written to the BlackHole 16ch output, read back by the engine's `Capture`; 60 clicks per setting, interleaved). With the engine's 100 ms PortAudio block, each chunk reaches the queue 67 ms (median, p90 67) after its last sample at both `latency` settings: no gain. A 10 ms block at default latency is also 67 ms. A 10 ms block at `latency="low"`, collected into 100 ms chunks, is 7.1 ms (p90 7.5): **−60 ms** per chunk. 0 overflows, 0 status flags, 0 missed clicks in every setting. Playback of the engine's `Playback` to BlackHole 2ch at default (10.7 ms) and low (1.3 ms) latency: 0 underflows in 2 × 30 s each | **Shipped** for BlackHole capture devices: `--capture-latency low` (default), `default` restores the old capture. Microphones unchanged (not measured). Output latency unchanged (≤ 10 ms to gain) |
+
+## OpenAI gpt-realtime-translate
+
+`--provider openai` ([ENGINE.md](ENGINE.md#openai-provider)) is measured on the same 16 clips, 3
+runs, both directions, `skip` playback, once with the voice gate and once with continuous audio
+(`--vad off`, what OpenAI's guide recommends). Rows go into the Results table above.
+
+```sh
+.venv/bin/python tools/latency_bench.py --provider openai --label openai --runs 3
+.venv/bin/python tools/latency_bench.py --provider openai --label openai-vad-off --vad off --runs 3
+.venv/bin/python tools/latency_bench.py --report --md --playback skip openai openai-vad-off
+.venv/bin/python tools/latency_bench.py --report --playback skip --text openai openai-vad-off
+```
+
+Status, 2026-11-13: **not measured yet.** No `OPENAI_API_KEY` was available (neither in the
+environment nor in the main checkout's `.env`). The engine path and the benchmark were checked
+end to end against a local fake server only. Cost is $0.034 per minute of audio sent: about $0.03
+per gated run and direction, about $0.09 ungated, so both sets cost under $1.
 
 ## Spend
 
 The benchmarks on 2026-11-13 used 95 sessions: 192,237 audio tokens in and 129,130 out (plus
 33,574 text tokens in on the fallback model), about $3.35 in total at the rates in
 `kana/session.py`, including one smoke run.
+
+## Vertex AI vs the Developer API, 2026-11-13
+
+Connection setup, same Live config, `gemini-3.5-live-translate-preview`, from Tokyo:
+
+| | TCP connect | TLS handshake | Session ready (probe, 8 each) | Session ready (bench, 6 sessions each) |
+|---|---|---|---|---|
+| Developer API (`generativelanguage.googleapis.com`) | 10-37 ms | 20-40 ms | median 376 ms (288-510) | 339-482 ms |
+| Vertex AI `global` (`aiplatform.googleapis.com`) | 9-19 ms | 19-28 ms | median 942 ms (726-1867) | 1027-2151 ms |
+
+Handshake medians vary between probes with the network; session ready is the server's setup
+and is consistently 0.5-1.5 s slower on Vertex. Token counts were identical on both backends
+(same audio sent); the dollar figures are computed at the Developer API rates in
+`kana/session.py`, and Vertex bills through Google Cloud.
+
+Data terms: the Developer API's unpaid (free-tier) services may use prompts and responses to
+improve Google's products, with human review, while its paid services and Vertex AI do not
+([Gemini API terms](https://ai.google.dev/gemini-api/terms); Vertex AI: "Google won't use your
+data to train or fine-tune any AI/ML models without your prior permission or instruction",
+[Vertex AI data governance](https://cloud.google.com/vertex-ai/generative-ai/docs/data-governance)).
+
+## Spend, 2026-11-13 (second session)
+
+The Vertex A/B used 12 sessions, $0.36 at the rates above; the connect probes sent no audio.

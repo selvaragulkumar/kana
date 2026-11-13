@@ -54,6 +54,7 @@ struct EngineEvent: Decodable {
     let recv_s: Double?
     let gated_s: Double?
     let usd: Double?          // audio tick / usage: engine-computed cost from server-reported tokens
+    let est: Bool?            // audio tick / usage: usd is priced from audio sent (OpenAI), not server counts
     let latency_ms: Double?
     // latency (per utterance)
     let onset_to_audio_ms: Double?

@@ -33,8 +33,11 @@ def audio_seconds(direction) -> tuple[float, float]:
 
 def audio_fields(label: str, d) -> dict:
     sent, recv = audio_seconds(d)
-    return {"dir": label.lower(), "sent_s": sent, "recv_s": recv,
-            "gated_s": d.vad.gated_s, "latency_ms": d.latency_ms(), "usd": d.usd()}
+    f = {"dir": label.lower(), "sent_s": sent, "recv_s": recv,
+         "gated_s": d.vad.gated_s, "latency_ms": d.latency_ms(), "usd": d.usd()}
+    if getattr(d, "usd_is_estimate", False):  # priced from audio sent, not server-reported usage
+        f["est"] = True
+    return f
 
 
 async def audio_ticker(directions: dict, emit, interval: float = 1.0) -> None:

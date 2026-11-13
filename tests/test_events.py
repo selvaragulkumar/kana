@@ -43,6 +43,8 @@ class Rec:
     ("error", {"fatal": True, "text": "boom"}),
     ("usage", {"dir": "out", "model": "gemini-3.8-live", "in_audio_tokens": 283, "out_audio_tokens": 103, "usd": 0.003154,
                "in_text_tokens": 390}),
+    ("usage", {"dir": "in", "model": "gpt-realtime-translate", "sent_s": 12.0, "usd": 0.0068, "est": True}),
+    ("audio", {"dir": "in", "sent_s": 12.0, "recv_s": 9.8, "usd": 0.0068, "est": True}),
     ("bye", {}),
 ])
 def test_emitter_encodes_one_json_line(ev, fields):

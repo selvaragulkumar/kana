@@ -4,6 +4,7 @@ clip, what a listener would hear.
 
     .venv/bin/python tools/latency_bench.py --label baseline --runs 3
     .venv/bin/python tools/latency_bench.py --label chunk40 --chunk-ms 40 --runs 3
+    .venv/bin/python tools/latency_bench.py --label openai --provider openai --runs 3   # gpt-realtime-translate
     .venv/bin/python tools/latency_bench.py --report            # summary of all saved runs
 
 Timing model (all on one monotonic clock):
@@ -24,8 +25,8 @@ meeting); between clips silence is fed until the translation has gone quiet.
 Results go to tools/bench_out/<label>/<run>.json (ignored by git); --report
 prints medians / p90 and transcripts per label.
 
-The API key is read from GEMINI_API_KEY (or the main checkout's .env); it is
-never printed.
+The API key is read from GEMINI_API_KEY, or OPENAI_API_KEY with --provider openai
+(environment first, then the main checkout's .env or --env-file); it is never printed.
 """
 from __future__ import annotations
 
@@ -45,7 +46,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from kana import audio  # noqa: E402
+from kana import audio, backend  # noqa: E402
+from kana.openai_session import OPENAI_MODEL, OpenAIDirection  # noqa: E402
 from kana.session import DEFAULT_MODEL, Direction  # noqa: E402
 from kana.vad import DEFAULT_HANGOVER_MS, VAD  # noqa: E402
 
@@ -174,8 +176,8 @@ class Recorder:
         return None
 
 
-class BenchDirection(Direction):
-    """Direction that timestamps transcript pieces."""
+class _Pieces:
+    """Mixin: timestamps transcript pieces."""
 
     def __init__(self, *a, **kw):
         super().__init__(*a, **kw)
@@ -186,17 +188,41 @@ class BenchDirection(Direction):
         super()._add(kind, text)
 
 
+class BenchDirection(_Pieces, Direction):
+    pass
+
+
+class OpenAIBenchDirection(_Pieces, OpenAIDirection):
+    pass
+
+
+def main_checkout_env() -> Path:
+    """.env of this checkout, or of the main checkout when run from a git worktree."""
+    if (ROOT / ".env").exists():
+        return ROOT / ".env"
+    r = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--path-format=absolute", "--git-common-dir"],
+                       capture_output=True, text=True)
+    common = r.stdout.strip()
+    return Path(common).parent / ".env" if r.returncode == 0 and common else ROOT / ".env"
+
+
 def make_connect(args):
-    from google import genai
-    if args.backend == "vertex":
-        client = genai.Client(vertexai=True, project=args.project, location=args.location)
-    else:
-        if not os.environ.get("GEMINI_API_KEY"):
+    if args.provider == "openai":
+        if not os.environ.get("OPENAI_API_KEY"):
             from dotenv import load_dotenv
             load_dotenv(ROOT / ".env")
             load_dotenv(Path(args.env_file))
-        client = genai.Client(http_options={"api_version": "v1beta"})
-    return client.aio.live.connect
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise SystemExit(f"OPENAI_API_KEY is not set (looked in the environment and {args.env_file})")
+        from kana.openai_session import make_connect as openai_connect
+        return openai_connect(os.environ["OPENAI_API_KEY"])
+    project = None
+    if args.backend == "vertex":
+        project = backend.gcp_project(args.gcp_project)
+    elif not os.environ.get("GEMINI_API_KEY"):
+        from dotenv import load_dotenv
+        load_dotenv(Path(args.env_file))
+    return backend.make_client(args.backend, project).aio.live.connect
 
 
 def live_options(args) -> dict | None:
@@ -215,7 +241,8 @@ async def run_direction(args, dkey: str, connect) -> dict:
     rec = Recorder(clock)
     in_q: asyncio.Queue = asyncio.Queue(maxsize=200)
     vad = VAD(gate=args.vad == "auto", hangover_ms=args.hangover_ms, chunk_ms=args.chunk_ms, flush_ms=args.flush_ms)
-    d = BenchDirection(dkey.upper(), src, dst, args.model, in_q, rec, connect=connect, out=lambda *_: None,
+    cls = OpenAIBenchDirection if args.provider == "openai" else BenchDirection
+    d = cls(dkey.upper(), src, dst, args.model, in_q, rec, connect=connect, out=lambda *_: None,
                        vad=vad, clock=clock, live_options=live_options(args))
     task = asyncio.create_task(d.run())
     cb = 16000 * args.chunk_ms // 1000 * 2
@@ -313,8 +340,9 @@ def summarize(vals):
 
 
 def config_of(args) -> dict:
-    return {"model": args.model, "chunk_ms": args.chunk_ms, "hangover_ms": args.hangover_ms, "vad": args.vad, "flush_ms": args.flush_ms,
-            "aad": args.aad, "loops": args.loops, "set": args.set, "backend": args.backend, "location": args.location if args.backend == "vertex" else None}
+    return {"provider": args.provider, "model": args.model, "chunk_ms": args.chunk_ms, "hangover_ms": args.hangover_ms, "vad": args.vad, "flush_ms": args.flush_ms,
+            "aad": args.aad, "loops": args.loops, "set": args.set, "backend": args.backend,
+            "location": backend.VERTEX_LOCATION if args.backend == "vertex" else None}
 
 
 async def main_async(args) -> None:
@@ -392,16 +420,17 @@ def main() -> None:
     p.add_argument("--label", default="baseline")
     p.add_argument("--runs", type=int, default=3)
     p.add_argument("--dirs", default="out,in", help="comma list of out (en->ja) / in (ja->en)")
-    p.add_argument("--model", default=DEFAULT_MODEL)
+    p.add_argument("--provider", choices=["gemini", "openai"], default="gemini")
+    p.add_argument("--model", help=f"default: {DEFAULT_MODEL}, or {OPENAI_MODEL} with --provider openai")
     p.add_argument("--chunk-ms", type=int, default=audio.CHUNK_MS)
     p.add_argument("--hangover-ms", type=int, default=DEFAULT_HANGOVER_MS)
     p.add_argument("--flush-ms", type=int, default=0, help="digital silence burst sent at the VAD end")
     p.add_argument("--vad", choices=["auto", "off"], default="auto")
     p.add_argument("--aad", help='JSON for AutomaticActivityDetection, e.g. {"silence_duration_ms":300}')
-    p.add_argument("--backend", choices=["gemini", "vertex"], default="gemini")
-    p.add_argument("--project", default="zag-pios")
-    p.add_argument("--location", default="global")
-    p.add_argument("--env-file", default=str(ROOT / ".env"), help=".env with GEMINI_API_KEY")
+    p.add_argument("--backend", choices=backend.BACKENDS, default="developer")
+    p.add_argument("--gcp-project", help="with --backend vertex (default: GOOGLE_CLOUD_PROJECT, then gcloud config)")
+    p.add_argument("--env-file", default=str(main_checkout_env()),
+                   help=".env with GEMINI_API_KEY / OPENAI_API_KEY (default: this checkout's, else the main checkout's)")
     p.add_argument("--set", help="clip set instead of the direction's default (e.g. ja2, held out)")
     p.add_argument("--loops", type=int, default=1, help="play the clip set this many times in one session (drift)")
     p.add_argument("--gap-s", type=float, default=12.0, help="pause before each new session")
@@ -413,6 +442,8 @@ def main() -> None:
     p.add_argument("--md", action="store_true", help="with --report: markdown table rows")
     p.add_argument("labels", nargs="*", help="with --report: only these labels")
     args = p.parse_args()
+    if args.model is None:
+        args.model = OPENAI_MODEL if args.provider == "openai" else DEFAULT_MODEL
     if args.report:
         report(args.labels, args.text, args.playback, args.backlog_ms / 1000, args.md)
         return

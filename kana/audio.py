@@ -97,19 +97,60 @@ def _pick_rate(check, device, wanted: int, kind: str) -> int:
         return int(sd.query_devices(device, kind)["default_samplerate"])
 
 
-class Capture:
-    """Input stream -> asyncio queue of 3200-byte 16 kHz chunks."""
+class Rechunker:
+    """Collects 16 kHz int16 blocks of any size into CHUNK_MS chunks (bytes)."""
 
-    def __init__(self, device: int | None, q: asyncio.Queue, loop: asyncio.AbstractEventLoop):
+    def __init__(self, samples: int = IN_RATE * CHUNK_MS // 1000):
+        self.samples = samples
+        self.buf = np.zeros(0, dtype=np.int16)
+
+    def push(self, x: np.ndarray) -> list[bytes]:
+        if len(self.buf) == 0 and len(x) == self.samples:
+            return [x.astype("<i2").tobytes()]  # the block is a chunk: no copy
+        self.buf = np.concatenate([self.buf, x.astype(np.int16, copy=False)])
+        out = []
+        while len(self.buf) >= self.samples:
+            out.append(self.buf[:self.samples].astype("<i2").tobytes())
+            self.buf = self.buf[self.samples:]
+        return out
+
+
+LOW_LATENCY_BLOCK_MS = 10
+
+
+def capture_options(device_name: str | None, setting: str = "low") -> dict:
+    """Capture keyword arguments for a device. "low" opens BlackHole inputs at
+    PortAudio latency "low" with 10 ms blocks: on the BlackHole 16ch loopback
+    each 100 ms chunk then reaches the engine 7 ms after its last sample instead
+    of 67 ms (docs/LATENCY.md). Other inputs (microphones) were not measured and
+    keep the defaults."""
+    if setting == "low" and device_name and "blackhole" in device_name.lower():
+        return {"latency": "low", "block_ms": LOW_LATENCY_BLOCK_MS}
+    return {}
+
+
+class Capture:
+    """Input stream -> asyncio queue of 3200-byte 16 kHz chunks.
+
+    `block_ms` is the PortAudio block; smaller blocks are collected into 100 ms
+    chunks. `latency` is passed to PortAudio ("low", "high" or seconds); None
+    keeps sounddevice's default ("high"). With a 100 ms block PortAudio buffers
+    the same either way; only a small block with "low" hands each chunk over
+    sooner (docs/LATENCY.md)."""
+
+    def __init__(self, device: int | None, q: asyncio.Queue, loop: asyncio.AbstractEventLoop,
+                 latency: str | float | None = None, block_ms: int = CHUNK_MS):
         import sounddevice as sd
         self.q, self.loop = q, loop
         self.rate = _pick_rate(sd.check_input_settings, device, IN_RATE, "input")
+        self.chunks = Rechunker()
+        kw = {} if latency is None else {"latency": latency}
         self.stream = sd.InputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
-                                     blocksize=self.rate * CHUNK_MS // 1000, callback=self._cb)
+                                     blocksize=self.rate * block_ms // 1000, callback=self._cb, **kw)
 
     def _cb(self, indata, frames, time_info, status):
-        x = resample(indata[:, 0].copy(), self.rate, IN_RATE)
-        self.loop.call_soon_threadsafe(put_latest, self.q, x.astype("<i2").tobytes())
+        for c in self.chunks.push(resample(indata[:, 0].copy(), self.rate, IN_RATE)):
+            self.loop.call_soon_threadsafe(put_latest, self.q, c)
 
     def __enter__(self):
         self.stream.start()
@@ -174,13 +215,15 @@ CATCH_UP_MS = 0  # see catch_up(); measured in docs/LATENCY.md
 class Playback:
     """Output stream fed from 24 kHz PCM bytes; silence on underrun."""
 
-    def __init__(self, device: int | None, catch_up_ms: int | None = CATCH_UP_MS):
+    def __init__(self, device: int | None, catch_up_ms: int | None = CATCH_UP_MS,
+                 latency: str | float | None = None):
         import sounddevice as sd
         self.ring = Ring()
         self.catch_up_ms = catch_up_ms  # None: queue everything back-to-back
         self.rate = _pick_rate(sd.check_output_settings, device, OUT_RATE, "output")
+        kw = {} if latency is None else {"latency": latency}
         self.stream = sd.OutputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
-                                      callback=self._cb)
+                                      callback=self._cb, **kw)
 
     def feed(self, pcm: bytes) -> None:
         x = np.frombuffer(pcm, dtype="<i2")

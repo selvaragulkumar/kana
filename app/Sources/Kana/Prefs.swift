@@ -22,6 +22,11 @@ final class Prefs: ObservableObject {
     @Published var minimized: Bool {
         didSet { d.set(minimized, forKey: "minimized") }
     }
+    /// Translation engine: "gemini" (default, your own voice) or "openai" (gpt-realtime-translate).
+    @Published var engineProvider: String {
+        didSet { d.set(engineProvider, forKey: "engineProvider") }
+    }
+    var usesOpenAI: Bool { engineProvider == "openai" }
     /// Paths from the engine's last `saved` event, kept across launches.
     @Published var lastTranscriptMD: String? {
         didSet { d.set(lastTranscriptMD, forKey: "lastTranscriptMD") }
@@ -33,6 +38,7 @@ final class Prefs: ObservableObject {
         saveTranscripts = d.object(forKey: "saveTranscripts") as? Bool ?? true
         lastTranscriptMD = d.string(forKey: "lastTranscriptMD")
         minimized = d.bool(forKey: "minimized")
+        engineProvider = d.string(forKey: "engineProvider") == "openai" ? "openai" : "gemini"
     }
 }
 

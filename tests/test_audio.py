@@ -116,3 +116,70 @@ def test_playback_feed_skips_streamed_silence_while_behind():
     p.feed(np.zeros(2400, dtype="<i2").tobytes())  # behind: dropped
     p.feed(np.full(2400, 500, dtype="<i2").tobytes())
     assert p.ring.queued() == 4800
+
+
+def test_rechunker_collects_small_blocks_into_100ms_chunks():
+    r = audio.Rechunker()
+    x = np.arange(4000, dtype=np.int16)
+    out = []
+    for k in range(0, 4000, 160):  # 10 ms blocks
+        out += r.push(x[k:k + 160])
+    assert [len(c) for c in out] == [audio.CHUNK_BYTES, audio.CHUNK_BYTES]
+    assert np.array_equal(np.frombuffer(b"".join(out), dtype="<i2"), x[:3200])
+    assert len(r.buf) == 800  # the rest waits for the next blocks
+
+
+def test_rechunker_passes_a_full_chunk_through():
+    r = audio.Rechunker()
+    x = np.full(1600, 7, dtype=np.int16)
+    assert r.push(x) == [x.astype("<i2").tobytes()]
+    assert len(r.buf) == 0
+
+
+def test_capture_passes_latency_and_block_to_portaudio(monkeypatch):
+    import sounddevice as sd
+    opened = []
+
+    class FakeInputStream:
+        def __init__(self, **kw):
+            opened.append(kw)
+    monkeypatch.setattr(sd, "InputStream", FakeInputStream)
+    monkeypatch.setattr(sd, "check_input_settings", lambda **kw: None)
+    loop = asyncio.new_event_loop()
+    try:
+        audio.Capture(3, asyncio.Queue(), loop)
+        audio.Capture(3, asyncio.Queue(), loop, latency="low", block_ms=10)
+    finally:
+        loop.close()
+    assert opened[0]["blocksize"] == 1600 and "latency" not in opened[0]  # unchanged default
+    assert opened[1]["blocksize"] == 160 and opened[1]["latency"] == "low"
+
+
+def test_capture_callback_delivers_100ms_chunks_from_small_blocks(monkeypatch):
+    import sounddevice as sd
+    monkeypatch.setattr(sd, "InputStream", lambda **kw: None)
+    monkeypatch.setattr(sd, "check_input_settings", lambda **kw: None)
+    loop = asyncio.new_event_loop()
+    try:
+        q: asyncio.Queue = asyncio.Queue()
+        c = audio.Capture(3, q, loop, latency="low", block_ms=10)
+        for _ in range(25):
+            c._cb(np.ones((160, 1), dtype=np.int16), 160, None, None)
+        loop.run_until_complete(asyncio.sleep(0))
+        assert q.qsize() == 2 and len(q.get_nowait()) == audio.CHUNK_BYTES
+    finally:
+        loop.close()
+
+
+def test_capture_options_low_latency_for_blackhole_only():
+    assert audio.capture_options("BlackHole 16ch") == {"latency": "low", "block_ms": 10}
+    assert audio.capture_options("BlackHole 2ch", "low") == {"latency": "low", "block_ms": 10}
+    assert audio.capture_options("BlackHole 16ch", "default") == {}
+    assert audio.capture_options("MacBook Pro Microphone") == {}  # not measured: unchanged
+    assert audio.capture_options(None) == {}
+
+
+def test_capture_latency_flag_defaults_to_low():
+    from kana import __main__ as cli
+    assert cli.parse_args([]).capture_latency == "low"
+    assert cli.parse_args(["--capture-latency", "default"]).capture_latency == "default"

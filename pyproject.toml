@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Two-way live voice translation for meetings, from the Mac menu bar"
 license = "Apache-2.0"
 requires-python = ">=3.13"
-dependencies = ["google-genai", "sounddevice", "numpy", "python-dotenv"]
+dependencies = ["google-genai", "sounddevice", "numpy", "python-dotenv", "websockets>=13"]
 
 [project.scripts]
 kana = "kana.__main__:main"

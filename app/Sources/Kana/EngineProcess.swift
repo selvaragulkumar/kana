@@ -277,6 +277,8 @@ final class EngineProcess: ObservableObject {
     private var audioByDir: [String: (sent: Double, recv: Double)] = [:]
     /// Cost the engine computed from server-reported tokens, per direction.
     private var engineUsdByDir: [String: Double] = [:]
+    /// Directions whose engine cost is itself an estimate (`est`: OpenAI, priced from audio sent).
+    private var engineEstDirs: Set<String> = []
     /// True until the engine reports a cost; the footer then shows a seconds-based estimate.
     @Published private(set) var costIsEstimate = true
 
@@ -284,7 +286,7 @@ final class EngineProcess: ObservableObject {
     /// audio second, $3.50 / 1M in, $21 / 1M out), shown with "est.".
     private func recomputeCost() {
         if !engineUsdByDir.isEmpty {
-            costIsEstimate = false
+            costIsEstimate = !engineEstDirs.isEmpty
             usd = engineUsdByDir.values.reduce(0, +)
         } else {
             costIsEstimate = true
@@ -305,6 +307,7 @@ final class EngineProcess: ObservableObject {
         guard let m = model else { return nil }
         if m == "fake" { return "fake engine" }
         if m == "gemini-3.8-live" { return "fallback model" }
+        if m.hasPrefix("gpt-") { return "OpenAI" }
         return nil
     }
 
@@ -313,7 +316,9 @@ final class EngineProcess: ObservableObject {
         var lines: [String] = []
         lines.append("IN: \(inModel ?? "not running")")
         lines.append("OUT: \(outModel ?? "not running")")
-        if register == "business" {
+        if inModel?.hasPrefix("gpt-") == true || outModel?.hasPrefix("gpt-") == true {
+            lines.append("OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo.")
+        } else if register == "business" {
             lines.append("Business keigo: the outbound Japanese uses a stock voice, not yours.")
         } else if register != nil {
             lines.append("Register mirrors yours; your own voice both ways.")
@@ -397,7 +402,11 @@ final class EngineProcess: ObservableObject {
 
     func start(mic: String?, spk: String?, inLang: String, outLang: String, business: Bool) {
         guard process == nil else { return }
-        var args = ["--json", "--in", inLang, "--out", outLang, "--register", business ? "business" : "default"]
+        // OpenAI takes no instruction, so business keigo is Gemini-only; the engine refuses the combination.
+        let openai = prefs.usesOpenAI
+        var args = ["--json", "--in", inLang, "--out", outLang,
+                    "--register", business && !openai ? "business" : "default"]
+        if openai { args += ["--provider", "openai"] }
         if let mic, !mic.isEmpty { args += ["--mic", mic] }
         if let spk, !spk.isEmpty { args += ["--spk", spk] }
         if !prefs.saveTranscripts { args.append("--no-save") }
@@ -405,7 +414,11 @@ final class EngineProcess: ObservableObject {
         // The Keychain key goes into the child's environment, never onto the command line.
         // Without it the engine falls back to .env (python-dotenv does not override).
         var extraEnv: [String: String] = [:]
-        if let key = KeychainStore.read(account: KeychainStore.geminiAccount), !key.isEmpty {
+        if openai {
+            if let key = KeychainStore.read(account: KeychainStore.openaiAccount), !key.isEmpty {
+                extraEnv["OPENAI_API_KEY"] = key
+            }
+        } else if let key = KeychainStore.read(account: KeychainStore.geminiAccount), !key.isEmpty {
             extraEnv["GEMINI_API_KEY"] = key
         }
 
@@ -455,6 +468,7 @@ final class EngineProcess: ObservableObject {
         rows.removeAll()
         audioByDir.removeAll()
         engineUsdByDir.removeAll()
+        engineEstDirs.removeAll()
         costIsEstimate = true
         inModel = nil
         outModel = nil
@@ -594,12 +608,17 @@ final class EngineProcess: ObservableObject {
             if let dir = e.dir {
                 audioByDir[dir] = (e.sent_s ?? 0, e.recv_s ?? 0)
                 if let u = e.usd { engineUsdByDir[dir] = u }
+                if e.est == true { engineEstDirs.insert(dir) }
                 recomputeCost()
                 if let g = e.gated_s { gatedS[dir] = g }
                 if let l = e.latency_ms { latencyMs[dir] = l }
             }
         case "usage":
-            if let dir = e.dir, let u = e.usd { engineUsdByDir[dir] = u; recomputeCost() }
+            if let dir = e.dir, let u = e.usd {
+                engineUsdByDir[dir] = u
+                if e.est == true { engineEstDirs.insert(dir) }
+                recomputeCost()
+            }
         case "latency":
             if let dir = e.dir { lastUtterance[dir] = (e.onset_to_audio_ms, e.src_final_to_dst_final_ms) }
         case "saved":
