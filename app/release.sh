@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --arch)
       case "${2:-}" in
-        all) ARCHES=(arm64 x86_64) ;;
+        all) ARCHES=(x86_64 arm64) ;;   # native last, so app/build/kana.app ends up Apple silicon
         arm64|x86_64) ARCHES=("$2") ;;
         *) echo "unknown arch: ${2:-}" >&2; exit 64 ;;
       esac
