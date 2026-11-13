@@ -4,6 +4,18 @@ import SwiftUI
 /// The six mark states from design/kana-design.html.
 enum MarkState: String, CaseIterable {
     case idle, connecting, listening, talking, translating, error
+
+    /// For VoiceOver ("kana, listening").
+    var spoken: String {
+        switch self {
+        case .idle: return L10n.t("idle")
+        case .connecting: return L10n.t("connecting")
+        case .listening: return L10n.t("listening")
+        case .talking: return L10n.t("talking")
+        case .translating: return L10n.t("translating")
+        case .error: return L10n.t("error")
+        }
+    }
 }
 
 /// CSS `cubic-bezier(x1,y1,x2,y2)` evaluated at x (solved for t by Newton + bisection).
@@ -163,6 +175,6 @@ struct KanaMark: View {
             .animation(.easeOut(duration: 0.3), value: f.alpha1)
         }
         .onChange(of: state) { _, _ in since = Date() }
-        .accessibilityLabel("kana, \(state.rawValue)")
+        .accessibilityLabel(L10n.f("kana, %@", state.spoken))
     }
 }

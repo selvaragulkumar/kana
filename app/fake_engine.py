@@ -8,11 +8,15 @@ Speaks the engine's --json protocol (docs/superpowers/specs/2026-11-12-menubar-a
          outbound transcripts while talk is on; one reconnect and one non-fatal error along the way.
          Honours {"cmd":"talk","on":bool} and {"cmd":"quit"} on stdin.
          Also reports register and in_model/out_model in ready (model "fake"), emits usage events,
-         per-utterance latency events, gated_s/latency_ms on the audio tick, and a
+         per-utterance latency events, gated_s/latency_ms on the audio tick, one outbound
+         row in four that gets no translation (an untranslated event), and a
          saved event; the Markdown/SRT files are written to <tmp>/kana-fake/transcripts
          (or --save-dir) unless --no-save is given.
   --provider openai: usage is priced per minute of audio sent and marked est (no token counts),
          as the real engine does for gpt-realtime-translate; --register business is then fatal.
+  fake_engine.py --json --passthrough [--mic X --spk Y]
+      -> ready with "mode": "passthrough", then nothing until {"cmd":"quit"} or EOF, then bye.
+         A --spk naming a BlackHole device is a fatal error, as in the real engine.
   FAKE_ENGINE_FATAL=1 makes it exit with a fatal error after ~6 s.
 Stdlib only.
 """
@@ -69,6 +73,7 @@ OUTBOUND = [
     ("Yes, I can hear you clearly.", "はい、よく聞こえます。"),
     ("Tuesday works for me.", "火曜日で大丈夫です。"),
     ("Could you share the slides?", "スライドを共有していただけますか？"),
+    ("はい、そうですね。", None),  # the other person's voice in the mic: no translation (untranslated)
 ]
 
 
@@ -76,6 +81,9 @@ def main():
     if "--list-devices" in sys.argv:
         emit_devices()
         return 0
+
+    if "--passthrough" in sys.argv:
+        return passthrough()
 
     in_lang, out_lang = arg("--in", "en"), arg("--out", "ja")
     only = arg("--only", None)
@@ -122,6 +130,10 @@ def main():
         rows[d] += 1  # the real engine pairs by timing and names the row (kana/pairing.py)
         emit("transcript", dir=d, kind="src", text=src, row=rows[d], row_text=src, final=True)
         time.sleep(0.4)
+        if dst is None:  # the model said nothing (speech already in the target language)
+            emit("untranslated", dir=d, row=rows[d])
+            emit("latency", dir=d, onset_to_audio_ms=None, src_final_to_dst_final_ms=None)
+            return
         emit("transcript", dir=d, kind="dst", text=dst, row=rows[d], row_text=dst, final=True)
         lat[d].append(onset_ms)
         emit("latency", dir=d, onset_to_audio_ms=onset_ms, src_final_to_dst_final_ms=400 + onset_ms // 6)
@@ -184,6 +196,24 @@ def main():
 
     emit("session", dir="in", state="closed", detail="")
     emit("session", dir="out", state="closed", detail="")
+    emit("bye")
+    return 0
+
+
+def passthrough():
+    """--passthrough: ready with mode, then nothing until quit or EOF (no talk, no transcripts)."""
+    if "blackhole" in arg("--spk", "").lower():
+        text = f'Earphones are "{arg("--spk", "")}", a BlackHole device: pick your real earphones.'
+        print(text, file=sys.stderr)
+        emit("error", fatal=True, text=text)
+        return 2
+    threading.Thread(target=stdin_loop, daemon=True).start()
+    time.sleep(0.3)
+    emit("ready", mode="passthrough",
+         **{"in": {"src": "Fake Meet capture", "sink": arg("--spk", "Fake Speaker 1")},
+            "out": {"src": arg("--mic", "Fake Mic 1"), "sink": "Fake Meet mic"}})
+    while not state["quit"]:
+        time.sleep(0.1)
     emit("bye")
     return 0
 

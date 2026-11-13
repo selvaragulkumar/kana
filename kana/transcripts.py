@@ -6,11 +6,13 @@ import datetime as dt
 import time
 from pathlib import Path
 
+from .paths import support_dir
+
 ARROW = {"in": "↓", "out": "↑"}
 
 
 def default_dir() -> Path:
-    return Path.home() / "Library" / "Application Support" / "kana"
+    return support_dir()
 
 
 def srt_time(seconds: float) -> str:

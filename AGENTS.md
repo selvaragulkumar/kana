@@ -22,6 +22,7 @@ Notes for coding agents and new contributors. Humans should also read [CONTRIBUT
 - **Anti-goals:** no audio feedback loops by construction, and never send the microphone while the user believes they are muted.
 - **No telemetry.** The engine talks only to `generativelanguage.googleapis.com` (or, with the opt-in `--backend vertex`, to `aiplatform.googleapis.com` and Google's OAuth token endpoint for application-default credentials), or to `api.openai.com` instead when the user picks `--provider openai`. The app makes one kind of network call: when the user presses **Install audio drivers** in Setup, it downloads the two BlackHole installers from `existential.audio` (pinned version and SHA-256, see `app/drivers/README.md`). Nothing else.
 - **Installer work never runs for real on a dev Mac.** Test the driver install with `kana --driver-install-dry-run` (prints the admin command, installs nothing) and the Setup page with `kana --render-setup <dir>` (offscreen).
+- **UI text goes through `L10n`.** Every user-facing string in `app/Sources/Kana` is `L10n.t("English")` or `L10n.f("Format %@", x)`, with entries in `app/Resources/en.lproj/Kana.strings` (value = key) and `app/Resources/ja.lproj/Kana.strings` (です・ます, terms as in README.ja.md). `app/check_l10n.sh` must pass.
 - Never print or log `GEMINI_API_KEY` or `OPENAI_API_KEY`. The app passes it to the engine in the environment, never as an argument.
 
 ## Test commands
@@ -30,6 +31,8 @@ Notes for coding agents and new contributors. Humans should also read [CONTRIBUT
 .venv/bin/python -m pytest -q          # unit tests, no key or audio needed
 .venv/bin/python -m pytest -m live -s  # real Gemini call, needs GEMINI_API_KEY, costs cents
 app/build.sh                           # builds the app with Command Line Tools only
+app/check_talk_key.sh                  # talk key hold/tap logic checks (swiftc, no window)
+app/check_l10n.sh                      # every UI string has en + ja, no bare UI literal (python3 + swiftc)
 app/build.sh --bundle-engine           # same, with its own Python engine inside (as in the DMG)
 app/release.sh                         # dist/kana-<version>.dmg
 ```

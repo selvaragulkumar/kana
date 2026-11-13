@@ -95,6 +95,12 @@ enum Theme {
         return .system(size: size, weight: .semibold)
     }
 
+    /// Page titles ("Setup"): the wordmark face for Latin, Noto Sans JP 600 when the title is Japanese
+    /// (Space Grotesk has no Japanese glyphs). The wordmark "kana" itself always uses `brand`.
+    static func heading(_ s: String, size: CGFloat) -> Font {
+        isJapanese(s) ? jp(size, 600) : brand(size)
+    }
+
     /// True when the string has kana or kanji, to pick the Japanese face for whole lines.
     static func isJapanese(_ s: String) -> Bool {
         s.unicodeScalars.contains { (0x3040...0x30FF).contains($0.value) || (0x4E00...0x9FFF).contains($0.value) }
@@ -111,6 +117,8 @@ enum Theme {
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .lineLimit(1)
+            .fixedSize()   // a Japanese label never wraps
             .font(Theme.ui(13, 600))
             .foregroundStyle(Theme.c(0x0A0A0B))
             .padding(.horizontal, 18)
@@ -126,8 +134,9 @@ struct GhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 8) {
             if square { RoundedRectangle(cornerRadius: 2).fill(.white).frame(width: 9, height: 9) }
-            configuration.label
+            configuration.label.lineLimit(1)
         }
+        .fixedSize()
         .font(Theme.ui(13, 600))
         .foregroundStyle(.white)
         .padding(.horizontal, 14)
@@ -142,6 +151,8 @@ struct SmallButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var enabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
+            .lineLimit(1)
+            .fixedSize()
             .font(Theme.ui(12, 500))
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 10)
@@ -180,16 +191,19 @@ extension View {
     }
 }
 
-/// Pill chip ("Idle", "Live").
+/// Pill chip ("Idle", "Passing through", "Live").
 struct StatePill: View {
     let live: Bool
+    var passing = false
+    var lang = L10n.lang   // re-renders the pill when the UI language changes
     var body: some View {
         HStack(spacing: 6) {
             ZStack {
-                Circle().fill(live ? Theme.accent : Theme.text4).frame(width: 7, height: 7)
+                Circle().fill(live ? Theme.accent : (passing ? Theme.ok : Theme.text4)).frame(width: 7, height: 7)
                 if live { PingRing() }
             }
-            Text(live ? "Live" : "Idle")
+            Text(live ? L10n.t("Live") : (passing ? L10n.t("Pass-through") : L10n.t("Idle")))
+                .lineLimit(1)
         }
         .font(Theme.ui(12))
         .foregroundStyle(live ? Theme.liveText : Theme.text2)

@@ -23,6 +23,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // Writing to a dead engine's stdin must not kill the app.
         signal(SIGPIPE, SIG_IGN)
         Theme.registerFonts()
+        _ = Prefs.shared   // applies the saved UI language
+        // `--lang en|ja|system` (or KANA_LANG): UI language for this run only, not saved. For the
+        // offscreen renders below (`kana --render-setup <dir> --lang ja`).
+        let args = CommandLine.arguments
+        let langArg = args.firstIndex(of: "--lang").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil }
+            ?? ProcessInfo.processInfo.environment["KANA_LANG"]
+        if let langArg, let choice = L10n.Choice(rawValue: langArg) { L10n.set(choice) }
         // `kana --render-marks <dir>`: write stills of the six mark states and exit (docs, tests).
         if let i = CommandLine.arguments.firstIndex(of: "--render-marks"), i + 1 < CommandLine.arguments.count {
             MarkStills.render(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
@@ -52,7 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let prefs = Prefs.shared
         let engine = EngineProcess(prefs: prefs)
-        let hotkey = Hotkey { [weak engine] in engine?.toggleTalk() }
+        let hotkey = Hotkey(prefs: prefs, isTalking: { [weak engine] in engine?.talking ?? false },
+                            setTalk: { [weak engine] on in engine?.setTalk(on) })
         let actions = AppActions(prefs: prefs)
         self.engine = engine
         self.hotkey = hotkey
@@ -61,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         captions = CaptionController(engine: engine, prefs: prefs)
         hotkey.install()
         engine.refreshDevices()
+        engine.resumePassthrough()   // idle = pass-through, when the pref and Setup allow it
         status.launch()
         installTestHooks()
     }
@@ -75,11 +84,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 guard let self else { return }
                 switch cmd {
                 case "open": self.status.show()
-                case "start":
-                    let d = UserDefaults.standard
-                    self.engine.start(mic: d.string(forKey: "mic"), spk: d.string(forKey: "spk"),
-                                      inLang: d.string(forKey: "inLang") ?? "en", outLang: d.string(forKey: "outLang") ?? "ja",
-                                      business: d.bool(forKey: "businessKeigo"))
+                case "start": self.engine.startWithSavedPrefs()
                 case "stop": self.engine.stop()
                 case "talk": self.engine.toggleTalk()
                 case "minimize": self.status.minimize()
@@ -171,10 +176,10 @@ enum MarkStills {
             ForEach([true, false], id: \.self) { dark in
                 HStack(spacing: 16) {
                     Spacer()
-                    Text("Wi-Fi")
+                    Text(verbatim: "Wi-Fi")
                     Image(nsImage: bitmap(false, dark: dark))
                     Image(nsImage: bitmap(true, dark: dark))
-                    Text("Thu 20:05")
+                    Text(verbatim: "Thu 20:05")
                 }
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(dark ? Color.white : Color(white: 0.07))

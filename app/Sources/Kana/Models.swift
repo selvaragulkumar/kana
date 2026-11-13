@@ -24,6 +24,13 @@ struct TranscriptRow: Identifiable, Equatable {
     var updatedAt = Date()
     /// The engine's row number in this direction (`row` on transcript events); the engine pairs.
     var key: Int? = nil
+    /// No translation is coming: the engine said `untranslated`, or the backstop gave up
+    /// (`EngineProcess.settleStaleRows`). Shown as a quiet dash instead of typing dots.
+    /// A translation that still arrives is shown as usual.
+    var settled = false
+
+    /// Waiting for a translation that may still come.
+    var pending: Bool { dst.isEmpty && !settled }
 }
 
 enum Direction: String {
@@ -71,6 +78,7 @@ struct EngineEvent: Decodable {
     let register: String?
     let in_lang: String?
     let out_lang: String?
+    let mode: String?         // ready: "passthrough" for --passthrough; absent for a live session
 }
 
 /// Session state per direction, shown as a tiny label in the footer.
@@ -80,6 +88,17 @@ enum SessionState: String {
     case connected = "connected"
     case reconnecting = "reconnecting"
     case closed = "closed"
+
+    /// In sentences and tooltips ("IN session reconnecting: …").
+    var spoken: String {
+        switch self {
+        case .none: return "–"
+        case .connecting: return L10n.t("connecting")
+        case .connected: return L10n.t("connected")
+        case .reconnecting: return L10n.t("reconnecting")
+        case .closed: return L10n.t("closed")
+        }
+    }
 
     /// Compact form for the footer.
     var short: String {

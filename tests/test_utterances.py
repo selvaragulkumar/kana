@@ -160,6 +160,46 @@ async def test_quiet_close_flushes_unpunctuated_text_into_the_row(tmp_path):
     assert rows == [(["今日はいい天気ですね。"], ["The weather is nice today,"])]
 
 
+async def test_quiet_close_without_translation_marks_the_row_untranslated():
+    """Speech already in the target language (the other person's voice in the mic):
+    the model says nothing. When the utterance closes quietly, its waiting row is
+    reported `untranslated`; a translated row of an earlier utterance is not."""
+    clock, rec = Clock(), Rec()
+    s = LiveFake()
+    connect, _ = connector([s])
+    in_q = asyncio.Queue()
+    d = Direction("OUT", "en", "ja", "m-translate", in_q, asyncio.Queue(), connect=connect, emit=rec, clock=clock,
+                  vad=VAD(hangover_ms=400))
+
+    async def utterance(inp, outp=None):
+        in_q.put_nowait(tone())
+        n = len(rec.of("transcript"))
+        s.q.put_nowait(resp(server_content=content(inp=inp, outp=outp)))
+        await wait_for(lambda: len(rec.of("transcript")) == n + (2 if outp else 1))
+        for _ in range(4):  # hangover
+            in_q.put_nowait(SIL)
+        await wait_for(lambda: not d.vad.speaking and in_q.empty())
+        clock.t += 5  # quiet window passes
+        m = len(rec.of("latency"))
+        in_q.put_nowait(SIL)
+        await wait_for(lambda: len(rec.of("latency")) == m + 1)
+
+    task = asyncio.create_task(d.run())
+    try:
+        await wait_for(lambda: d.session is s)
+        await utterance("Is that okay?", "よろしいですか？")
+        assert rec.of("untranslated") == []
+        await utterance("そうですね、来週で大丈夫です。")
+        assert rec.of("untranslated") == [{"dir": "out", "row": 2}]
+        kinds = [e for e, _ in rec.items if e in ("untranslated", "latency")]
+        assert kinds == ["latency", "untranslated", "latency"]  # sent just before its utterance's latency
+    finally:
+        task.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await task
+    assert rec.of("untranslated") == [{"dir": "out", "row": 2}]  # the run's final close adds nothing
+
+
 def test_writer_files_names_and_escaping(tmp_path):
     w1 = TranscriptWriter(tmp_path, start_wall=dt.datetime(2026, 11, 12, 9, 5), start_mono=0.0)
     w2 = TranscriptWriter(tmp_path, start_wall=dt.datetime(2026, 11, 12, 9, 5), start_mono=0.0)

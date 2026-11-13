@@ -100,7 +100,11 @@ struct PanelView: View {
                 ? Self.introFrame(t, reduceMotion: reduceMotion && fixedIntroTime == nil) : IntroFrame()
             Group {
                 if showSetup {
-                    SetupView(model: setup) { showSetup = false; setupDismissed = true }
+                    SetupView(model: setup) {
+                        showSetup = false
+                        setupDismissed = true
+                        engine.resumePassthrough()   // drivers or mic permission may be in place now
+                    }
                         .opacity(f.content)
                 } else {
                     main(f)
@@ -130,6 +134,8 @@ struct PanelView: View {
         .onChange(of: actions.introStart) { _, d in if let d { startIntro(d) } else { introRunning = false } }
         .onReceive(NotificationCenter.default.publisher(for: .kanaPanelDidOpen)) { _ in panelOpened() }
         .onChange(of: engine.needsSetup) { _, need in if need { showSetup = true } }
+        .onChange(of: mic) { _, _ in engine.devicesChanged() }
+        .onChange(of: spk) { _, _ in engine.devicesChanged() }
         .onChange(of: actions.setupRequested) { _, req in
             if req { showSetup = true; actions.setupRequested = false }
         }
@@ -206,7 +212,7 @@ struct PanelView: View {
                     .tracking(-0.4)
                     .fixedSize()
                     .opacity(f.move)
-                StatePill(live: engine.running)
+                StatePill(live: engine.running, passing: engine.passingThrough)
                     .fixedSize()
                     .padding(.leading, 6)
                     .help(engine.model == nil ? "" : engine.engineTooltip)
@@ -221,23 +227,25 @@ struct PanelView: View {
                     Image(systemName: "minus").font(.system(size: 13, weight: .semibold))
                 }
                 .buttonStyle(IconButtonStyle())
-                .help("Minimize")
+                .help(L10n.t("Minimize"))
                 Button {
-                    actions.hidePanel()
+                    actions.quit()
                 } label: {
                     Image(systemName: "xmark").font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(IconButtonStyle())
-                .help("Close")
+                .help(L10n.t("Quit kana"))
                 if engine.running {
-                    Button("Stop") { engine.stop() }
+                    Button(L10n.t("Stop")) { engine.stop() }
                         .buttonStyle(GhostButtonStyle(square: true))
+                        .fixedSize()
                         .keyboardShortcut(.cancelAction)
                 } else {
-                    Button("Start") {
+                    Button(L10n.t("Start")) {
                         engine.start(mic: mic, spk: spk, inLang: inLang, outLang: outLang, business: businessKeigo)
                     }
                     .buttonStyle(PrimaryButtonStyle())
+                    .fixedSize()
                     .keyboardShortcut(.defaultAction)
                 }
             }
@@ -247,23 +255,35 @@ struct PanelView: View {
 
     private var overflowMenu: some View {
         Menu {
-            Toggle("Captions", isOn: $prefs.captionsOn)
-            Toggle("Visible in screen share", isOn: $prefs.visibleInShare)
-            Toggle("Save transcripts", isOn: $prefs.saveTranscripts)
+            Toggle(L10n.t("Captions"), isOn: $prefs.captionsOn)
+            Toggle(L10n.t("Visible in screen share"), isOn: $prefs.visibleInShare)
+            Toggle(L10n.t("Save transcripts"), isOn: $prefs.saveTranscripts)
+            Toggle(L10n.t("Pass audio through when idle"), isOn: Binding(
+                get: { prefs.passthroughWhenIdle },
+                set: { prefs.passthroughWhenIdle = $0; engine.passthroughPrefChanged() }))
             Divider()
-            Picker("Engine", selection: $prefs.engineProvider) {
-                Text("Gemini · your own voice").tag("gemini")
-                Text("OpenAI · faster, no business keigo").tag("openai")
+            Picker(L10n.t("Talk key"), selection: $prefs.talkKey) {
+                ForEach(TalkKey.allCases) { Text($0.title).tag($0) }
+            }
+            Divider()
+            Picker(L10n.t("Engine"), selection: $prefs.engineProvider) {
+                Text(L10n.t("Gemini · your own voice")).tag("gemini")
+                Text(L10n.t("OpenAI · faster, no business keigo")).tag("openai")
             }
             .disabled(engine.running)
+            Picker(L10n.t("Language"), selection: $prefs.language) {
+                Text(L10n.t("System")).tag(L10n.Choice.system)
+                Text(verbatim: "English").tag(L10n.Choice.en)
+                Text(verbatim: "日本語").tag(L10n.Choice.ja)
+            }
             Divider()
-            Button("Open Last Transcript") { actions.openLastTranscript() }
+            Button(L10n.t("Open Last Transcript")) { actions.openLastTranscript() }
                 .disabled(actions.lastTranscriptURL == nil)
-            Button("Transcripts Folder") { actions.openTranscriptsFolder() }
+            Button(L10n.t("Transcripts Folder")) { actions.openTranscriptsFolder() }
             Divider()
-            Button("Setup…") { showSetup = true }
+            Button(L10n.t("Setup…")) { showSetup = true }
             Divider()
-            Button("Quit kana") { NSApplication.shared.terminate(nil) }
+            Button(L10n.t("Quit kana")) { actions.quit() }
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 14, weight: .semibold))
@@ -273,12 +293,36 @@ struct PanelView: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .frame(minWidth: 28, minHeight: 28)
-        .help("More")
+        .help(L10n.t("More"))
     }
 
     // MARK: Talk bar
 
+    @ViewBuilder
     private var talkBar: some View {
+        if engine.passingThrough && !engine.running { passthroughBar } else { liveTalkBar }
+    }
+
+    /// Pass-through: no talk key, and the plain truth about the microphone.
+    private var passthroughBar: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "mic")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(Theme.text4)
+            Text(L10n.t("Meet hears your mic directly · mute in Meet"))
+                .font(Theme.ui(14, 500))
+                .foregroundStyle(Theme.text4)
+                .lineLimit(1)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .frame(maxWidth: .infinity, minHeight: 52, maxHeight: 52)
+        .background(RoundedRectangle(cornerRadius: 14).fill(Theme.surface))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.line))
+        .help(L10n.t("Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter."))
+    }
+
+    private var liveTalkBar: some View {
         let on = engine.talking
         let enabled = engine.running && engine.ready
         return Button {
@@ -289,11 +333,11 @@ struct PanelView: View {
                     .font(.system(size: 15, weight: .medium))
                     .foregroundStyle(on ? Theme.accent : Theme.text4)
                 if on {
-                    Text("Talking · \(LanguagePresets.name(inLang)) → \(LanguagePresets.name(outLang))")
+                    Text(L10n.f("Talking · %@ → %@", LanguagePresets.name(inLang), LanguagePresets.name(outLang)))
                         .font(Theme.ui(15, 600))
                         .foregroundStyle(.white)
                 } else {
-                    Text("Press to talk")
+                    Text(L10n.t("Press to talk"))
                         .font(Theme.ui(15, 500))
                         .foregroundStyle(Theme.text4)
                 }
@@ -301,7 +345,7 @@ struct PanelView: View {
                 if on {
                     LevelMeter()
                 } else {
-                    Text("⌃⌥ Space")
+                    Text(hotkey.hint)
                         .font(Theme.ui(12))
                         .foregroundStyle(Theme.text3)
                         .padding(.horizontal, 7)
@@ -317,7 +361,13 @@ struct PanelView: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .help(enabled ? "Toggle talking (⌃⌥ Space)" : "Start a session first")
+        .help(enabled ? talkHelp : L10n.t("Start a session first"))
+    }
+
+    private var talkHelp: String {
+        prefs.talkKey.isModifier
+            ? L10n.f("Toggle talking, or hold %@ to talk and tap it to toggle", hotkey.hint)
+            : L10n.f("Toggle talking (%@)", hotkey.hint)
     }
 
     // MARK: Warning cards
@@ -327,7 +377,7 @@ struct PanelView: View {
         HStack(spacing: 10) {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundStyle(Theme.accent)
-            Text("FAKE ENGINE — test data, not your devices")
+            Text(L10n.t("FAKE ENGINE — test data, not your devices"))
                 .font(Theme.ui(12, 600))
                 .foregroundStyle(Theme.alertTitle)
             Spacer(minLength: 0)
@@ -341,10 +391,10 @@ struct PanelView: View {
         HStack(spacing: 10) {
             Image(systemName: "keyboard")
                 .foregroundStyle(Theme.text2)
-            Text("Hotkey needs Accessibility access.")
+            Text(L10n.t("Hotkey needs Accessibility access."))
                 .foregroundStyle(Theme.text2)
             Spacer()
-            Button("Open Settings") { hotkey.requestAccess() }
+            Button(L10n.t("Open Settings")) { hotkey.requestAccess() }
                 .buttonStyle(SmallButtonStyle())
         }
         .padding(.horizontal, 12)
@@ -355,14 +405,14 @@ struct PanelView: View {
     @ViewBuilder
     private func errorCard(_ text: String) -> some View {
         if engine.lastErrorFatal {
-            alertRow(title: "Engine stopped", detail: text) {
+            alertRow(title: L10n.t("Engine stopped"), detail: text) {
                 Button {
                     engine.dismissError()
                 } label: {
                     Image(systemName: "xmark").font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(IconButtonStyle(color: Theme.alertText))
-                .help("Dismiss")
+                .help(L10n.t("Dismiss"))
             }
         } else {
             HStack(alignment: .top, spacing: 10) {
@@ -415,8 +465,8 @@ struct PanelView: View {
 
     private var deviceFields: some View {
         VStack(spacing: 8) {
-            field("Microphone", selection: $mic, devices: engine.inputs)
-            field("Earphones", selection: $spk, devices: engine.outputs)
+            field(L10n.t("Microphone"), selection: $mic, devices: engine.inputs)
+            field(L10n.t("Earphones"), selection: $spk, devices: engine.outputs)
         }
     }
 
@@ -427,10 +477,10 @@ struct PanelView: View {
                 .foregroundStyle(Theme.text3)
                 .frame(width: 96, alignment: .leading)
             Menu {
-                Button("System default") { selection.wrappedValue = "" }
+                Button(L10n.t("System default")) { selection.wrappedValue = "" }
                 if !names.isEmpty { Divider() }
                 ForEach(names, id: \.self) { n in
-                    Button(engine.devicesAreFake ? "\(n) (fake)" : n) { selection.wrappedValue = n }
+                    Button(engine.devicesAreFake ? L10n.f("%@ (fake)", n) : n) { selection.wrappedValue = n }
                 }
             } label: {
                 HStack {
@@ -456,8 +506,8 @@ struct PanelView: View {
     }
 
     private func selectionLabel(_ value: String, _ names: [String]) -> String {
-        if value.isEmpty { return "System default" }
-        return names.contains(value) ? value : "\(value) (not found)"
+        if value.isEmpty { return L10n.t("System default") }
+        return names.contains(value) ? value : L10n.f("%@ (not found)", value)
     }
 
     // MARK: Languages
@@ -465,7 +515,7 @@ struct PanelView: View {
     private var languageCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                presetsMenu { side("You hear", LanguagePresets.name(inLang), trailing: false) }
+                presetsMenu { side(L10n.t("You hear"), LanguagePresets.name(inLang), trailing: false) }
                 Button {
                     swap(&inLang, &outLang)
                 } label: {
@@ -478,9 +528,9 @@ struct PanelView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(engine.running)
-                .help("Swap languages")
+                .help(L10n.t("Swap languages"))
                 presetsMenu {
-                    side(engine.register == "business" ? "Meet hears · business keigo" : "Meet hears",
+                    side(engine.register == "business" ? L10n.t("Meet hears · business keigo") : L10n.t("Meet hears"),
                          LanguagePresets.name(outLang), trailing: true)
                 }
             }
@@ -518,11 +568,12 @@ struct PanelView: View {
                     customOpen = false
                 } label: {
                     let current = inLang == LanguagePresets.english && outLang == code
-                    Text("\(LanguagePresets.name(code)) ⇄ English  (\(code)/en)\(current ? "  ✓" : "")")
+                    // Language names in their own language, so the same in both UIs.
+                    Text(verbatim: "\(LanguagePresets.name(code)) ⇄ English  (\(code)/en)\(current ? "  ✓" : "")")
                 }
             }
             Divider()
-            Button("Custom…") {
+            Button(L10n.t("Custom…")) {
                 customIn = inLang
                 customOut = outLang
                 customOpen = true
@@ -534,20 +585,20 @@ struct PanelView: View {
         .buttonStyle(.plain)
         .menuIndicator(.hidden)
         .disabled(engine.running)
-        .help("Language pair")
+        .help(L10n.t("Language pair"))
     }
 
     private var customLanguages: some View {
         HStack(spacing: 8) {
-            TextField("You hear", text: $customIn)
+            TextField(L10n.t("You hear"), text: $customIn)
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 10).padding(.vertical, 7)
                 .surfaceCard(radius: 10, border: Theme.lineInput)
-            TextField("Meet hears", text: $customOut)
+            TextField(L10n.t("Meet hears"), text: $customOut)
                 .textFieldStyle(.plain)
                 .padding(.horizontal, 10).padding(.vertical, 7)
                 .surfaceCard(radius: 10, border: Theme.lineInput)
-            Button("Apply") {
+            Button(L10n.t("Apply")) {
                 inLang = customIn.trimmingCharacters(in: .whitespaces)
                 outLang = customOut.trimmingCharacters(in: .whitespaces)
                 customOpen = false
@@ -568,10 +619,10 @@ struct PanelView: View {
     private var registerRow: some View {
         HStack(spacing: 6) {
             Spacer()
-            Text("Business keigo")
+            Text(L10n.t("Business keigo"))
                 .font(Theme.ui(11))
                 .foregroundStyle(Theme.text3)
-            Toggle("Business keigo", isOn: $businessKeigo)
+            Toggle(L10n.t("Business keigo"), isOn: $businessKeigo)
                 .labelsHidden()
                 .toggleStyle(.switch)
                 .controlSize(.mini)
@@ -580,8 +631,8 @@ struct PanelView: View {
         }
         .opacity(prefs.usesOpenAI ? 0.5 : 1)
         .help(prefs.usesOpenAI
-              ? "Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction."
-              : "Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours.")
+              ? L10n.t("Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction.")
+              : L10n.t("Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours."))
     }
 
     // MARK: Transcript
@@ -595,9 +646,9 @@ struct PanelView: View {
             }
             .frame(width: 40, height: 40)
             .opacity(0.5)
-            Text("Press Start to begin interpreting")
+            Text(L10n.t("Press Start to begin interpreting"))
                 .foregroundStyle(Theme.text3)
-            Text("Transcripts appear here, original beside translation.")
+            Text(L10n.t("Transcripts appear here, original beside translation."))
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.text4)
             Spacer(minLength: 0)
@@ -609,11 +660,11 @@ struct PanelView: View {
     private var transcript: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Transcript")
+                Text(L10n.t("Transcript"))
                 Spacer()
                 HStack(spacing: 14) {
-                    Text("↓ from Meet")
-                    Text("↑ from you")
+                    Text(L10n.t("↓ from Meet"))
+                    Text(L10n.t("↑ from you"))
                 }
             }
             .font(Theme.ui(12))
@@ -625,7 +676,7 @@ struct PanelView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 14) {
                         if engine.rows.isEmpty {
-                            Text("Listening…")
+                            Text(L10n.t("Listening…"))
                                 .foregroundStyle(Theme.text4)
                                 .frame(maxWidth: .infinity, minHeight: 120)
                         }
@@ -663,7 +714,7 @@ struct PanelView: View {
             HStack(spacing: 14) {
                 stream("IN", engine.inState, engine.latencyMs["in"])
                 stream("OUT", engine.outState, engine.latencyMs["out"])
-                Button("Quit") { NSApplication.shared.terminate(nil) }
+                Button(L10n.t("Quit")) { actions.quit() }
                     .buttonStyle(.plain)
                     .font(Theme.ui(13, 500))
                     .foregroundStyle(Theme.text)
@@ -681,21 +732,21 @@ struct PanelView: View {
         let time = String(format: "%d:%02d", secs / 60, secs % 60)
         let usd = String(format: "$%.2f", engine.usd)
         let jpy = "≈¥\(Int((engine.usd * EngineProcess.jpyPerUSD).rounded()))"
-        let est = engine.running && engine.costIsEstimate ? " est." : ""
+        let est = engine.running && engine.costIsEstimate ? " " + L10n.t("est.") : ""
         return "\(time) · \(usd) · \(jpy)\(est)"
     }
 
     private var silenceTooltip: String {
         let i = engine.gatedS["in"] ?? 0, o = engine.gatedS["out"] ?? 0
         let saved = (i + o) * 0.0000875
-        var s = String(format: "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved", i, o, saved)
+        var s = L10n.f("Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved", i, o, saved)
         if engine.costIsEstimate {
             s += prefs.usesOpenAI
-                ? "\nEstimate: OpenAI bills $0.034 per minute of audio sent and reports no usage."
-                : "\nEstimate from audio seconds until the engine reports token usage."
+                ? "\n" + L10n.t("Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage.")
+                : "\n" + L10n.t("Estimate from audio seconds until the engine reports token usage.")
         }
         if engine.model != nil {
-            s += "\n\n" + (engine.engineChip.map { "Engine: \($0)\n" } ?? "") + engine.engineTooltip
+            s += "\n\n" + (engine.engineChip.map { L10n.f("Engine: %@", $0) + "\n" } ?? "") + engine.engineTooltip
         }
         return s
     }
@@ -704,16 +755,18 @@ struct PanelView: View {
         let live = state == .connected
         let word: String
         switch state {
-        case .connected: word = "live"
+        case .connected: word = ""
         case .connecting: word = "…"
-        case .reconnecting: word = "retry"
-        case .closed: word = "closed"
-        case .none: word = engine.running ? "–" : "closed"
+        case .reconnecting: word = L10n.t("retry")
+        case .closed: word = L10n.t("closed")
+        case .none: word = engine.running ? "–" : L10n.t("closed")
         }
         let lat = latency.map { String(format: " · %.1f s", $0 / 1000) } ?? ""
         return HStack(spacing: 6) {
             Circle().fill(live ? Theme.ok : Theme.streamOff).frame(width: 6, height: 6)
-            Text("\(name) \(word)\(live ? lat : "")")
+            // Live: "IN live · 1.8 s". The Japanese drops the word (the green dot says it), so
+            // both directions and their delays fit the footer.
+            Text(live ? L10n.f("%@ live%@", name, lat) : "\(name) \(word)")
                 .monospacedDigit()
                 .lineLimit(1)
         }
@@ -721,10 +774,10 @@ struct PanelView: View {
     }
 
     private func latencyTooltip(_ dir: String) -> String {
-        var lines = ["\(dir.uppercased()) session. The number is the median delay from speech onset to translated audio."]
+        var lines = [L10n.f("%@ session. The number is the median delay from speech onset to translated audio.", dir.uppercased())]
         if let (o2a, s2d) = engine.lastUtterance[dir] {
             let f = { (v: Double?) in v.map { String(format: "%.1f s", $0 / 1000) } ?? "–" }
-            lines.append("Last utterance: onset→audio \(f(o2a)), text→translation \(f(s2d))")
+            lines.append(L10n.f("Last utterance: onset→audio %@, text→translation %@", f(o2a), f(s2d)))
         }
         return lines.joined(separator: "\n")
     }
@@ -733,6 +786,7 @@ struct PanelView: View {
 /// One utterance: arrow, original (grey), translation (strong). Japanese uses Noto Sans JP.
 struct TranscriptRowView: View {
     let row: TranscriptRow
+    var lang = L10n.lang   // re-renders the tooltips when the UI language changes
 
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -740,15 +794,21 @@ struct TranscriptRowView: View {
                 .font(Theme.ui(13))
                 .foregroundStyle(row.dir == .inbound ? Theme.text4 : Theme.accent)
                 .frame(width: 14, alignment: .leading)
-                .help(row.dir == .inbound ? "From Meet" : "From you")
+                .help(row.dir == .inbound ? L10n.t("From Meet") : L10n.t("From you"))
             Text(row.src.isEmpty ? "…" : row.src)
                 .font(Theme.text(row.src, size: 13))
                 .foregroundStyle(Theme.text3)
                 .lineSpacing(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
             Group {
-                if row.dst.isEmpty {
+                if row.pending {
                     TypingDots().frame(maxWidth: .infinity, alignment: .leading)
+                } else if row.dst.isEmpty {  // settled: the model gave no translation
+                    Text(verbatim: "—")
+                        .font(Theme.ui(13))
+                        .foregroundStyle(Theme.text4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .help(L10n.t("No translation"))
                 } else {
                     Text(row.dst)
                         .font(Theme.text(row.dst, size: 14))

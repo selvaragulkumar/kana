@@ -85,6 +85,16 @@ def modality_counts(details) -> dict:
     return out
 
 
+# While the voice gate is closed nothing is sent, and on 2026-11-13 Gemini closed an inbound
+# session after about 4 min of that with APIError 1008 "Session closed due to client
+# inactivity". The Live API docs (session management and capabilities pages, checked
+# 2026-11-13) document no inactivity window and no keepalive, only the 15 min session /
+# ~10 min connection limits, so the window is unknown. Every KEEPALIVE_S of nothing sent,
+# the pump sends one 100 ms chunk of PCM16 silence: 0.1 s per 20 s, about 0.5 % of the
+# audio a closed gate would have sent, billed like any input audio.
+KEEPALIVE_S = 20.0
+KEEPALIVE_CHUNK = bytes(3200)  # 100 ms of 16 kHz mono int16 zeros
+
 UTTERANCE_QUIET_S = 1.5  # close an utterance this long after its last event, once speech has ended
 
 
@@ -126,7 +136,7 @@ class Direction:
     def __init__(self, label, src, dst, model, in_q, out_q=None, *, connect,
                  is_muted=lambda: False, out=print, dump=None, backoff=(1, 2, 4), emit=None,
                  vad: VAD | None = None, on_utterance=None, clock=time.monotonic, instruction=None,
-                 on_row=None, live_options: dict | None = None):
+                 on_row=None, live_options: dict | None = None, keepalive_s: float = KEEPALIVE_S):
         self.label, self.src, self.dst, self.model = label, src, dst, model
         self.in_q, self.out_q, self.connect = in_q, out_q, connect
         self.is_muted, self.out, self.dump, self.backoff = is_muted, out, dump, backoff
@@ -136,6 +146,10 @@ class Direction:
         self.vad = vad if vad is not None else VAD(gate=False)
         self.on_utterance = on_utterance  # (dir, Utterance) when an utterance closes
         self.clock = clock
+        self.keepalive_s = keepalive_s
+        self.keepalives = 0  # silence chunks sent to keep an idle session open (also in bytes_sent)
+        self._last_send: float | None = None  # clock() of the last audio sent on this session
+        self._idle_session = None
         self.utt: Utterance | None = None
         self._utt_seq = 0
         # Source/translation rows, paired by timing (kana/pairing.py); on_row(dir, Row)
@@ -228,11 +242,22 @@ class Direction:
                     with contextlib.suppress(Exception):
                         await s.send_realtime_input(audio_stream_end=True)
                 was_muted = muted
+                if s is not None:  # idle clock runs while muted too: the server closes idle sessions
+                    now = self.clock()  # and the keepalive is zeros, never the microphone
+                    if self._last_send is None or s is not self._idle_session:
+                        self._idle_session, self._last_send = s, now
+                    if now - self._last_send >= self.keepalive_s:
+                        with contextlib.suppress(Exception):
+                            await self._keepalive(s, now)
                 continue
             was_muted = muted
             dec = self.vad.push(chunk)
             if s is None:
+                self._last_send = None
                 continue  # drained, never queued for later: no chunk is sent twice
+            now = self.clock()
+            if self._last_send is None or s is not self._idle_session:
+                self._idle_session, self._last_send = s, now  # a new session starts its idle clock
             if dec.onset:
                 self._onset()
             try:
@@ -241,11 +266,24 @@ class Direction:
                     self.chunks_sent += 1
                     self.bytes_sent += len(c)
                 if dec.send:
+                    self._last_send = now
                     self._on_sent()
                 if dec.end:
                     await s.send_realtime_input(audio_stream_end=True)
+                if not dec.send and now - self._last_send >= self.keepalive_s:
+                    await self._keepalive(s, now)
             except Exception:
                 pass  # the receiver sees the broken connection and reconnects
+
+    async def _keepalive(self, s, now: float) -> None:
+        """One 100 ms chunk of silence so the server does not close an idle session
+        (KEEPALIVE_S). Billed, so counted in bytes_sent; never speech: no onset, no utterance."""
+        self._last_send = now
+        await s.send_realtime_input(audio=types.Blob(data=KEEPALIVE_CHUNK, mime_type="audio/pcm;rate=16000"))
+        self.keepalives += 1
+        self.chunks_sent += 1
+        self.bytes_sent += len(KEEPALIVE_CHUNK)
+        self._on_sent()
 
     # --- utterances: latency and saved transcripts ---------------------------
 
@@ -266,7 +304,7 @@ class Direction:
         u = self.utt
         if u is not None and not self.vad.speaking and self.clock() - u.last >= UTTERANCE_QUIET_S:
             self._flush()  # text without a sentence end still belongs to this utterance
-            self.close_utterance()
+            self.close_utterance(quiet=True)
         self._seal()
 
     def _seal(self, force: bool = False) -> None:
@@ -277,10 +315,19 @@ class Direction:
         if self.emit is not None:
             self.emit("transcript", dir=self.label.lower(), **op, final=True)
 
-    def close_utterance(self) -> None:
+    def close_utterance(self, quiet: bool = False) -> None:
+        """`quiet`: closed after UTTERANCE_QUIET_S with no transcript or audible model audio,
+        so the model has finished answering it (a close by a new onset may not have)."""
         u, self.utt = self.utt, None
         if u is None or not u.has_content:
             return
+        if quiet and self.emit is not None:
+            # Rows of this utterance whose source is final and that got no translation:
+            # the model said nothing for them (e.g. speech already in the target language).
+            # The app stops showing them as pending. A late translation still fills the row.
+            for r in self.pairer.rows:
+                if r.utt == u.seq and r.waiting:
+                    self.emit("untranslated", dir=self.label.lower(), row=r.id)
         lat = u.latency()
         if lat["onset_to_audio_ms"] is not None:
             self.latencies.append(lat["onset_to_audio_ms"])

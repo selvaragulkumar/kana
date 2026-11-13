@@ -6,15 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.0] - 2026-11-13
+
+First public release. Built and used on the author's Mac (Apple silicon); the first real Google Meet call is logged in docs/VERIFICATION.md. Not notarised: see the Gatekeeper steps in the README.
+
 ### Added
+
+- **Japanese UI.** The whole app (panel, mini bar, captions hint, ••• and menu-bar menus, Setup, tooltips, error headings and the app's own error messages) is available in Japanese. It follows the macOS language (Japanese when the first preferred language is Japanese) and ••• › Language overrides it with System / English / 日本語, applied live. Strings live in `app/Resources/{en,ja}.lproj/Kana.strings` behind a small `L10n` helper; `app/check_l10n.sh` checks that every string has both languages. The microphone prompt is translated too. Engine messages, product and device names stay in English. Offscreen renders take `--lang ja`.
 
 - **OpenAI as a second engine (opt-in).** `--provider openai` (or `--model gpt-realtime-translate`) runs both directions on OpenAI's realtime translation model over its websocket, with the same voice gate, transcripts, pairing, latency events and playback. It needs `OPENAI_API_KEY` (a missing key is one fatal error); `--env-file` reads keys from another `.env`. Cost is priced at $0.034 per minute of audio sent and marked `est: true` on `usage` and `audio` events, because the endpoint reports no usage. No register control: `--register business` is refused on it. Gemini stays the default and is unchanged.
 - `tools/latency_bench.py --provider openai` measures it on the same clips.
 - App: ••• › Engine (Gemini / OpenAI), persisted; an optional OpenAI key card in Setup, stored in the login Keychain (account `OPENAI_API_KEY`); Business keigo is disabled while OpenAI is chosen, and the cost shows "est.".
+- **Pass-through when idle.** While the app is open but not live, `--passthrough` copies BlackHole 16ch to your earphones and your microphone to BlackHole 2ch, untranslated, at the devices' native rate (no key, no network), so Meet works as a normal call between sessions. Start swaps in the interpreter, Stop swaps it back. The pill reads "Passing through" and the talk bar "Meet hears your mic directly · mute in Meet": the microphone is not gated by talk there. It refuses a BlackHole earphone and never writes to BlackHole 16ch. `ready` carries `mode: "passthrough"`. Toggle: ••• › Pass audio through when idle (on by default).
+- **Talk key: hold Right ⌥ to talk, tap to toggle.** The default talk key is Right ⌥ (hold = push-to-talk, a tap under 350 ms latches, a second tap stops). ••• › Talk key and Setup › Permissions offer Right ⌘, Fn/🌐 and the old ⌃⌥Space. The pill and tooltips show the chosen key.
+- **Mini bar Start/Stop.** Clicking the mark in the minimized bar starts a session with the saved devices and languages, or stops it; the mark breathes while live (opacity only under Reduce Motion).
 
-### 0.1.0 (first public release, not yet tagged)
-
-#### Added
+- **Windows groundwork in the engine (not yet run on Windows).** A per-platform data folder (`%LOCALAPPDATA%\kana` on Windows), `--host-api` (WASAPI on Windows by default, no filter on macOS), VB-Audio cable names (`CABLE-A`/`CABLE-B` defaults on Windows, either end of a cable, MME's 31-character names), cable-aware pass-through checks, UTF-8 stdio and console push-to-talk on Windows. macOS behaviour is unchanged. Audit and design: `docs/research/windows.md`, `docs/superpowers/specs/2026-11-13-windows-design.md`.
 
 Engine (`python -m kana`):
 
@@ -53,8 +62,17 @@ App (`kana.app`, SwiftUI, macOS 14+):
 - **Transcript rows paired by timing**, not order, so a short tag the model folds into the previous sentence no longer shifts every later row.
 - **App polish.** Opening animation from the design handoff (brackets trace in, once per launch), eased connecting spin, flicker-free minimize and expand, panel stays open until ×, launching kana again opens the panel, and builds sign with a stable local identity so macOS keeps the Accessibility grant across rebuilds.
 
-#### Changed
+### Changed
+
+- **The panel's × quits kana**, stopping a live session or pass-through cleanly first (the same path as ••• › Quit kana). Reopen kana from Applications or Spotlight.
 
 - Renamed from meet-translate to kana. The Python package is now `kana` (`python -m kana`, console script `kana`), and the app is `kana.app` with the bundle id `com.selvaragulkumar.kana`.
 
-[Unreleased]: https://github.com/selvaragulkumar/kana/commits/main
+
+### Fixed
+
+- **An idle direction no longer gets closed by the server.** With the voice gate closed nothing was sent, and after about 4 minutes of a silent meeting Gemini closed the inbound session ("1008 Session closed due to client inactivity"); the reconnect lost a second or two of speech and showed a warning. While a session is up, muted or not, the engine now sends 100 ms of zero-filled silence after every 20 s with nothing sent (never microphone audio while muted) (about 0.5 % of the gated audio, billed and counted in `sent_s`). It never counts as speech.
+- **Rows the model never translates no longer show typing dots forever.** When an utterance closes after 1.5 s of quiet with a row whose source is final and no translation, the engine sends a new `untranslated` event (`dir`, `row`), and the app shows a quiet grey "—" (tooltip "No translation") in place of the dots. This happened when the other person's Japanese reached the microphone on the outbound direction. As a backstop, the app settles a row the same way 10 s after its source was last updated once a newer row exists in that direction. A late translation still fills the row.
+
+[Unreleased]: https://github.com/selvaragulkumar/kana/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/selvaragulkumar/kana/releases/tag/v0.1.0

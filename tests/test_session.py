@@ -193,3 +193,93 @@ def test_register_modes_pick_models_and_configs():
     assert m["OUT"] == ("gemini-3.5-live-translate-preview", None)
     m, _ = configs(["--register", "business", "--model", "gemini-3.8-live"])  # an explicit general model keeps its name
     assert m == {"IN": ("gemini-3.8-live", None), "OUT": ("gemini-3.8-live", KEIGO_INSTRUCTION)}
+
+
+# --- keepalive while the voice gate is closed ---------------------------------
+
+class StepClock:
+    def __init__(self, t=100.0):
+        self.t = t
+
+    def __call__(self):
+        return self.t
+
+
+async def _feed(d, in_q, clock, chunks, start, step=0.1):
+    """Feeds chunks one at a time, each at its own clock time; returns the clock
+    times at which a keepalive was sent."""
+    at = []
+    for k, c in enumerate(chunks):
+        clock.t = round(start + k * step, 3)
+        before = d.keepalives
+        in_q.put_nowait(c)
+        await wait_for(lambda: in_q.empty())
+        for _ in range(3):  # let the pump finish this chunk
+            await asyncio.sleep(0)
+        if d.keepalives > before:
+            at.append(clock.t)
+    return at
+
+
+async def _gated_direction(muted=False, hangover_ms=2000):
+    from kana.vad import VAD
+    from tests.test_events import Rec
+    s = FakeSession([], block_after=True)
+    connect, _ = make_connect([s])
+    in_q, clock, rec = asyncio.Queue(), StepClock(), Rec()
+    d = Direction("IN", "ja", "en", "m-translate", in_q, connect=connect, emit=rec, clock=clock,
+                  is_muted=lambda: muted, vad=VAD(gate=True, hangover_ms=hangover_ms), keepalive_s=1.0)
+    task = asyncio.create_task(d.run())
+    await wait_for(lambda: d.session is s)
+    return d, s, in_q, clock, rec, task
+
+
+async def _stop(task):
+    task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await task
+
+
+async def test_keepalive_one_silence_chunk_per_window_while_gated():
+    from kana.session import KEEPALIVE_S
+    from tests.test_vad import SIL
+    assert KEEPALIVE_S == 20.0
+    d, s, in_q, clock, rec, task = await _gated_direction()
+    try:
+        at = await _feed(d, in_q, clock, [SIL] * 35, start=100.0)  # 3.4 s of gated silence
+        assert at == [101.0, 102.0, 103.0]  # one per 1 s window, counted from the first chunk
+        assert d.keepalives == 3 and d.chunks_sent == 3 and d.bytes_sent == 3 * 3200
+        assert len(s.sent) == 3 and all(k["audio"].data == bytes(3200) for k in s.sent)
+        assert s.sent[0]["audio"].mime_type == "audio/pcm;rate=16000"
+        assert d.utt is None and d._utt_seq == 0  # not speech: no onset, no utterance
+    finally:
+        await _stop(task)
+    assert not rec.of("latency") and not rec.of("transcript")
+
+
+async def test_keepalive_while_muted_is_silence_never_the_microphone():
+    from tests.test_vad import SIL, tone
+    d, s, in_q, clock, rec, task = await _gated_direction(muted=True)
+    try:
+        await _feed(d, in_q, clock, [tone()] * 50, start=100.0)  # 5 s of speech into a muted direction
+        assert d.keepalives == 4 and d.bytes_sent == 4 * 3200
+        assert s.sent[0] == {"audio_stream_end": True}  # the mute's own stream end, once
+        assert all(k["audio"].data == bytes(3200) for k in s.sent[1:])  # zeros only, no mic audio
+        assert d.utt is None and d._utt_seq == 0
+    finally:
+        await _stop(task)
+
+
+async def test_speech_resets_the_keepalive_clock():
+    from tests.test_vad import SIL, tone
+    d, s, in_q, clock, rec, task = await _gated_direction(hangover_ms=200)
+    try:
+        # 100.0-100.5 silence, 100.6-101.0 speech, 101.1-101.2 hangover (sent), then silence
+        chunks = [SIL] * 6 + [tone(k=k) for k in range(5)] + [SIL] * 25
+        at = await _feed(d, in_q, clock, chunks, start=100.0)
+        assert d.chunks_sent > d.keepalives > 0
+        # the last real chunk went at 101.2, so the first keepalive is 1 s later,
+        # not at 101.0 as it would be counting from the start of the silence
+        assert at == [102.2, 103.2]
+    finally:
+        await _stop(task)

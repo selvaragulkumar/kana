@@ -1,0 +1,252 @@
+/* kana UI strings, English. The key is the English text used in app/Sources/Kana
+   (L10n.t / L10n.f); every value equals its key. Checked by app/check_l10n.sh. */
+
+/* AudioCheck.swift */
+"%@ has no input/output pair to loop back" = "%@ has no input/output pair to loop back";
+"Could not select %@" = "Could not select %@";
+"%@ reports no audio format" = "%@ reports no audio format";
+"Could not build the test tone" = "Could not build the test tone";
+"%@ loopback OK (%@)" = "%@ loopback OK (%@)";
+"%@: silence came back. Check Microphone access for kana." = "%@: silence came back. Check Microphone access for kana.";
+"%@: unexpected signal (%@)" = "%@: unexpected signal (%@)";
+
+/* CaptionStrip.swift */
+"Captions appear here. Drag the handle to move." = "Captions appear here. Drag the handle to move.";
+
+/* DriverInstaller.swift */
+"Could not download %@: %@" = "Could not download %@: %@";
+"%@ did not match its published checksum, so it was not installed." = "%@ did not match its published checksum, so it was not installed.";
+"%@ is not signed by Existential Audio, so it was not installed." = "%@ is not signed by Existential Audio, so it was not installed.";
+"Cancelled. Nothing was installed." = "Cancelled. Nothing was installed.";
+"The installer stopped: %@" = "The installer stopped: %@";
+"%@ and %@" = "%@ and %@";
+"kana wants to install the %@ audio drivers." = "kana wants to install the %@ audio drivers.";
+
+/* EngineProcess.swift */
+"An override command is in use." = "An override command is in use.";
+"Choose the folder that holds the engine (.venv and the kana package)." = "Choose the folder that holds the engine (.venv and the kana package).";
+"Built in (Python %@)." = "Built in (Python %@).";
+"Built in." = "Built in.";
+"No engine in %@." = "No engine in %@.";
+"Engine not found: %@" = "Engine not found: %@";
+"Engine not found. Choose its folder in Setup." = "Engine not found. Choose its folder in Setup.";
+"%@ has no .venv/bin/python with the engine package." = "%@ has no .venv/bin/python with the engine package.";
+"Could not list devices: %@" = "Could not list devices: %@";
+"fake engine" = "fake engine";
+"fallback model" = "fallback model";
+"not running" = "not running";
+"OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo." = "OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo.";
+"Business keigo: the outbound Japanese uses a stock voice, not yours." = "Business keigo: the outbound Japanese uses a stock voice, not yours.";
+"Register mirrors yours; your own voice both ways." = "Register mirrors yours; your own voice both ways.";
+"Could not start engine: %@" = "Could not start engine: %@";
+"Pass-through could not start: %@" = "Pass-through could not start: %@";
+"Pass-through stopped (signal %d)%@" = "Pass-through stopped (signal %d)%@";
+"Pass-through stopped (code %d)%@" = "Pass-through stopped (code %d)%@";
+"Engine was killed (signal %d)%@" = "Engine was killed (signal %d)%@";
+"Engine exited (code %d)%@" = "Engine exited (code %d)%@";
+"Pass-through: %@" = "Pass-through: %@";
+"unknown error" = "unknown error";
+"%@ session %@: %@" = "%@ session %@: %@";
+"Unknown engine error" = "Unknown engine error";
+"no JSON on stdout (exit %d)" = "no JSON on stdout (exit %d)";
+
+/* Hotkey.swift */
+"⌥ right" = "⌥ right";
+"⌘ right" = "⌘ right";
+"Right ⌥ (hold or tap)" = "Right ⌥ (hold or tap)";
+"Right ⌘ (hold or tap)" = "Right ⌘ (hold or tap)";
+"Fn / 🌐 (hold or tap)" = "Fn / 🌐 (hold or tap)";
+"⌃⌥Space (toggle)" = "⌃⌥Space (toggle)";
+"Set Keyboard › “Press 🌐 key to” to “Do Nothing”, or Fn opens the emoji picker." = "Set Keyboard › “Press 🌐 key to” to “Do Nothing”, or Fn opens the emoji picker.";
+
+/* KanaMark.swift */
+"idle" = "idle";
+"connecting" = "connecting";
+"listening" = "listening";
+"talking" = "talking";
+"translating" = "translating";
+"error" = "error";
+"kana, %@" = "kana, %@";
+
+/* KeychainStore.swift */
+"Keychain: %@" = "Keychain: %@";
+
+/* MiniBar.swift */
+"Stop" = "Stop";
+"Start" = "Start";
+"Expand" = "Expand";
+"Close" = "Close";
+"Listening…" = "Listening…";
+"Passing through · mute in Meet" = "Passing through · mute in Meet";
+"Idle. Click the mark to start." = "Idle. Click the mark to start.";
+"Talking" = "Talking";
+"Not talking (%@)" = "Not talking (%@)";
+", %.1f s delay" = ", %.1f s delay";
+"live" = "live";
+"est." = "est.";
+
+/* Models.swift */
+"connected" = "connected";
+"reconnecting" = "reconnecting";
+"closed" = "closed";
+
+/* PanelView.swift */
+"Minimize" = "Minimize";
+"Quit kana" = "Quit kana";
+"Captions" = "Captions";
+"Visible in screen share" = "Visible in screen share";
+"Save transcripts" = "Save transcripts";
+"Pass audio through when idle" = "Pass audio through when idle";
+"Talk key" = "Talk key";
+"Engine" = "Engine";
+"Gemini · your own voice" = "Gemini · your own voice";
+"OpenAI · faster, no business keigo" = "OpenAI · faster, no business keigo";
+"Language" = "Language";
+"System" = "System";
+"Open Last Transcript" = "Open Last Transcript";
+"Transcripts Folder" = "Transcripts Folder";
+"Setup…" = "Setup…";
+"More" = "More";
+"Meet hears your mic directly · mute in Meet" = "Meet hears your mic directly · mute in Meet";
+"Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter." = "Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter.";
+"Talking · %@ → %@" = "Talking · %@ → %@";
+"Press to talk" = "Press to talk";
+"Start a session first" = "Start a session first";
+"Toggle talking, or hold %@ to talk and tap it to toggle" = "Toggle talking, or hold %@ to talk and tap it to toggle";
+"Toggle talking (%@)" = "Toggle talking (%@)";
+"FAKE ENGINE — test data, not your devices" = "FAKE ENGINE — test data, not your devices";
+"Hotkey needs Accessibility access." = "Hotkey needs Accessibility access.";
+"Open Settings" = "Open Settings";
+"Engine stopped" = "Engine stopped";
+"Dismiss" = "Dismiss";
+"Microphone" = "Microphone";
+"Earphones" = "Earphones";
+"System default" = "System default";
+"%@ (fake)" = "%@ (fake)";
+"%@ (not found)" = "%@ (not found)";
+"You hear" = "You hear";
+"Swap languages" = "Swap languages";
+"Meet hears · business keigo" = "Meet hears · business keigo";
+"Meet hears" = "Meet hears";
+"Custom…" = "Custom…";
+"Language pair" = "Language pair";
+"Apply" = "Apply";
+"Business keigo" = "Business keigo";
+"Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction." = "Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction.";
+"Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours." = "Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours.";
+"Press Start to begin interpreting" = "Press Start to begin interpreting";
+"Transcripts appear here, original beside translation." = "Transcripts appear here, original beside translation.";
+"Transcript" = "Transcript";
+"↓ from Meet" = "↓ from Meet";
+"↑ from you" = "↑ from you";
+"Quit" = "Quit";
+"Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved" = "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved";
+"Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage." = "Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage.";
+"Estimate from audio seconds until the engine reports token usage." = "Estimate from audio seconds until the engine reports token usage.";
+"Engine: %@" = "Engine: %@";
+"retry" = "retry";
+"%@ live%@" = "%@ live%@";
+"%@ session. The number is the median delay from speech onset to translated audio." = "%@ session. The number is the median delay from speech onset to translated audio.";
+"Last utterance: onset→audio %@, text→translation %@" = "Last utterance: onset→audio %@, text→translation %@";
+"From Meet" = "From Meet";
+"From you" = "From you";
+"No translation" = "No translation";
+
+/* Render.swift */
+"Waiting for your password…" = "Waiting for your password…";
+"Installed. No restart needed." = "Installed. No restart needed.";
+
+/* Setup.swift */
+"Use This Folder" = "Use This Folder";
+"Choose the folder that contains the engine (.venv and the kana package)." = "Choose the folder that contains the engine (.venv and the kana package).";
+"Downloading from Existential Audio…" = "Downloading from Existential Audio…";
+"Preparing…" = "Preparing…";
+"Loading the drivers…" = "Loading the drivers…";
+"%@ not installed" = "%@ not installed";
+"Saved to the login Keychain." = "Saved to the login Keychain.";
+"Removed from the Keychain." = "Removed from the Keychain.";
+"No key to test." = "No key to test.";
+"Testing…" = "Testing…";
+"%@…, %ld characters" = "%@…, %ld characters";
+"Format looks right (%@). Not checked with Google: this engine has no --check-key." = "Format looks right (%@). Not checked with Google: this engine has no --check-key.";
+"That does not look like a Gemini key (%@); keys start with AIza." = "That does not look like a Gemini key (%@); keys start with AIza.";
+"Key check timed out." = "Key check timed out.";
+"Key works (checked with Google). %@" = "Key works (checked with Google). %@";
+"Key check failed: %@" = "Key check failed: %@";
+"Setup" = "Setup";
+"Done" = "Done";
+"1  Audio drivers" = "1  Audio drivers";
+"Found. Meet's microphone." = "Found. Meet's microphone.";
+"Missing. Meet's microphone." = "Missing. Meet's microphone.";
+"Found. Meet's speakers." = "Found. Meet's speakers.";
+"Missing. Meet's speakers." = "Missing. Meet's speakers.";
+"2  Gemini API key" = "2  Gemini API key";
+"Key found" = "Key found";
+"No key" = "No key";
+"3  Permissions" = "3  Permissions";
+"Allow" = "Allow";
+"Accessibility" = "Accessibility";
+"Granted. %@ works in every app." = "Granted. %@ works in every app.";
+"Needed for the %@ talk key." = "Needed for the %@ talk key.";
+"Meet settings (set these by hand)" = "Meet settings (set these by hand)";
+"Meet › Settings › Audio › Microphone" = "Meet › Settings › Audio › Microphone";
+"Meet › Settings › Audio › Speakers" = "Meet › Settings › Audio › Speakers";
+"macOS › Sound › Output" = "macOS › Sound › Output";
+"your earphones" = "your earphones";
+"Engine found" = "Engine found";
+"Engine not found" = "Engine not found";
+"Use Built-in" = "Use Built-in";
+"Use a Checkout…" = "Use a Checkout…";
+"Change…" = "Change…";
+"Choose Folder…" = "Choose Folder…";
+"That folder is not an engine" = "That folder is not an engine";
+"Audio drivers" = "Audio drivers";
+"Gemini key" = "Gemini key";
+"Permissions" = "Permissions";
+"Step %ld of 3 · %@" = "Step %ld of 3 · %@";
+"Ready. Press Done, then Start in the panel." = "Ready. Press Done, then Start in the panel.";
+"Install the two free BlackHole audio drivers." = "Install the two free BlackHole audio drivers.";
+"Paste your Gemini API key." = "Paste your Gemini API key.";
+"Allow the microphone and Accessibility." = "Allow the microphone and Accessibility.";
+"Downloads Existential Audio's signed installers (about 200 KB) and asks for your Mac password once." = "Downloads Existential Audio's signed installers (about 200 KB) and asks for your Mac password once.";
+"Installs both drivers from the copies inside kana and asks for your Mac password once." = "Installs both drivers from the copies inside kana and asks for your Mac password once.";
+"Installing…" = "Installing…";
+"Install audio drivers" = "Install audio drivers";
+"Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again." = "Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again.";
+"Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole)." = "Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole).";
+"Or in Terminal: %@" = "Or in Terminal: %@";
+"Copied" = "Copied";
+"Copy" = "Copy";
+"Plays a 1 s tone into each BlackHole and listens for it. Not during a call." = "Plays a 1 s tone into each BlackHole and listens for it. Not during a call.";
+"Test devices" = "Test devices";
+"Paste a key from AI Studio" = "Paste a key from AI Studio";
+"Save" = "Save";
+"Test key" = "Test key";
+"Remove from Keychain" = "Remove from Keychain";
+"Get a free key at aistudio.google.com/apikey ↗" = "Get a free key at aistudio.google.com/apikey ↗";
+"Stored in your login Keychain and passed to the engine in its environment, never on the command line. A .env file still works when no Keychain key is set." = "Stored in your login Keychain and passed to the engine in its environment, never on the command line. A .env file still works when no Keychain key is set.";
+"Stored in your login Keychain and passed to the engine in its environment, never on the command line." = "Stored in your login Keychain and passed to the engine in its environment, never on the command line.";
+"OpenAI key (optional)" = "OpenAI key (optional)";
+"In the Keychain" = "In the Keychain";
+"Not set" = "Not set";
+"Paste an OpenAI API key" = "Paste an OpenAI API key";
+"Remove" = "Remove";
+"Only for ••• › Engine › OpenAI: faster, but a voice adapted to the speaker rather than yours, and no business keigo. About $2 per hour of speech per direction." = "Only for ••• › Engine › OpenAI: faster, but a voice adapted to the speaker rather than yours, and no business keigo. About $2 per hour of speech per direction.";
+"Hold to talk, tap to keep talking, tap again to stop." = "Hold to talk, tap to keep talking, tap again to stop.";
+"Press to talk, press again to stop." = "Press to talk, press again to stop.";
+"Granted." = "Granted.";
+"Denied. Turn kana on in Privacy › Microphone." = "Denied. Turn kana on in Privacy › Microphone.";
+"Not asked yet. The engine needs it to hear you." = "Not asked yet. The engine needs it to hear you.";
+"In use: Keychain." = "In use: Keychain.";
+"In use: %@." = "In use: %@.";
+"In use: GEMINI_API_KEY from the environment." = "In use: GEMINI_API_KEY from the environment.";
+"Paste a key below, or put GEMINI_API_KEY in the engine's .env." = "Paste a key below, or put GEMINI_API_KEY in the engine's .env.";
+"Paste a key below. It is free to create and starts with AIza." = "Paste a key below. It is free to create and starts with AIza.";
+
+/* StatusController.swift */
+"Pass Audio Through When Idle" = "Pass Audio Through When Idle";
+
+/* Theme.swift */
+"Live" = "Live";
+"Pass-through" = "Pass-through";
+"Idle" = "Idle";

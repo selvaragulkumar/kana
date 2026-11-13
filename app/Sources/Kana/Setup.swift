@@ -21,8 +21,8 @@ final class SetupModel: ObservableObject {
         open.canChooseDirectories = true
         open.canChooseFiles = false
         open.allowsMultipleSelection = false
-        open.prompt = "Use This Folder"
-        open.message = "Choose the folder that contains the engine (.venv and the kana package)."
+        open.prompt = L10n.t("Use This Folder")
+        open.message = L10n.t("Choose the folder that contains the engine (.venv and the kana package).")
         NSApp.activate(ignoringOtherApps: true)
         guard open.runModal() == .OK, let url = open.url else { return }
         do {
@@ -93,16 +93,16 @@ final class SetupModel: ObservableObject {
         guard !installing else { return }
         let wanted = DriverInstaller.drivers.filter { CoreAudioDevices.find($0.name, in: devices) == nil }
         guard !wanted.isEmpty else { refresh(); return }
-        install = .working(DriverInstaller.bundledDir == nil ? "Downloading from Existential Audio…" : "Preparing…")
+        install = .working(DriverInstaller.bundledDir == nil ? L10n.t("Downloading from Existential Audio…") : L10n.t("Preparing…"))
         Task {
             do {
                 let pkgs = try await DriverInstaller.fetch(wanted)
-                install = .working("Waiting for your password…")
+                install = .working(L10n.t("Waiting for your password…"))
                 try await DriverInstaller.runAdmin(pkgs)
-                install = .working("Loading the drivers…")
+                install = .working(L10n.t("Loading the drivers…"))
                 let ok = await DriverInstaller.waitForDevices(wanted.map(\.name))
                 refresh()
-                install = ok ? .done("Installed. No restart needed.") : .needsRestart
+                install = ok ? .done(L10n.t("Installed. No restart needed.")) : .needsRestart
             } catch {
                 install = .failed(error.localizedDescription)
                 refresh()
@@ -145,7 +145,7 @@ final class SetupModel: ObservableObject {
                 if let d = CoreAudioDevices.find(name, in: CoreAudioDevices.all()) {
                     results.append(await LoopbackTester.run(device: d))
                 } else {
-                    results.append(.init(ok: false, text: "\(name) not installed"))
+                    results.append(.init(ok: false, text: L10n.f("%@ not installed", name)))
                 }
                 testResults = results
             }
@@ -160,7 +160,7 @@ final class SetupModel: ObservableObject {
         guard !k.isEmpty else { return }
         do {
             try KeychainStore.save(k, account: KeychainStore.geminiAccount)
-            keyMessage = "Saved to the login Keychain."
+            keyMessage = L10n.t("Saved to the login Keychain.")
             keyMessageOK = true
         } catch {
             keyMessage = error.localizedDescription
@@ -174,7 +174,7 @@ final class SetupModel: ObservableObject {
         guard !k.isEmpty else { return }
         do {
             try KeychainStore.save(k, account: KeychainStore.openaiAccount)
-            openaiMessage = "Saved to the login Keychain."
+            openaiMessage = L10n.t("Saved to the login Keychain.")
             openaiMessageOK = true
         } catch {
             openaiMessage = error.localizedDescription
@@ -185,14 +185,14 @@ final class SetupModel: ObservableObject {
 
     func removeOpenAIKey() {
         KeychainStore.delete(account: KeychainStore.openaiAccount)
-        openaiMessage = "Removed from the Keychain."
+        openaiMessage = L10n.t("Removed from the Keychain.")
         openaiMessageOK = true
         refresh()
     }
 
     func removeKey() {
         KeychainStore.delete(account: KeychainStore.geminiAccount)
-        keyMessage = "Removed from the Keychain."
+        keyMessage = L10n.t("Removed from the Keychain.")
         keyMessageOK = true
         refresh()
     }
@@ -204,11 +204,11 @@ final class SetupModel: ObservableObject {
         let key = !typedKey.isEmpty ? typedKey
             : (KeychainStore.read(account: KeychainStore.geminiAccount) ?? KeySource.dotenvValue() ?? "")
         guard !key.isEmpty else {
-            keyMessage = "No key to test."
+            keyMessage = L10n.t("No key to test.")
             keyMessageOK = false
             return
         }
-        keyMessage = "Testing…"
+        keyMessage = L10n.t("Testing…")
         Task.detached {
             let outcome = Self.checkWithEngine(key: key) ?? Self.formatCheck(key)
             await MainActor.run {
@@ -220,10 +220,10 @@ final class SetupModel: ObservableObject {
 
     nonisolated private static func formatCheck(_ key: String) -> LoopbackTester.Outcome {
         let ok = key.hasPrefix("AIza") && key.count >= 30
-        let shape = "\(key.prefix(4))…, \(key.count) characters"
+        let shape = L10n.f("%@…, %ld characters", String(key.prefix(4)), key.count)
         return .init(ok: ok, text: ok
-            ? "Format looks right (\(shape)). Not checked with Google: this engine has no --check-key."
-            : "That does not look like a Gemini key (\(shape)); keys start with AIza.")
+            ? L10n.f("Format looks right (%@). Not checked with Google: this engine has no --check-key.", shape)
+            : L10n.f("That does not look like a Gemini key (%@); keys start with AIza.", shape))
     }
 
     /// nil when the engine has no `--check-key` (or the fake engine is in use).
@@ -231,12 +231,12 @@ final class SetupModel: ObservableObject {
         guard EngineLocation.overrideCommand == nil else { return nil }
         guard let help = run(["--help"], key: nil, timeout: 10), help.out.contains("--check-key") else { return nil }
         guard let r = run(["--check-key"], key: key, timeout: 30) else {
-            return .init(ok: false, text: "Key check timed out.")
+            return .init(ok: false, text: L10n.t("Key check timed out."))
         }
         let msg = (r.out + r.err).split(whereSeparator: \.isNewline).last.map(String.init) ?? ""
         return .init(ok: r.status == 0, text: r.status == 0
-            ? "Key works (checked with Google). \(msg)"
-            : "Key check failed: \(msg)")
+            ? L10n.f("Key works (checked with Google). %@", msg)
+            : L10n.f("Key check failed: %@", msg))
     }
 
     nonisolated private static func run(_ args: [String], key: String?, timeout: TimeInterval)
@@ -264,6 +264,7 @@ struct SetupView: View {
     @EnvironmentObject private var hotkey: Hotkey
     @EnvironmentObject private var engine: EngineProcess
     @EnvironmentObject private var actions: AppActions
+    @EnvironmentObject private var prefs: Prefs
     var onDone: () -> Void
 
     @State private var keyField = ""
@@ -274,54 +275,55 @@ struct SetupView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 10) {
                 KanaMark(state: .idle, size: 24)
-                Text("Setup").font(Theme.brand(20)).tracking(-0.4)
+                Text(L10n.t("Setup")).font(Theme.heading(L10n.t("Setup"), size: 20)).tracking(L10n.isJapanese ? 0 : -0.4)
                 Spacer()
-                Button("Done", action: onDone).buttonStyle(PrimaryButtonStyle())
+                Button(L10n.t("Done"), action: onDone).buttonStyle(PrimaryButtonStyle())
             }
             stepper
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {
-                    section("1  Audio drivers")
-                    check(model.bh2 != nil, "BlackHole 2ch", model.bh2 != nil ? "Found. Meet's microphone." : "Missing. Meet's microphone.")
-                    check(model.bh16 != nil, "BlackHole 16ch", model.bh16 != nil ? "Found. Meet's speakers." : "Missing. Meet's speakers.")
+                    section(L10n.t("1  Audio drivers"))
+                    check(model.bh2 != nil, "BlackHole 2ch", model.bh2 != nil ? L10n.t("Found. Meet's microphone.") : L10n.t("Missing. Meet's microphone."))
+                    check(model.bh16 != nil, "BlackHole 16ch", model.bh16 != nil ? L10n.t("Found. Meet's speakers.") : L10n.t("Missing. Meet's speakers."))
                     if model.blackholeMissing || model.install != .idle { installCard }
                     if !model.blackholeMissing { testCard }
 
-                    section("2  Gemini API key")
-                    check(model.keySource != .missing, model.keySource != .missing ? "Key found" : "No key", keySourceText)
+                    section(L10n.t("2  Gemini API key"))
+                    check(model.keySource != .missing, model.keySource != .missing ? L10n.t("Key found") : L10n.t("No key"), keySourceText)
                     keyCard
                     openaiCard
 
-                    section("3  Permissions")
-                    check(model.micStatus == .authorized, "Microphone", micText) {
+                    section(L10n.t("3  Permissions"))
+                    check(model.micStatus == .authorized, L10n.t("Microphone"), micText) {
                         if model.micStatus == .notDetermined {
-                            Button("Allow") { Task { _ = await MicPermission.request(); model.refresh() } }
+                            Button(L10n.t("Allow")) { Task { _ = await MicPermission.request(); model.refresh() } }
                                 .buttonStyle(SmallButtonStyle())
                         } else if model.micStatus != .authorized {
-                            Button("Open Settings") { openPrivacy("Privacy_Microphone") }
+                            Button(L10n.t("Open Settings")) { openPrivacy("Privacy_Microphone") }
                                 .buttonStyle(SmallButtonStyle())
                         }
                     }
-                    check(hotkey.trusted, "Accessibility",
-                          hotkey.trusted ? "Granted. ⌃⌥ Space works in every app." : "Needed for the ⌃⌥ Space hotkey.") {
+                    check(hotkey.trusted, L10n.t("Accessibility"),
+                          hotkey.trusted ? L10n.f("Granted. %@ works in every app.", hotkey.hint) : L10n.f("Needed for the %@ talk key.", hotkey.hint)) {
                         if !hotkey.trusted {
-                            Button("Open Settings") { hotkey.requestAccess() }.buttonStyle(SmallButtonStyle())
+                            Button(L10n.t("Open Settings")) { hotkey.requestAccess() }.buttonStyle(SmallButtonStyle())
                         }
                     }
+                    talkKeyRow
 
-                    section("Meet settings (set these by hand)")
-                    manual("Meet › Settings › Audio › Microphone", "BlackHole 2ch")
-                    manual("Meet › Settings › Audio › Speakers", "BlackHole 16ch")
-                    manual("macOS › Sound › Output", "your earphones")
+                    section(L10n.t("Meet settings (set these by hand)"))
+                    manual(L10n.t("Meet › Settings › Audio › Microphone"), "BlackHole 2ch")
+                    manual(L10n.t("Meet › Settings › Audio › Speakers"), "BlackHole 16ch")
+                    manual(L10n.t("macOS › Sound › Output"), L10n.t("your earphones"))
 
-                    section("Engine")
-                    check(model.engineFound, model.engineFound ? "Engine found" : "Engine not found", EngineLocation.summary) {
+                    section(L10n.t("Engine"))
+                    check(model.engineFound, model.engineFound ? L10n.t("Engine found") : L10n.t("Engine not found"), EngineLocation.summary) {
                         HStack(spacing: 6) {
                             if model.engineBundled && model.engineUsesCheckout {
-                                Button("Use Built-in") { model.useBundledEngine() }.buttonStyle(SmallButtonStyle())
+                                Button(L10n.t("Use Built-in")) { model.useBundledEngine() }.buttonStyle(SmallButtonStyle())
                             }
-                            Button(model.engineBundled && !model.engineUsesCheckout ? "Use a Checkout…"
-                                   : (model.engineFound ? "Change…" : "Choose Folder…")) {
+                            Button(model.engineBundled && !model.engineUsesCheckout ? L10n.t("Use a Checkout…")
+                                   : (model.engineFound ? L10n.t("Change…") : L10n.t("Choose Folder…"))) {
                                 actions.hidePanel()
                                 model.chooseEngineFolder()
                                 actions.showPanel()
@@ -329,7 +331,7 @@ struct SetupView: View {
                             .buttonStyle(SmallButtonStyle())
                         }
                     }
-                    if let msg = model.engineMessage { check(false, "That folder is not an engine", msg) }
+                    if let msg = model.engineMessage { check(false, L10n.t("That folder is not an engine"), msg) }
                 }
             }
             .scrollIndicators(.never)
@@ -343,8 +345,8 @@ struct SetupView: View {
     // MARK: Steps
 
     private var steps: [(String, Bool)] {
-        [("Audio drivers", model.driversDone), ("Gemini key", model.keyDone),
-         ("Permissions", model.permissionsDone(accessibility: hotkey.trusted))]
+        [(L10n.t("Audio drivers"), model.driversDone), (L10n.t("Gemini key"), model.keyDone),
+         (L10n.t("Permissions"), model.permissionsDone(accessibility: hotkey.trusted))]
     }
 
     /// "Step 2 of 3 · Gemini key" with three pills, or "Ready" when everything passes.
@@ -365,7 +367,7 @@ struct SetupView: View {
                 }
                 Spacer(minLength: 0)
             }
-            Text(next.map { "Step \($0 + 1) of 3 · " + nextHint($0) } ?? "Ready. Press Done, then Start in the panel.")
+            Text(next.map { L10n.f("Step %ld of 3 · %@", $0 + 1, nextHint($0)) } ?? L10n.t("Ready. Press Done, then Start in the panel."))
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.text3)
                 .fixedSize(horizontal: false, vertical: true)
@@ -374,9 +376,9 @@ struct SetupView: View {
 
     private func nextHint(_ i: Int) -> String {
         switch i {
-        case 0: return "Install the two free BlackHole audio drivers."
-        case 1: return "Paste your Gemini API key."
-        default: return "Allow the microphone and Accessibility."
+        case 0: return L10n.t("Install the two free BlackHole audio drivers.")
+        case 1: return L10n.t("Paste your Gemini API key.")
+        default: return L10n.t("Allow the microphone and Accessibility.")
         }
     }
 
@@ -386,13 +388,13 @@ struct SetupView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .center, spacing: 10) {
                 Text(DriverInstaller.bundledDir == nil
-                     ? "Downloads Existential Audio's signed installers (about 200 KB) and asks for your Mac password once."
-                     : "Installs both drivers from the copies inside kana and asks for your Mac password once.")
+                     ? L10n.t("Downloads Existential Audio's signed installers (about 200 KB) and asks for your Mac password once.")
+                     : L10n.t("Installs both drivers from the copies inside kana and asks for your Mac password once."))
                     .font(Theme.ui(12))
                     .foregroundStyle(Theme.text3)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Button(model.installing ? "Installing…" : "Install audio drivers") { model.installDrivers() }
+                Button(model.installing ? L10n.t("Installing…") : L10n.t("Install audio drivers")) { model.installDrivers() }
                     .buttonStyle(PrimaryButtonStyle())
                     .disabled(model.installing || !model.blackholeMissing)
             }
@@ -402,19 +404,19 @@ struct SetupView: View {
             case .done(let msg): resultLine(true, msg)
             case .failed(let msg): resultLine(false, msg)
             case .needsRestart:
-                resultLine(false, "Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again.")
+                resultLine(false, L10n.t("Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again."))
             }
-            Text("Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole).")
+            Text(L10n.t("Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole)."))
                 .font(Theme.ui(11))
                 .foregroundStyle(Theme.text4)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 8) {
-                Text("Or in Terminal: " + SetupModel.brewLine)
+                Text(L10n.f("Or in Terminal: %@", SetupModel.brewLine))
                     .font(.system(size: 11, design: .monospaced))
                     .foregroundStyle(Theme.text4)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                Button(copied ? "Copied" : "Copy") {
+                Button(copied ? L10n.t("Copied") : L10n.t("Copy")) {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(SetupModel.brewLine, forType: .string)
                     copied = true
@@ -429,12 +431,12 @@ struct SetupView: View {
     private var testCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Text("Plays a 1 s tone into each BlackHole and listens for it. Not during a call.")
+                Text(L10n.t("Plays a 1 s tone into each BlackHole and listens for it. Not during a call."))
                     .font(Theme.ui(12))
                     .foregroundStyle(Theme.text3)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
-                Button(model.testing ? "Testing…" : "Test devices") { model.testDevices() }
+                Button(model.testing ? L10n.t("Testing…") : L10n.t("Test devices")) { model.testDevices() }
                     .buttonStyle(SmallButtonStyle())
                     .disabled(model.testing || (model.bh2 == nil && model.bh16 == nil) || engine.running)
             }
@@ -449,27 +451,28 @@ struct SetupView: View {
     private var keyCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                SecureField("Paste a key from AI Studio", text: $keyField)
+                SecureField(L10n.t("Paste a key from AI Studio"), text: $keyField)
                     .textFieldStyle(.plain)
                     .padding(.horizontal, 10).padding(.vertical, 7)
                     .surfaceCard(radius: 10, border: Theme.lineInput)
-                Button("Save") { model.saveKey(keyField); keyField = "" }
+                Button(L10n.t("Save")) { model.saveKey(keyField); keyField = "" }
                     .buttonStyle(SmallButtonStyle())
                     .disabled(keyField.trimmingCharacters(in: .whitespaces).isEmpty)
             }
             HStack(spacing: 8) {
-                Button("Test key") { model.testKey(typed: keyField) }.buttonStyle(SmallButtonStyle())
+                Button(L10n.t("Test key")) { model.testKey(typed: keyField) }.buttonStyle(SmallButtonStyle())
                 if model.keySource == .keychain {
-                    Button("Remove from Keychain") { model.removeKey() }.buttonStyle(SmallButtonStyle())
+                    Button(L10n.t("Remove from Keychain")) { model.removeKey() }.buttonStyle(SmallButtonStyle())
                 }
                 Spacer()
             }
             if let msg = model.keyMessage { resultLine(model.keyMessageOK, msg) }
-            Link("Get a free key at aistudio.google.com/apikey ↗", destination: URL(string: "https://aistudio.google.com/apikey")!)
+            Link(L10n.t("Get a free key at aistudio.google.com/apikey ↗"), destination: URL(string: "https://aistudio.google.com/apikey")!)
                 .font(Theme.ui(12, 500))
                 .foregroundStyle(Theme.accent)
-            Text("Stored in your login Keychain and passed to the engine in its environment, never on the command line."
-                 + (model.engineUsesCheckout ? " A .env file still works when no Keychain key is set." : ""))
+            Text(model.engineUsesCheckout
+                 ? L10n.t("Stored in your login Keychain and passed to the engine in its environment, never on the command line. A .env file still works when no Keychain key is set.")
+                 : L10n.t("Stored in your login Keychain and passed to the engine in its environment, never on the command line."))
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.text4)
                 .fixedSize(horizontal: false, vertical: true)
@@ -482,28 +485,27 @@ struct SetupView: View {
     private var openaiCard: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 8) {
-                Text("OpenAI key (optional)")
+                Text(L10n.t("OpenAI key (optional)"))
                     .font(Theme.ui(13, 600))
                 Spacer()
-                Text(model.openaiKeySaved ? "In the Keychain" : "Not set")
+                Text(model.openaiKeySaved ? L10n.t("In the Keychain") : L10n.t("Not set"))
                     .font(Theme.ui(12))
                     .foregroundStyle(Theme.text3)
             }
             HStack(spacing: 8) {
-                SecureField("Paste an OpenAI API key", text: $openaiField)
+                SecureField(L10n.t("Paste an OpenAI API key"), text: $openaiField)
                     .textFieldStyle(.plain)
                     .padding(.horizontal, 10).padding(.vertical, 7)
                     .surfaceCard(radius: 10, border: Theme.lineInput)
-                Button("Save") { model.saveOpenAIKey(openaiField); openaiField = "" }
+                Button(L10n.t("Save")) { model.saveOpenAIKey(openaiField); openaiField = "" }
                     .buttonStyle(SmallButtonStyle())
                     .disabled(openaiField.trimmingCharacters(in: .whitespaces).isEmpty)
                 if model.openaiKeySaved {
-                    Button("Remove") { model.removeOpenAIKey() }.buttonStyle(SmallButtonStyle())
+                    Button(L10n.t("Remove")) { model.removeOpenAIKey() }.buttonStyle(SmallButtonStyle())
                 }
             }
             if let msg = model.openaiMessage { resultLine(model.openaiMessageOK, msg) }
-            Text("Only for ••• › Engine › OpenAI: faster, but a voice adapted to the speaker rather than yours, "
-                 + "and no business keigo. About $2 per hour of speech per direction.")
+            Text(L10n.t("Only for ••• › Engine › OpenAI: faster, but a voice adapted to the speaker rather than yours, and no business keigo. About $2 per hour of speech per direction."))
                 .font(Theme.ui(12))
                 .foregroundStyle(Theme.text4)
                 .fixedSize(horizontal: false, vertical: true)
@@ -513,6 +515,29 @@ struct SetupView: View {
     }
 
     // MARK: Pieces
+
+    /// Talk key choice, under the Accessibility check that it depends on.
+    private var talkKeyRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 10) {
+                Text(L10n.t("Talk key")).foregroundStyle(Theme.text2)
+                Spacer()
+                Picker(L10n.t("Talk key"), selection: $prefs.talkKey) {
+                    ForEach(TalkKey.allCases) { Text($0.title).tag($0) }
+                }
+                .labelsHidden()
+                .fixedSize()
+            }
+            Text(prefs.talkKey.note ?? (prefs.talkKey.isModifier
+                 ? L10n.t("Hold to talk, tap to keep talking, tap again to stop.") : L10n.t("Press to talk, press again to stop.")))
+                .font(Theme.ui(11))
+                .foregroundStyle(Theme.text4)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .surfaceCard()
+    }
 
     private func section(_ title: String) -> some View {
         Text(title)
@@ -579,20 +604,20 @@ struct SetupView: View {
 
     private var micText: String {
         switch model.micStatus {
-        case .authorized: return "Granted."
-        case .denied, .restricted: return "Denied. Turn kana on in Privacy › Microphone."
-        default: return "Not asked yet. The engine needs it to hear you."
+        case .authorized: return L10n.t("Granted.")
+        case .denied, .restricted: return L10n.t("Denied. Turn kana on in Privacy › Microphone.")
+        default: return L10n.t("Not asked yet. The engine needs it to hear you.")
         }
     }
 
     private var keySourceText: String {
         switch model.keySource {
-        case .keychain: return "In use: Keychain."
-        case .dotenv(let path): return "In use: \(path)."
-        case .environment: return "In use: GEMINI_API_KEY from the environment."
+        case .keychain: return L10n.t("In use: Keychain.")
+        case .dotenv(let path): return L10n.f("In use: %@.", path)
+        case .environment: return L10n.t("In use: GEMINI_API_KEY from the environment.")
         case .missing: return model.engineUsesCheckout
-            ? "Paste a key below, or put GEMINI_API_KEY in the engine's .env."
-            : "Paste a key below. It is free to create and starts with AIza."
+            ? L10n.t("Paste a key below, or put GEMINI_API_KEY in the engine's .env.")
+            : L10n.t("Paste a key below. It is free to create and starts with AIza.")
         }
     }
 

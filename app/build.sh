@@ -43,7 +43,7 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN" "$APP/Contents/MacOS/$NAME"
 if [[ -d "$HERE/Resources" ]]; then
-  cp -R "$HERE/Resources/." "$APP/Contents/Resources/"   # fonts + their OFL licences
+  cp -R "$HERE/Resources/." "$APP/Contents/Resources/"   # fonts + their OFL licences, en/ja.lproj UI strings
 fi
 
 if [[ $BUNDLE_ENGINE -eq 1 ]]; then
@@ -96,6 +96,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleShortVersionString</key><string>$VERSION</string>
   <key>CFBundleVersion</key><string>1</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleLocalizations</key><array><string>en</string><string>ja</string></array>
   <key>LSMinimumSystemVersion</key><string>14.0</string>
   <key>LSUIElement</key><true/>
   <key>NSHighResolutionCapable</key><true/>

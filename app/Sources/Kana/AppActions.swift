@@ -41,6 +41,12 @@ final class AppActions: ObservableObject {
         NSWorkspace.shared.open(folder)
     }
 
+    /// The one way to quit (panel ×, ••• › Quit kana, footer Quit, menu-bar Quit):
+    /// applicationWillTerminate stops a live or pass-through engine cleanly first.
+    func quit() {
+        NSApp.terminate(nil)
+    }
+
     func openSetup() {
         setupRequested = true
         showPanel()

@@ -23,7 +23,7 @@
 <!--
   A demo GIF (docs/demo.gif) is planned. It must show, in 30-60 seconds: the panel next to a
   Meet call with both sessions live; an inbound Japanese sentence and its English with the
-  caption strip on; ⌃⌥Space turning Talk on and an English sentence going out in Japanese;
+  caption strip on; holding Right ⌥ to turn Talk on and an English sentence going out in Japanese;
   the delay readout and the cost meter. No real participants' faces or names.
 -->
 <p align="center">
@@ -40,7 +40,7 @@ your mic ───────────────────────�
 
 Two Gemini Live sessions run side by side. One interprets the meeting into your earphones. The other interprets you into the meeting, only while Talk is on. A menu-bar panel shows both transcripts, the delay and what the call has cost so far.
 
-**Status, 2026-11-12.** kana has been verified with recorded clips and the live Gemini API. The first live Google Meet call is still to come.
+**Status, 2026-11-13.** kana has carried its first real Google Meet call, both directions, with the author's own voice: outbound first audio about 1.2 s after speech onset, about ¥13 for the first four minutes. The log is in [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Who is this for
 
@@ -96,7 +96,7 @@ What kana does that we did not find combined anywhere else:
 4. kana sits in the menu bar. Its panel opens with **Setup**, one step at a time:
    1. **Audio drivers.** Press **Install audio drivers** and enter your Mac password once. kana downloads Existential Audio's signed BlackHole 2ch and 16ch installers (about 200 KB, checked against the Homebrew casks' SHA-256 and the vendor's signature), installs both and reloads macOS audio, so no restart is needed. If the devices still do not appear, Setup says so: restart the Mac.
    2. **Gemini API key.** Create a free key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey), paste it and press **Save**. It goes into your login Keychain.
-   3. **Permissions.** Allow the microphone, and turn on kana in Accessibility for the ⌃⌥Space hotkey.
+   3. **Permissions.** Allow the microphone, and turn on kana in Accessibility for the talk key (Right ⌥ by default).
 5. Set Meet's microphone to BlackHole 2ch and its speakers to BlackHole 16ch (see [Wiring](#wiring)), put on earphones and press **Start**.
 
 The app is about 140 MB because it carries its own Python 3.13 runtime and the engine; nothing else is installed besides the two drivers.
@@ -148,7 +148,7 @@ kana uses four audio devices. Two of them are virtual cables from BlackHole: wha
 | BlackHole 16ch | virtual cable | the meeting app, as its **speaker** | kana (inbound) |
 | Your earphones | playback device | kana (inbound interpretation) | your ears |
 
-So the meeting never hears your real microphone, and your earphones never hear the uninterpreted meeting.
+So during a session the meeting never hears your real microphone, and your earphones never hear the uninterpreted meeting. Between sessions, kana passes both through untranslated (see Pass-through under Usage), so the meeting behaves like a normal call.
 
 Set the meeting app once:
 
@@ -174,8 +174,8 @@ Zoom and Teams need the same two settings as Meet, but we have not tried them ye
 2. Pick **Microphone** (your real microphone) and **Earphones**. The app remembers them.
 3. Check the language cards: **You hear English** on the left, **Meet hears 日本語** on the right, with a ⇄ button to swap them. Click either card for the presets, which pair English with Japanese, Chinese, Korean, Spanish, French, German, Hindi or Tamil. **Custom…** takes any two BCP-47 codes.
 4. When the meeting hears Japanese, a small **Business keigo** switch sits under the cards on the right. It is off by default, so the Japanese mirrors how you speak. Turn it on for `--register business`; its tooltip notes that the outbound voice becomes a stock voice, and the right card then reads "Meet hears · business keigo". See [Register](#register).
-5. Press **Start**. Both sessions connect, the pill in the header changes from Idle to Live, and inbound interpretation starts right away.
-6. Press the talk bar ("Press to talk ⌃⌥ Space"), or **⌃⌥Space** from any app, to send your voice. It is a toggle, not hold-to-talk. While on it reads "Talking · English → 日本語". Outbound always starts muted. Press again to mute.
+5. Press **Start**. Both sessions connect, the pill in the header changes from Passing through (or Idle) to Live, and inbound interpretation starts right away.
+6. To send your voice, hold **Right ⌥** from any app and speak; talk ends when you let go. A quick tap (under 350 ms) keeps talk on until the next tap. The talk bar ("Press to talk ⌥ right") toggles it with a click. While on it reads "Talking · English → 日本語". Outbound always starts muted.
 7. Read both directions in the transcript. The footer shows the call time and the running cost, for example "0:00 · $0.00 · ≈¥0", with " est." until the engine reports Google's token counts. The IN and OUT labels show a green dot when live and the median delay, for example "IN live · 1.8 s".
 
 A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in use, and "fake engine" when testing with `app/fake_engine.py`. With the default model it shows nothing.
@@ -192,7 +192,15 @@ A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in 
 
 <p align="center"><img src="docs/images/setup.png" width="360" alt="The Setup page with BlackHole 16ch missing and the install line"></p>
 
-**Hotkey.** ⌃⌥Space needs Accessibility access. Press **Open Settings** in the panel and switch kana on under Privacy & Security › Accessibility. The talk bar works without it.
+**Talk key.** Right ⌥ by default: hold to talk, tap to toggle. ••• › **Talk key** (also in Setup › Permissions) offers Right ⌘, Fn/🌐 and the old ⌃⌥Space, which only toggles. For Fn, set System Settings › Keyboard › "Press 🌐 key to" to "Do Nothing", or it opens the emoji picker. The talk key needs Accessibility access: press **Open Settings** in the panel and switch kana on under Privacy & Security › Accessibility. The talk bar works without it.
+
+**Pass-through.** While kana is open but not live, Meet still works like a normal call: the meeting plays in your earphones and your microphone goes to Meet, untranslated, through the same BlackHole devices. The pill reads "Passing through" and the talk bar says "Meet hears your mic directly · mute in Meet": your microphone is live to Meet then, so mute in Meet. **Start** swaps in the interpreter; **Stop** swaps it back. Turn it off with ••• › **Pass audio through when idle**; it needs both BlackHole drivers and microphone permission.
+
+**Mini bar.** **−** collapses the panel into a small bar. Click its mark to Start or Stop; it breathes while live. Double-click the bar, or its expand button, to get the panel back.
+
+**Quit.** The panel's **×** quits kana (stopping a session cleanly first), as do ••• › **Quit kana** and **Quit** in the footer. Open kana again from Applications or Spotlight.
+
+**Language.** The UI is in English and Japanese and follows the system language (Japanese when your first preferred language is Japanese, English otherwise); ••• › **Language** overrides it with System, English or 日本語, applied at once without a restart.
 
 ### Command line
 
@@ -241,9 +249,9 @@ ffmpeg -y -i /tmp/ja.aiff -ar 16000 -ac 1 /tmp/ja.wav
 | macOS permission | Why | Without it |
 |---|---|---|
 | Microphone | to record your microphone and the BlackHole 16ch cable | no audio is captured; nothing is interpreted |
-| Accessibility | to see the ⌃⌥Space key press while another app is in front | the global hotkey does nothing; the talk bar still works |
+| Accessibility | to see the talk key (Right ⌥ by default) while another app is in front | the talk key does nothing; the talk bar still works |
 
-Your microphone is sent only while Talk is on. Meeting audio is sent while the engine runs. In both directions a voice-activity gate holds back silence by default, so only speech, plus a short margin around it, leaves your Mac. Audio is not saved unless you pass `--dump-in` or `--dump-out`. The API key is kept in your login Keychain, or in `.env` if you use that instead, and leaves your Mac only as the credential sent to Google. Details are in [SECURITY.md](SECURITY.md).
+Your microphone is sent to Google only while Talk is on. While kana passes audio through (open but not live), your microphone goes to the meeting app directly, untranslated and not gated by Talk, exactly as without kana; nothing goes to Google then. Meeting audio is sent while the engine runs. In both directions a voice-activity gate holds back silence by default, so only speech, plus a short margin around it, leaves your Mac. Audio is not saved unless you pass `--dump-in` or `--dump-out`. The API key is kept in your login Keychain, or in `.env` if you use that instead, and leaves your Mac only as the credential sent to Google. Details are in [SECURITY.md](SECURITY.md).
 
 **Transcripts are saved by default.** Each run writes a Markdown table and an SRT file to `~/Library/Application Support/kana/transcripts/`, named by date and time, as plain unencrypted text. Turn off **Save transcripts** in the app, or pass `--no-save` or `--save-dir` on the command line.
 
@@ -317,7 +325,7 @@ Full measurements are in [docs/ENGINE.md](docs/ENGINE.md#cost).
 - **The voice gate is energy-based.** Steady background noise is learnt within about 5 seconds, but loud or changing noise can still count as speech and be sent. A very quiet speaker can be held back. Raise or lower `--vad-threshold`, or use `--vad off`.
 - **Transcripts are plain files.** Saved transcripts are not encrypted. Anyone with access to your user account can read them.
 - **Not notarised yet.** Releases are not signed with an Apple Developer ID, so the first open needs the Gatekeeper steps under [Download](#download). Source builds are signed with a local certificate when you have one (`build.sh` uses `KANA_SIGN_IDENTITY`, or a certificate named "kana Local Signing"), which keeps macOS permission grants across rebuilds; an ad-hoc signed build can make macOS forget the Accessibility grant, so switch it off and on again if the hotkey stops working.
-- **macOS only.**
+- **macOS only.** Windows: planned, see [docs/ROADMAP.md](docs/ROADMAP.md).
 
 ## Repository layout
 

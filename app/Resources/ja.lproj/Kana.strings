@@ -1,0 +1,253 @@
+/* kana UI strings, Japanese (です・ます; product and device names stay in Latin letters).
+   The key is the English text used in app/Sources/Kana (L10n.t / L10n.f); keep the
+   format specifiers (%@, %ld, %d, %.1f) in the same order. Checked by app/check_l10n.sh. */
+
+/* AudioCheck.swift */
+"%@ has no input/output pair to loop back" = "%@ にはループバックできる入出力の組がありません";
+"Could not select %@" = "%@ を選択できませんでした";
+"%@ reports no audio format" = "%@ からオーディオ形式を取得できません";
+"Could not build the test tone" = "テスト音を作成できませんでした";
+"%@ loopback OK (%@)" = "%@ のループバック OK (%@)";
+"%@: silence came back. Check Microphone access for kana." = "%@: 無音が返ってきました。kana のマイクの許可を確認してください。";
+"%@: unexpected signal (%@)" = "%@: 想定外の信号です (%@)";
+
+/* CaptionStrip.swift */
+"Captions appear here. Drag the handle to move." = "ここに字幕が表示されます。ハンドルをドラッグすると移動できます。";
+
+/* DriverInstaller.swift */
+"Could not download %@: %@" = "%@ をダウンロードできませんでした: %@";
+"%@ did not match its published checksum, so it was not installed." = "%@ は公開されているチェックサムと一致しないため、インストールしませんでした。";
+"%@ is not signed by Existential Audio, so it was not installed." = "%@ には Existential Audio の署名がないため、インストールしませんでした。";
+"Cancelled. Nothing was installed." = "キャンセルしました。何もインストールしていません。";
+"The installer stopped: %@" = "インストーラが停止しました: %@";
+"%@ and %@" = "%@ と %@";
+"kana wants to install the %@ audio drivers." = "kana が %@ のオーディオドライバーをインストールします。";
+
+/* EngineProcess.swift */
+"An override command is in use." = "上書き用のコマンドを使用しています。";
+"Choose the folder that holds the engine (.venv and the kana package)." = "エンジン (.venv と kana パッケージ) のあるフォルダを選んでください。";
+"Built in (Python %@)." = "内蔵 (Python %@)。";
+"Built in." = "内蔵。";
+"No engine in %@." = "%@ にエンジンがありません。";
+"Engine not found: %@" = "エンジンが見つかりません: %@";
+"Engine not found. Choose its folder in Setup." = "エンジンが見つかりません。セットアップでフォルダを選んでください。";
+"%@ has no .venv/bin/python with the engine package." = "%@ に、エンジンのパッケージを含む .venv/bin/python がありません。";
+"Could not list devices: %@" = "デバイスの一覧を取得できませんでした: %@";
+"fake engine" = "テスト用エンジン";
+"fallback model" = "予備モデル";
+"not running" = "停止中";
+"OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo." = "OpenAI: 開始が速く、声は話し手の口調に合わせた音声 (あなたの声ではありません) です。ビジネス敬語は使えません。";
+"Business keigo: the outbound Japanese uses a stock voice, not yours." = "ビジネス敬語: 送信側の日本語は、あなたの声ではなく既定の音声になります。";
+"Register mirrors yours; your own voice both ways." = "丁寧さは話し手に合わせます。声は両方向とも本人の声です。";
+"Could not start engine: %@" = "エンジンを開始できませんでした: %@";
+"Pass-through could not start: %@" = "パススルーを開始できませんでした: %@";
+"Pass-through stopped (signal %d)%@" = "パススルーが停止しました (シグナル %d)%@";
+"Pass-through stopped (code %d)%@" = "パススルーが停止しました (コード %d)%@";
+"Engine was killed (signal %d)%@" = "エンジンが強制終了されました (シグナル %d)%@";
+"Engine exited (code %d)%@" = "エンジンが終了しました (コード %d)%@";
+"Pass-through: %@" = "パススルー: %@";
+"unknown error" = "不明なエラー";
+"%@ session %@: %@" = "%@ セッション %@: %@";
+"Unknown engine error" = "エンジンで不明なエラーが発生しました";
+"no JSON on stdout (exit %d)" = "標準出力に JSON がありません (終了コード %d)";
+
+/* Hotkey.swift */
+"⌥ right" = "右 ⌥";
+"⌘ right" = "右 ⌘";
+"Right ⌥ (hold or tap)" = "右 ⌥ (長押し / タップ)";
+"Right ⌘ (hold or tap)" = "右 ⌘ (長押し / タップ)";
+"Fn / 🌐 (hold or tap)" = "Fn / 🌐 (長押し / タップ)";
+"⌃⌥Space (toggle)" = "⌃⌥Space (切り替え)";
+"Set Keyboard › “Press 🌐 key to” to “Do Nothing”, or Fn opens the emoji picker." = "システム設定 › キーボードの「🌐キーを押して」を「何もしない」にしてください。そのままだと Fn で絵文字ピッカーが開きます。";
+
+/* KanaMark.swift */
+"idle" = "待機中";
+"connecting" = "接続中";
+"listening" = "聞き取り中";
+"talking" = "話し中";
+"translating" = "通訳中";
+"error" = "エラー";
+"kana, %@" = "kana、%@";
+
+/* KeychainStore.swift */
+"Keychain: %@" = "キーチェーン: %@";
+
+/* MiniBar.swift */
+"Stop" = "停止";
+"Start" = "開始";
+"Expand" = "パネルに戻す";
+"Close" = "閉じる";
+"Listening…" = "聞き取り中…";
+"Passing through · mute in Meet" = "パススルー中 · ミュートは Meet で";
+"Idle. Click the mark to start." = "待機中 · マークをクリックで開始";
+"Talking" = "話し中";
+"Not talking (%@)" = "話していません (%@)";
+", %.1f s delay" = "、遅延 %.1f s";
+"live" = "接続中";
+"est." = "(推定)";
+
+/* Models.swift */
+"connected" = "接続済み";
+"reconnecting" = "再接続中";
+"closed" = "未接続";
+
+/* PanelView.swift */
+"Minimize" = "最小化";
+"Quit kana" = "kana を終了";
+"Captions" = "字幕";
+"Visible in screen share" = "画面共有に表示";
+"Save transcripts" = "文字起こしを保存";
+"Pass audio through when idle" = "待機中は音声をパススルー";
+"Talk key" = "トークキー";
+"Engine" = "エンジン";
+"Gemini · your own voice" = "Gemini · あなた自身の声";
+"OpenAI · faster, no business keigo" = "OpenAI · 高速、ビジネス敬語なし";
+"Language" = "言語 (Language)";
+"System" = "システムに合わせる";
+"Open Last Transcript" = "最新の文字起こしを開く";
+"Transcripts Folder" = "文字起こしのフォルダ";
+"Setup…" = "セットアップ…";
+"More" = "その他";
+"Meet hears your mic directly · mute in Meet" = "マイクは直接 Meet へ · ミュートは Meet で";
+"Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter." = "パススルー中: 翻訳はしません。kana がないときと同じように、マイクの音声がそのまま Meet に届くので、ミュートは Meet で行ってください。開始を押すと通訳に切り替わります。";
+"Talking · %@ → %@" = "話し中 · %@ → %@";
+"Press to talk" = "押して話す";
+"Start a session first" = "先に開始を押してください";
+"Toggle talking, or hold %@ to talk and tap it to toggle" = "クリックで切り替えます。%@ は押している間だけ話し、短く押すと切り替わります";
+"Toggle talking (%@)" = "クリックで切り替え (%@)";
+"FAKE ENGINE — test data, not your devices" = "テスト用エンジン: 実際のデバイスではなくテストデータです";
+"Hotkey needs Accessibility access." = "トークキーにはアクセシビリティの許可が必要です。";
+"Open Settings" = "設定を開く";
+"Engine stopped" = "エンジンが停止しました";
+"Dismiss" = "閉じる";
+"Microphone" = "マイク";
+"Earphones" = "イヤホン";
+"System default" = "システムの既定";
+"%@ (fake)" = "%@ (テスト用)";
+"%@ (not found)" = "%@ (見つかりません)";
+"You hear" = "あなたが聞く";
+"Swap languages" = "言語を入れ替える";
+"Meet hears · business keigo" = "Meet が聞く · ビジネス敬語";
+"Meet hears" = "Meet が聞く";
+"Custom…" = "カスタム…";
+"Language pair" = "言語の組み合わせ";
+"Apply" = "適用";
+"Business keigo" = "ビジネス敬語";
+"Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction." = "ビジネス敬語には Gemini エンジンが必要です (••• › エンジン)。OpenAI は指示を受け付けません。";
+"Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours." = "ビジネス敬語: 必ず丁寧な日本語になりますが、送信側の声はあなたの声ではなく既定の音声になります。";
+"Press Start to begin interpreting" = "開始を押すと通訳が始まります";
+"Transcripts appear here, original beside translation." = "ここに文字起こしが原文と訳文を並べて表示されます。";
+"Transcript" = "文字起こし";
+"↓ from Meet" = "↓ Meet から";
+"↑ from you" = "↑ あなたから";
+"Quit" = "終了";
+"Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved" = "送信しなかった無音: IN %.0f s · OUT %.0f s、約 $%.3f の節約";
+"Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage." = "推定値: OpenAI は送信した音声 1 分につき $0.034 を請求し、使用量を返しません。";
+"Estimate from audio seconds until the engine reports token usage." = "エンジンがトークン使用量を返すまでは、音声の秒数からの推定値です。";
+"Engine: %@" = "エンジン: %@";
+"retry" = "再接続中";
+"%@ live%@" = "%@%@";
+"%@ session. The number is the median delay from speech onset to translated audio." = "%@ セッション。数値は、話し始めから訳の音声が届くまでの遅延の中央値です。";
+"Last utterance: onset→audio %@, text→translation %@" = "直前の発話: 話し始め→音声 %@、原文→訳文 %@";
+"From Meet" = "Meet から";
+"From you" = "あなたから";
+"No translation" = "訳なし";
+
+/* Render.swift */
+"Waiting for your password…" = "パスワードの入力を待っています…";
+"Installed. No restart needed." = "インストールしました。再起動は不要です。";
+
+/* Setup.swift */
+"Use This Folder" = "このフォルダを使う";
+"Choose the folder that contains the engine (.venv and the kana package)." = "エンジン (.venv と kana パッケージ) が入っているフォルダを選んでください。";
+"Downloading from Existential Audio…" = "Existential Audio からダウンロード中…";
+"Preparing…" = "準備中…";
+"Loading the drivers…" = "ドライバーを読み込んでいます…";
+"%@ not installed" = "%@ がインストールされていません";
+"Saved to the login Keychain." = "ログインキーチェーンに保存しました。";
+"Removed from the Keychain." = "キーチェーンから削除しました。";
+"No key to test." = "テストするキーがありません。";
+"Testing…" = "テスト中…";
+"%@…, %ld characters" = "%@…、%ld 文字";
+"Format looks right (%@). Not checked with Google: this engine has no --check-key." = "形式は正しいようです (%@)。このエンジンには --check-key がないため、Google では確認していません。";
+"That does not look like a Gemini key (%@); keys start with AIza." = "Gemini のキーではないようです (%@)。キーは AIza で始まります。";
+"Key check timed out." = "キーの確認がタイムアウトしました。";
+"Key works (checked with Google). %@" = "キーは有効です (Google で確認済み)。%@";
+"Key check failed: %@" = "キーの確認に失敗しました: %@";
+"Setup" = "セットアップ";
+"Done" = "完了";
+"1  Audio drivers" = "1  オーディオドライバー";
+"Found. Meet's microphone." = "あります。Meet のマイクに使います。";
+"Missing. Meet's microphone." = "ありません。Meet のマイクに使います。";
+"Found. Meet's speakers." = "あります。Meet のスピーカーに使います。";
+"Missing. Meet's speakers." = "ありません。Meet のスピーカーに使います。";
+"2  Gemini API key" = "2  Gemini API キー";
+"Key found" = "キーがあります";
+"No key" = "キーがありません";
+"3  Permissions" = "3  許可";
+"Allow" = "許可する";
+"Accessibility" = "アクセシビリティ";
+"Granted. %@ works in every app." = "許可済みです。%@ はどのアプリでも使えます。";
+"Needed for the %@ talk key." = "トークキー (%@) に必要です。";
+"Meet settings (set these by hand)" = "Meet の設定 (手動で設定します)";
+"Meet › Settings › Audio › Microphone" = "Meet › 設定 › 音声 › マイク";
+"Meet › Settings › Audio › Speakers" = "Meet › 設定 › 音声 › スピーカー";
+"macOS › Sound › Output" = "macOS › サウンド › 出力";
+"your earphones" = "イヤホン";
+"Engine found" = "エンジンがあります";
+"Engine not found" = "エンジンが見つかりません";
+"Use Built-in" = "内蔵を使う";
+"Use a Checkout…" = "チェックアウトを使う…";
+"Change…" = "変更…";
+"Choose Folder…" = "フォルダを選択…";
+"That folder is not an engine" = "このフォルダはエンジンではありません";
+"Audio drivers" = "ドライバー";
+"Gemini key" = "Gemini キー";
+"Permissions" = "許可";
+"Step %ld of 3 · %@" = "ステップ %ld/3 · %@";
+"Ready. Press Done, then Start in the panel." = "準備ができました。完了を押してから、パネルで開始を押してください。";
+"Install the two free BlackHole audio drivers." = "無料の BlackHole ドライバーを 2 つインストールします。";
+"Paste your Gemini API key." = "Gemini API キーを貼り付けます。";
+"Allow the microphone and Accessibility." = "マイクとアクセシビリティを許可します。";
+"Downloads Existential Audio's signed installers (about 200 KB) and asks for your Mac password once." = "Existential Audio の署名付きインストーラ (約 200 KB) をダウンロードします。Mac のパスワードを一度だけ入力します。";
+"Installs both drivers from the copies inside kana and asks for your Mac password once." = "kana に同梱のインストーラから両方のドライバーをインストールします。Mac のパスワードを一度だけ入力します。";
+"Installing…" = "インストール中…";
+"Install audio drivers" = "ドライバーをインストール";
+"Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again." = "インストールしましたが、macOS がまだドライバーを読み込んでいません。Mac を再起動してから、もう一度 kana を開いてください。";
+"Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole)." = "macOS がドライバーを読み込み直す間、音声が 1 秒ほど止まります。BlackHole は Existential Audio によるフリーソフトウェアです (GPL-3.0、ソース: github.com/ExistentialAudio/BlackHole)。";
+"Or in Terminal: %@" = "ターミナルでは: %@";
+"Copied" = "コピーしました";
+"Copy" = "コピー";
+"Plays a 1 s tone into each BlackHole and listens for it. Not during a call." = "各 BlackHole に 1 秒の音を流し、返ってくるかを確かめます。通話中は使わないでください。";
+"Test devices" = "デバイスをテスト";
+"Paste a key from AI Studio" = "AI Studio のキーを貼り付け";
+"Save" = "保存";
+"Test key" = "キーをテスト";
+"Remove from Keychain" = "キーチェーンから削除";
+"Get a free key at aistudio.google.com/apikey ↗" = "aistudio.google.com/apikey で無料のキーを作成 ↗";
+"Stored in your login Keychain and passed to the engine in its environment, never on the command line. A .env file still works when no Keychain key is set." = "キーはログインキーチェーンに保存し、エンジンには環境変数で渡します。コマンドラインには載せません。キーチェーンにキーがないときは .env ファイルも使えます。";
+"Stored in your login Keychain and passed to the engine in its environment, never on the command line." = "キーはログインキーチェーンに保存し、エンジンには環境変数で渡します。コマンドラインには載せません。";
+"OpenAI key (optional)" = "OpenAI キー (任意)";
+"In the Keychain" = "キーチェーンにあります";
+"Not set" = "未設定";
+"Paste an OpenAI API key" = "OpenAI API キーを貼り付け";
+"Remove" = "削除";
+"Only for ••• › Engine › OpenAI: faster, but a voice adapted to the speaker rather than yours, and no business keigo. About $2 per hour of speech per direction." = "••• › エンジン › OpenAI でのみ使います。高速ですが、声はあなたの声ではなく話し手に合わせた音声になり、ビジネス敬語は使えません。料金は片方向につき発話 1 時間あたり約 $2 です。";
+"Hold to talk, tap to keep talking, tap again to stop." = "押している間だけ話します。短く押すと話し続け、もう一度押すと止まります。";
+"Press to talk, press again to stop." = "押すと話し始め、もう一度押すと止まります。";
+"Granted." = "許可済みです。";
+"Denied. Turn kana on in Privacy › Microphone." = "拒否されています。プライバシーとセキュリティ › マイクで kana をオンにしてください。";
+"Not asked yet. The engine needs it to hear you." = "まだ許可を求めていません。あなたの声を聞くためにエンジンが使います。";
+"In use: Keychain." = "使用中: キーチェーン";
+"In use: %@." = "使用中: %@";
+"In use: GEMINI_API_KEY from the environment." = "使用中: 環境変数の GEMINI_API_KEY";
+"Paste a key below, or put GEMINI_API_KEY in the engine's .env." = "下にキーを貼り付けるか、エンジンの .env に GEMINI_API_KEY を書いてください。";
+"Paste a key below. It is free to create and starts with AIza." = "下にキーを貼り付けてください。キーは無料で作成でき、AIza で始まります。";
+
+/* StatusController.swift */
+"Pass Audio Through When Idle" = "待機中は音声をパススルー";
+
+/* Theme.swift */
+"Live" = "通訳中";
+"Pass-through" = "パススルー";
+"Idle" = "待機中";

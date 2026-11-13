@@ -74,7 +74,7 @@ final class StatusController: NSObject, NSWindowDelegate {
         actions.minimize = { [weak self] in self?.minimize() }
         actions.expand = { [weak self] in self?.expand() }
         actions.closeBar = { [weak self] in self?.bar.hide() }
-        bar = MiniBarController(engine: engine, actions: actions)
+        bar = MiniBarController(engine: engine, prefs: prefs, actions: actions)
     }
 
     /// At launch: the bar if the user left kana minimized, otherwise the panel with its intro.
@@ -274,17 +274,40 @@ final class StatusController: NSObject, NSWindowDelegate {
 
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(actions.menuItem("Captions", state: prefs.captionsOn) { [weak self] in
+        menu.addItem(actions.menuItem(L10n.t("Captions"), state: prefs.captionsOn) { [weak self] in
             self?.prefs.captionsOn.toggle()
         })
+        let keys = NSMenu()
+        for key in TalkKey.allCases {
+            keys.addItem(actions.menuItem(key.title, state: prefs.talkKey == key) { [weak self] in
+                self?.prefs.talkKey = key
+            })
+        }
+        let keyItem = NSMenuItem(title: L10n.t("Talk key"), action: nil, keyEquivalent: "")
+        keyItem.submenu = keys
+        menu.addItem(keyItem)
+        let langs = NSMenu()
+        for (choice, title) in [(L10n.Choice.system, L10n.t("System")), (.en, "English"), (.ja, "日本語")] {
+            langs.addItem(actions.menuItem(title, state: prefs.language == choice) { [weak self] in
+                self?.prefs.language = choice
+            })
+        }
+        let langItem = NSMenuItem(title: L10n.t("Language"), action: nil, keyEquivalent: "")
+        langItem.submenu = langs
+        menu.addItem(langItem)
+        menu.addItem(actions.menuItem(L10n.t("Pass Audio Through When Idle"), state: prefs.passthroughWhenIdle) { [weak self] in
+            guard let self else { return }
+            self.prefs.passthroughWhenIdle.toggle()
+            self.engine.passthroughPrefChanged()
+        })
         menu.addItem(.separator())
-        let last = actions.menuItem("Open Last Transcript") { [weak self] in self?.actions.openLastTranscript() }
+        let last = actions.menuItem(L10n.t("Open Last Transcript")) { [weak self] in self?.actions.openLastTranscript() }
         last.isEnabled = actions.lastTranscriptURL != nil
         menu.addItem(last)
-        menu.addItem(actions.menuItem("Transcripts Folder") { [weak self] in self?.actions.openTranscriptsFolder() })
-        menu.addItem(actions.menuItem("Setup…") { [weak self] in self?.actions.openSetup() })
+        menu.addItem(actions.menuItem(L10n.t("Transcripts Folder")) { [weak self] in self?.actions.openTranscriptsFolder() })
+        menu.addItem(actions.menuItem(L10n.t("Setup…")) { [weak self] in self?.actions.openSetup() })
         menu.addItem(.separator())
-        menu.addItem(actions.menuItem("Quit kana") { NSApp.terminate(nil) })
+        menu.addItem(actions.menuItem(L10n.t("Quit kana")) { [weak self] in self?.actions.quit() })
         item.menu = menu
         item.button?.performClick(nil)   // shows the menu at the item
         item.menu = nil                  // left click goes back to the panel

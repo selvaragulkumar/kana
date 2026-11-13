@@ -107,25 +107,25 @@ enum LoopbackTester {
 
     private static func runBlocking(device: CADevice) -> Outcome {
         guard device.inputChannels > 0, device.outputChannels > 0 else {
-            return Outcome(ok: false, text: "\(device.name) has no input/output pair to loop back")
+            return Outcome(ok: false, text: L10n.f("%@ has no input/output pair to loop back", device.name))
         }
         let engine = AVAudioEngine()
         // Input and output both on the BlackHole device; nothing else is touched.
         guard setDevice(engine.outputNode.audioUnit, device.id) == noErr,
               setDevice(engine.inputNode.audioUnit, device.id) == noErr else {
-            return Outcome(ok: false, text: "Could not select \(device.name)")
+            return Outcome(ok: false, text: L10n.f("Could not select %@", device.name))
         }
         let outRate = engine.outputNode.outputFormat(forBus: 0).sampleRate
         let inFormat = engine.inputNode.outputFormat(forBus: 0)
         guard outRate > 0, inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
-            return Outcome(ok: false, text: "\(device.name) reports no audio format")
+            return Outcome(ok: false, text: L10n.f("%@ reports no audio format", device.name))
         }
 
         let player = AVAudioPlayerNode()
         engine.attach(player)
         guard let mono = AVAudioFormat(standardFormatWithSampleRate: outRate, channels: 1),
               let tone = AVAudioPCMBuffer(pcmFormat: mono, frameCapacity: AVAudioFrameCount(outRate)) else {
-            return Outcome(ok: false, text: "Could not build the test tone")
+            return Outcome(ok: false, text: L10n.t("Could not build the test tone"))
         }
         tone.frameLength = tone.frameCapacity
         let samples = tone.floatChannelData![0]
@@ -154,12 +154,12 @@ enum LoopbackTester {
         let db = rms > 0 ? 20 * log10(Double(rms)) : -120
         let level = String(format: "%.0f dB, ≈%.0f Hz", db, freq)
         if rms > 0.01 && abs(freq - 440) < 40 {
-            return Outcome(ok: true, text: "\(device.name) loopback OK (\(level))")
+            return Outcome(ok: true, text: L10n.f("%@ loopback OK (%@)", device.name, level))
         }
         if rms <= 0.0001 {
-            return Outcome(ok: false, text: "\(device.name): silence came back. Check Microphone access for kana.")
+            return Outcome(ok: false, text: L10n.f("%@: silence came back. Check Microphone access for kana.", device.name))
         }
-        return Outcome(ok: false, text: "\(device.name): unexpected signal (\(level))")
+        return Outcome(ok: false, text: L10n.f("%@: unexpected signal (%@)", device.name, level))
     }
 }
 

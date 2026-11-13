@@ -11,7 +11,7 @@ final class MiniBarController: NSObject, NSWindowDelegate {
     let window: NSPanel
     private let hover = CaptionHover()
 
-    init(engine: EngineProcess, actions: AppActions) {
+    init(engine: EngineProcess, prefs: Prefs, actions: AppActions) {
         window = NSPanel(contentRect: NSRect(origin: .zero, size: Self.size),
                          styleMask: [.borderless, .nonactivatingPanel],
                          backing: .buffered, defer: false)
@@ -24,11 +24,12 @@ final class MiniBarController: NSObject, NSWindowDelegate {
         window.hidesOnDeactivate = false
         window.isReleasedWhenClosed = false
         window.becomesKeyOnlyIfNeeded = true
-        window.title = "\(Theme.name) bar"
+        window.title = "\(Theme.name) bar"   // borderless, never shown; l10n:skip
         window.delegate = self
         let view = MiniBarView(onExpand: { actions.expand() }, onClose: { actions.closeBar() })
             .environmentObject(engine)
             .environmentObject(hover)
+            .environmentObject(prefs)
         let host = NSHostingView(rootView: view)
         host.frame = NSRect(origin: .zero, size: Self.size)
         window.contentView = host
@@ -64,20 +65,27 @@ final class MiniBarController: NSObject, NSWindowDelegate {
     func hide() { window.orderOut(nil) }
 }
 
-/// Bar content. The mark expands the panel; a double-click anywhere on the bar does too.
+/// Bar content. The mark is Start / Stop; a double-click on the bar or the hover button expands.
 struct MiniBarView: View {
     @EnvironmentObject private var engine: EngineProcess
     @EnvironmentObject private var hover: CaptionHover
+    @EnvironmentObject private var prefs: Prefs
     var onExpand: () -> Void
     var onClose: () -> Void
 
     var body: some View {
         HStack(spacing: 12) {
-            Button(action: onExpand) {
-                KanaMark(state: engine.markState, size: 28)
+            Button {
+                if engine.running { engine.stop() } else { engine.startWithSavedPrefs() }
+            } label: {
+                KanaMark(state: markState, size: 28)
+                    .modifier(Breathe(active: breathing))
             }
             .buttonStyle(.plain)
-            .help("Expand")
+            .help(engine.running ? L10n.t("Stop") : L10n.t("Start"))
+            .onHover { inside in
+                if inside { NSCursor.pointingHand.push() } else { NSCursor.pop() }
+            }
 
             lines
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -88,12 +96,12 @@ struct MiniBarView: View {
                     Image(systemName: "arrow.up.left.and.arrow.down.right").font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(IconButtonStyle())
-                .help("Expand")
+                .help(L10n.t("Expand"))
                 Button(action: onClose) {
                     Image(systemName: "xmark").font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(IconButtonStyle())
-                .help("Close")
+                .help(L10n.t("Close"))
             } else {
                 status
             }
@@ -133,7 +141,8 @@ struct MiniBarView: View {
                     .id("l-\(latest.id)")
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
-                Text(engine.running ? "Listening…" : "Idle. Expand to start.")
+                Text(engine.running ? L10n.t("Listening…")
+                     : engine.passingThrough ? L10n.t("Passing through · mute in Meet") : L10n.t("Idle. Click the mark to start."))
                     .font(Theme.ui(13))
                     .foregroundStyle(Theme.text4)
             }
@@ -141,6 +150,17 @@ struct MiniBarView: View {
         .clipped()
         .animation(.easeOut(duration: 0.25), value: latest?.id)
     }
+
+    /// Talking shows the talking mark; a connected session shows the still mark breathing
+    /// (one motion only, not the listening brackets as well); connecting, error and idle (also
+    /// pass-through) are the engine's mark state.
+    private var markState: MarkState {
+        if engine.running && engine.talking { return .talking }
+        if engine.markState == .listening { return .idle }
+        return engine.markState
+    }
+
+    private var breathing: Bool { engine.running && !engine.talking && engine.markState == .listening }
 
     private var status: some View {
         HStack(spacing: 10) {
@@ -152,7 +172,7 @@ struct MiniBarView: View {
             Image(systemName: engine.talking ? "mic.fill" : "mic")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(engine.talking ? Theme.accent : Theme.text4)
-                .help(engine.talking ? "Talking" : "Not talking (⌃⌥ Space)")
+                .help(engine.talking ? L10n.t("Talking") : L10n.f("Not talking (%@)", prefs.talkKey.hint))
         }
     }
 
@@ -162,12 +182,31 @@ struct MiniBarView: View {
 
     private var dotsTooltip: String {
         func dir(_ name: String, _ s: SessionState, _ key: String) -> String {
-            let lat = engine.latencyMs[key].map { String(format: ", %.1f s delay", $0 / 1000) } ?? ""
-            return "\(name) \(s == .connected ? "live" : s.rawValue)\(lat)"
+            let lat = engine.latencyMs[key].map { L10n.f(", %.1f s delay", $0 / 1000) } ?? ""
+            return "\(name) \(s == .connected ? L10n.t("live") : s.spoken)\(lat)"
         }
         let cost = String(format: "$%.2f · ≈¥%d%@", engine.usd, Int((engine.usd * EngineProcess.jpyPerUSD).rounded()),
-                          engine.costIsEstimate ? " est." : "")
+                          engine.costIsEstimate ? " " + L10n.t("est.") : "")
         return [dir("IN", engine.inState, "in"), dir("OUT", engine.outState, "out"), cost].joined(separator: "\n")
+    }
+}
+
+/// The mini bar mark's live pulse: scale 1.0 → 1.06 and opacity 0.85 → 1, 0.9 s each way
+/// (1.8 s period). Under Reduce Motion only the opacity changes, more gently.
+struct Breathe: ViewModifier {
+    let active: Bool
+    private let reduce = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+
+    func body(content: Content) -> some View {
+        if active {
+            content.phaseAnimator([false, true]) { view, up in
+                view
+                    .scaleEffect(up && !reduce ? 1.06 : 1)
+                    .opacity(up ? 1 : (reduce ? 0.9 : 0.85))
+            } animation: { _ in .easeInOut(duration: 0.9) }
+        } else {
+            content
+        }
     }
 }
 

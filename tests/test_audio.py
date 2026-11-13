@@ -183,3 +183,105 @@ def test_capture_latency_flag_defaults_to_low():
     from kana import __main__ as cli
     assert cli.parse_args([]).capture_latency == "low"
     assert cli.parse_args(["--capture-latency", "default"]).capture_latency == "default"
+
+
+class FakeSD:
+    """sounddevice stand-in for Passthrough: device rates, channels, and the
+    streams it opens (their kwargs and callbacks), with no audio."""
+
+    def __init__(self, rates, out_channels=2, accepts_in_rate=True):
+        self.rates, self.out_channels, self.accepts = rates, out_channels, accepts_in_rate
+        self.streams = []
+
+    def query_devices(self, device, kind):
+        return {"default_samplerate": float(self.rates[(device, kind)]),
+                "max_output_channels": self.out_channels}
+
+    def check_output_settings(self, **kw):
+        if not self.accepts:
+            raise ValueError("rate not supported")
+
+    def _stream(self, kind):
+        sd = self
+
+        class S:
+            def __init__(self, **kw):
+                self.kind, self.kw, self.events = kind, kw, []
+                sd.streams.append(self)
+
+            def start(self):
+                self.events.append("start")
+
+            def stop(self):
+                self.events.append("stop")
+
+            def close(self):
+                self.events.append("close")
+        return S
+
+    @property
+    def InputStream(self):
+        return self._stream("in")
+
+    @property
+    def OutputStream(self):
+        return self._stream("out")
+
+
+def test_passthrough_copies_src_to_dst_at_native_rate():
+    sd = FakeSD({(5, "input"): 48000, (1, "output"): 48000})
+    with audio.Passthrough(5, 1, sd=sd):
+        inp, out = sd.streams
+        assert (inp.kind, inp.kw["device"], inp.kw["samplerate"], inp.kw["channels"]) == ("in", 5, 48000, 1)
+        assert (out.kind, out.kw["device"], out.kw["samplerate"], out.kw["channels"]) == ("out", 1, 48000, 2)
+        assert inp.kw["blocksize"] == out.kw["blocksize"] == 480 and inp.kw["latency"] == "low"
+        x = (np.arange(480) * 7).astype(np.int16)
+        inp.kw["callback"](x[:, None], 480, None, None)
+        buf = np.ones((480, 2), dtype=np.int16)
+        out.kw["callback"](buf, 480, None, None)
+        assert (buf[:, 0] == x).all() and (buf[:, 1] == x).all()  # mono on both channels
+        out.kw["callback"](buf, 480, None, None)
+        assert not buf.any()  # underrun: silence
+    assert inp.events == ["start", "stop", "close"] and out.events == ["start", "stop", "close"]
+
+
+def test_passthrough_resamples_only_when_the_sink_refuses_the_rate():
+    sd = FakeSD({(5, "input"): 48000, (1, "output"): 24000}, out_channels=1, accepts_in_rate=False)
+    p = audio.Passthrough(5, 1, sd=sd)
+    inp, out = sd.streams
+    assert (p.in_rate, p.out_rate, out.kw["channels"], out.kw["blocksize"]) == (48000, 24000, 1, 240)
+    inp.kw["callback"](np.zeros((480, 1), dtype=np.int16), 480, None, None)
+    assert len(p.blocks[0]) == 240
+
+
+def test_passthrough_drops_oldest_blocks_beyond_max():
+    sd = FakeSD({(5, "input"): 16000, (1, "output"): 16000})
+    p = audio.Passthrough(5, 1, sd=sd, block_ms=10, max_ms=50)
+    inp, out = sd.streams
+    for i in range(8):
+        inp.kw["callback"](np.full((160, 1), i, dtype=np.int16), 160, None, None)
+    assert len(p.blocks) == 5 and p.dropped == 3
+    buf = np.zeros((160, 1), dtype=np.int16)
+    out.kw["callback"](buf, 160, None, None)
+    assert (buf == 3).all()  # the newest 50 ms survive
+
+
+def routes(spk="AirPods Pro", mic="AirPods Pro", meet_spk="BlackHole 16ch", meet_mic="BlackHole 2ch"):
+    return {"IN": ((3, meet_spk), (1, spk)), "OUT": ((0, mic), (2, meet_mic))}
+
+
+def test_check_passthrough_accepts_a_headset_with_one_name():
+    audio.check_passthrough(routes())
+
+
+def test_check_passthrough_refuses_a_blackhole_speaker():
+    for spk in ("BlackHole 16ch", "BlackHole 2ch"):
+        with pytest.raises(audio.DeviceError, match="BlackHole device"):
+            audio.check_passthrough(routes(spk=spk))
+
+
+def test_check_passthrough_refuses_a_sink_that_is_captured():
+    with pytest.raises(audio.DeviceError, match="feedback loop"):
+        audio.check_passthrough(routes(mic="BlackHole 2ch"))
+    with pytest.raises(audio.DeviceError, match="feedback loop"):
+        audio.check_passthrough(routes(meet_mic="BlackHole 16ch"))

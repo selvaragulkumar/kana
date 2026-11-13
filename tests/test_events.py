@@ -36,8 +36,11 @@ class Rec:
     ("ready", {"in": {"src": "BlackHole 16ch", "sink": "AirPods"},
                "out": {"src": "MacBook Pro Microphone", "sink": "BlackHole 2ch"},
                "model": "m", "in_lang": "en", "out_lang": "ja"}),
+    ("ready", {"mode": "passthrough", "in": {"src": "BlackHole 16ch", "sink": "AirPods"},
+               "out": {"src": "MacBook Pro Microphone", "sink": "BlackHole 2ch"}}),
     ("talk", {"on": False}),
     ("transcript", {"dir": "in", "kind": "src", "text": "こんにちは。", "final": True}),
+    ("untranslated", {"dir": "out", "row": 3}),
     ("session", {"dir": "out", "state": "reconnecting", "detail": "go_away"}),
     ("audio", {"dir": "in", "sent_s": 12.3, "recv_s": 9.8}),
     ("error", {"fatal": True, "text": "boom"}),
@@ -304,3 +307,79 @@ async def test_unknown_model_assumes_live_translate_rates_and_warns_once():
 def test_catch_up_playback_is_on_by_default_and_can_be_turned_off():
     assert cli.parse_args([]).catch_up == "on"
     assert cli.parse_args(["--catch-up", "off"]).catch_up == "off"
+
+
+class FakePassthrough:
+    opened = []
+
+    def __init__(self, src, dst):
+        self.pair = (src, dst)
+
+    def __enter__(self):
+        FakePassthrough.opened.append(self.pair)
+        return self
+
+    def __exit__(self, *exc):
+        FakePassthrough.opened.remove(self.pair)
+
+
+PT_ROUTES = {"IN": ((5, "BlackHole 16ch"), (1, "AirPods")),
+             "OUT": ((0, "MacBook Pro Microphone"), (4, "BlackHole 2ch"))}
+
+
+async def test_run_passthrough_ready_with_mode_talk_refused_and_quit():
+    cmds: asyncio.Queue = asyncio.Queue()
+
+    async def commands():
+        while (l := await cmds.get()) is not None:
+            yield l
+
+    rec = Rec()
+    task = asyncio.create_task(cli.run_passthrough(PT_ROUTES, emit=rec, commands=commands(),
+                                                   make=FakePassthrough))
+    await wait_for(lambda: rec.items)
+    assert rec.items[0] == ("ready", {"mode": "passthrough",
+                                      "in": {"src": "BlackHole 16ch", "sink": "AirPods"},
+                                      "out": {"src": "MacBook Pro Microphone", "sink": "BlackHole 2ch"}})
+    assert sorted(FakePassthrough.opened) == [(0, 4), (5, 1)]  # meeting -> earphones, mic -> meeting
+    cmds.put_nowait('{"cmd":"talk","on":true}')
+    await wait_for(lambda: rec.of("error"))
+    assert rec.of("error")[0]["fatal"] is False
+    cmds.put_nowait('{"cmd":"quit"}')
+    await asyncio.wait_for(task, 2)
+    assert FakePassthrough.opened == []  # devices released
+    assert [e for e, _ in rec.items] == ["ready", "error"]  # no talk, transcript, audio or usage
+
+
+async def test_run_passthrough_ends_on_eof():
+    async def commands():
+        for line in ():
+            yield line
+    rec = Rec()
+    await asyncio.wait_for(cli.run_passthrough(PT_ROUTES, emit=rec, commands=commands(),
+                                               make=FakePassthrough), 2)
+    assert [e for e, _ in rec.items] == ["ready"]
+
+
+def test_main_passthrough_needs_no_key_and_says_bye(monkeypatch, capsys):
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(cli, "plan_passthrough", lambda args: PT_ROUTES)
+
+    async def fake_run(routes, emit=None, commands=None, make=None):
+        emit("ready", **cli.passthrough_ready_fields(routes))
+    monkeypatch.setattr(cli, "run_passthrough", fake_run)
+    assert cli.main(["--json", "--passthrough"]) == 0
+    evs = [json.loads(l)["ev"] for l in capsys.readouterr().out.splitlines()]
+    assert evs == ["ready", "bye"]
+
+
+def test_main_passthrough_refuses_a_blackhole_earphone(monkeypatch, capsys):
+    index = {"BlackHole 16ch": 3, "BlackHole 2ch": 2, None: 0}
+    names = {(3, "input"): "BlackHole 16ch", (2, "output"): "BlackHole 2ch", (0, "input"): "Mic",
+             (0, "output"): "BlackHole 2ch"}  # system default output left on BlackHole
+    monkeypatch.setattr(cli.audio, "find_device", lambda name, kind: index[name])
+    monkeypatch.setattr(cli.audio, "device_name", lambda i, kind: names[(i, kind)])
+    assert cli.main(["--json", "--passthrough"]) == 2
+    out = [json.loads(l) for l in capsys.readouterr().out.splitlines()]
+    assert out[-1]["ev"] == "error" and out[-1]["fatal"] is True and "BlackHole device" in out[-1]["text"]

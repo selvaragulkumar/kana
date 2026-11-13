@@ -164,10 +164,10 @@ enum EngineLocation {
 
     /// One line for Setup › Engine.
     static var summary: String {
-        if overrideCommand != nil { return "An override command is in use." }
-        guard let r = resolved else { return "Choose the folder that holds the engine (.venv and the kana package)." }
-        if r.bundled { return "Built in" + (bundledVersion.map { " (Python \($0))" } ?? "") + "." }
-        return usable(r.root) ? r.root.path : "No engine in \(r.root.path)."
+        if overrideCommand != nil { return L10n.t("An override command is in use.") }
+        guard let r = resolved else { return L10n.t("Choose the folder that holds the engine (.venv and the kana package).") }
+        if r.bundled { return bundledVersion.map { L10n.f("Built in (Python %@).", $0) } ?? L10n.t("Built in.") }
+        return usable(r.root) ? r.root.path : L10n.f("No engine in %@.", r.root.path)
     }
 }
 
@@ -179,10 +179,10 @@ enum EngineError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingPython(let path): return "Engine not found: \(path)"
-        case .notFound: return "Engine not found. Choose its folder in Setup."
-        case .notAnEngine(let path): return "\(path) has no .venv/bin/python with the engine package."
-        case .badDeviceList(let detail): return "Could not list devices: \(detail)"
+        case .missingPython(let path): return L10n.f("Engine not found: %@", path)
+        case .notFound: return L10n.t("Engine not found. Choose its folder in Setup.")
+        case .notAnEngine(let path): return L10n.f("%@ has no .venv/bin/python with the engine package.", path)
+        case .badDeviceList(let detail): return L10n.f("Could not list devices: %@", detail)
         }
     }
 }
@@ -239,7 +239,10 @@ final class EngineProcess: ObservableObject {
     static let maxRows = 200
 
     // Lifecycle
+    /// A live session's engine runs (Start was pressed). Pass-through does not count.
     @Published private(set) var running = false
+    /// The idle pass-through engine runs (`--passthrough`): Meet hears the mic directly.
+    @Published private(set) var passingThrough = false
     @Published private(set) var ready = false
     @Published private(set) var talking = false
     @Published private(set) var startedAt: Date?
@@ -274,6 +277,14 @@ final class EngineProcess: ObservableObject {
 
     private var process: Process?
     private var stdinHandle: FileHandle?
+    /// What the current child is. One child at a time.
+    enum Kind { case live, passthrough }
+    private var kind: Kind = .live
+    /// Runs once the current child has exited and released its devices (Start from
+    /// pass-through, or a pass-through restart with new devices).
+    private var afterExit: (() -> Void)?
+    /// The app is terminating: nothing starts again.
+    private var quitting = false
     private var audioByDir: [String: (sent: Double, recv: Double)] = [:]
     /// Cost the engine computed from server-reported tokens, per direction.
     private var engineUsdByDir: [String: Double] = [:]
@@ -305,8 +316,8 @@ final class EngineProcess: ObservableObject {
     /// Chip text derived from `ready`: nothing for the default model.
     var engineChip: String? {
         guard let m = model else { return nil }
-        if m == "fake" { return "fake engine" }
-        if m == "gemini-3.8-live" { return "fallback model" }
+        if m == "fake" { return L10n.t("fake engine") }
+        if m == "gemini-3.8-live" { return L10n.t("fallback model") }
         if m.hasPrefix("gpt-") { return "OpenAI" }
         return nil
     }
@@ -314,14 +325,14 @@ final class EngineProcess: ObservableObject {
     /// Tooltip for the engine chip: model per direction and what the register means.
     var engineTooltip: String {
         var lines: [String] = []
-        lines.append("IN: \(inModel ?? "not running")")
-        lines.append("OUT: \(outModel ?? "not running")")
+        lines.append("IN: \(inModel ?? L10n.t("not running"))")
+        lines.append("OUT: \(outModel ?? L10n.t("not running"))")
         if inModel?.hasPrefix("gpt-") == true || outModel?.hasPrefix("gpt-") == true {
-            lines.append("OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo.")
+            lines.append(L10n.t("OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo."))
         } else if register == "business" {
-            lines.append("Business keigo: the outbound Japanese uses a stock voice, not yours.")
+            lines.append(L10n.t("Business keigo: the outbound Japanese uses a stock voice, not yours."))
         } else if register != nil {
-            lines.append("Register mirrors yours; your own voice both ways.")
+            lines.append(L10n.t("Register mirrors yours; your own voice both ways."))
         }
         return lines.joined(separator: "\n")
     }
@@ -400,8 +411,25 @@ final class EngineProcess: ObservableObject {
 
     // MARK: Start / stop
 
+    /// Start with the panel's saved choices (the same keys as its `@AppStorage`).
+    func startWithSavedPrefs() {
+        let d = UserDefaults.standard
+        start(mic: d.string(forKey: "mic"), spk: d.string(forKey: "spk"),
+              inLang: d.string(forKey: "inLang") ?? "en", outLang: d.string(forKey: "outLang") ?? "ja",
+              business: d.bool(forKey: "businessKeigo"))
+    }
+
     func start(mic: String?, spk: String?, inLang: String, outLang: String, business: Bool) {
+        if process != nil && kind == .passthrough {
+            // The pass-through engine holds the devices: quit it, start once it has exited.
+            afterExit = { [weak self] in
+                self?.start(mic: mic, spk: spk, inLang: inLang, outLang: outLang, business: business)
+            }
+            stop()
+            return
+        }
         guard process == nil else { return }
+        afterExit = nil
         // OpenAI takes no instruction, so business keigo is Gemini-only; the engine refuses the combination.
         let openai = prefs.usesOpenAI
         var args = ["--json", "--in", inLang, "--out", outLang,
@@ -431,38 +459,7 @@ final class EngineProcess: ObservableObject {
             return
         }
 
-        let outPipe = Pipe(), inPipe = Pipe(), errPipe = Pipe()
-        p.standardOutput = outPipe
-        p.standardInput = inPipe
-        p.standardError = errPipe
-
-        let splitter = LineSplitter { [weak self] line in
-            Task { @MainActor in self?.handle(line: line) }
-        }
-        outPipe.fileHandleForReading.readabilityHandler = { h in
-            let data = h.availableData
-            if data.isEmpty {
-                h.readabilityHandler = nil
-                splitter.flush()
-            } else {
-                splitter.feed(data)
-            }
-        }
-        let tail = TailBuffer()
-        errPipe.fileHandleForReading.readabilityHandler = { h in
-            let data = h.availableData
-            if data.isEmpty { h.readabilityHandler = nil } else { tail.append(data) }
-        }
-        p.terminationHandler = { [weak self] proc in
-            let status = proc.terminationStatus
-            let reason = proc.terminationReason
-            // Give the stdout reader a moment to deliver the last lines (bye / fatal error).
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-                MainActor.assumeIsolated {
-                    self?.didExit(proc, status: status, reason: reason, stderrTail: tail.lastLine)
-                }
-            }
-        }
+        let input = wire(p, kind: .live)
 
         // Reset per-run state.
         rows.removeAll()
@@ -492,19 +489,125 @@ final class EngineProcess: ObservableObject {
         do {
             try p.run()
         } catch {
-            showError("Could not start engine: \(error.localizedDescription)", fatal: true)
+            showError(L10n.f("Could not start engine: %@", error.localizedDescription), fatal: true)
             inState = .none; outState = .none
             return
         }
         process = p
-        stdinHandle = inPipe.fileHandleForWriting
+        kind = .live
+        stdinHandle = input
         running = true
         markTimer?.invalidate()
         markTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            MainActor.assumeIsolated { self?.updateMarkState() }
+            MainActor.assumeIsolated {
+                self?.updateMarkState()
+                self?.settleStaleRows()
+            }
         }
         updateMarkState()
         startedAt = Date()
+    }
+
+    /// Pipes and handlers of a child. Lines are handled as the kind they were spawned as.
+    private func wire(_ p: Process, kind: Kind) -> FileHandle {
+        let outPipe = Pipe(), inPipe = Pipe(), errPipe = Pipe()
+        p.standardOutput = outPipe
+        p.standardInput = inPipe
+        p.standardError = errPipe
+
+        let splitter = LineSplitter { [weak self] line in
+            Task { @MainActor in self?.handle(line: line, kind: kind) }
+        }
+        outPipe.fileHandleForReading.readabilityHandler = { h in
+            let data = h.availableData
+            if data.isEmpty {
+                h.readabilityHandler = nil
+                splitter.flush()
+            } else {
+                splitter.feed(data)
+            }
+        }
+        let tail = TailBuffer()
+        errPipe.fileHandleForReading.readabilityHandler = { h in
+            let data = h.availableData
+            if data.isEmpty { h.readabilityHandler = nil } else { tail.append(data) }
+        }
+        p.terminationHandler = { [weak self] proc in
+            let status = proc.terminationStatus
+            let reason = proc.terminationReason
+            // Give the stdout reader a moment to deliver the last lines (bye / fatal error).
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                MainActor.assumeIsolated {
+                    self?.didExit(proc, status: status, reason: reason, stderrTail: tail.lastLine)
+                }
+            }
+        }
+        return inPipe.fileHandleForWriting
+    }
+
+    // MARK: Pass-through
+
+    /// Pass-through needs both BlackHole drivers and microphone permission (and an engine);
+    /// it needs no key. Setup's first-run gating stays as it is.
+    static func passthroughPrereqsMet() -> Bool {
+        let devices = CoreAudioDevices.all()
+        return CoreAudioDevices.find("BlackHole 2ch", in: devices) != nil
+            && CoreAudioDevices.find("BlackHole 16ch", in: devices) != nil
+            && MicPermission.status == .authorized && EngineLocation.found
+    }
+
+    /// Starts pass-through when the app is idle and the pref is on: at launch, after a live
+    /// session ends, after Setup's Done, when the pref is turned on. Never after a
+    /// pass-through failure by itself, so a broken device cannot cause a restart loop.
+    func resumePassthrough() {
+        guard prefs.passthroughWhenIdle, process == nil, !quitting, !Self.previewMode,
+              Self.passthroughPrereqsMet() else { return }
+        let d = UserDefaults.standard
+        startPassthrough(mic: d.string(forKey: "mic"), spk: d.string(forKey: "spk"))
+    }
+
+    private func startPassthrough(mic: String?, spk: String?) {
+        guard process == nil else { return }
+        var args = ["--json", "--passthrough"]
+        if let mic, !mic.isEmpty { args += ["--mic", mic] }
+        if let spk, !spk.isEmpty { args += ["--spk", spk] }
+        guard let p = try? EngineLocation.makeProcess(arguments: args) else { return }  // Setup explains a missing engine
+        let input = wire(p, kind: .passthrough)
+        sawFatal = false
+        stopRequested = false
+        do {
+            try p.run()
+        } catch {
+            showPassthroughError(L10n.f("Pass-through could not start: %@", error.localizedDescription))
+            return
+        }
+        process = p
+        kind = .passthrough
+        stdinHandle = input
+        passingThrough = true
+    }
+
+    /// ••• › Pass audio through when idle was switched.
+    func passthroughPrefChanged() {
+        if prefs.passthroughWhenIdle {
+            resumePassthrough()
+        } else if process != nil && kind == .passthrough {
+            afterExit = nil
+            stop()
+        }
+    }
+
+    /// The microphone or earphones changed: a running pass-through restarts on the new devices.
+    func devicesChanged() {
+        guard process != nil, kind == .passthrough else { return }
+        if afterExit == nil { afterExit = { [weak self] in self?.resumePassthrough() } }
+        stop()
+    }
+
+    /// A pass-through failure is shown like a device error, unless an error (for example the
+    /// live session's) is already on screen.
+    private func showPassthroughError(_ text: String) {
+        if lastError == nil { showError(text, fatal: true) }
     }
 
     /// Asks the engine to quit, then terminates it if it does not exit in time.
@@ -517,8 +620,10 @@ final class EngineProcess: ObservableObject {
         }
     }
 
-    /// Synchronous stop used when the app quits.
+    /// Synchronous stop used when the app quits (a live session or pass-through alike).
     func stopForQuit() {
+        quitting = true
+        afterExit = nil
         guard let p = process else { return }
         stopRequested = true
         send(["cmd": "quit"])
@@ -547,6 +652,22 @@ final class EngineProcess: ObservableObject {
         process = nil
         try? stdinHandle?.close()
         stdinHandle = nil
+        let next = afterExit
+        afterExit = nil
+        if kind == .passthrough {
+            passingThrough = false
+            if !stopRequested && !sawFatal && !(reason == .exit && status == 0) {
+                let detail = stderrTail.map { ": \($0)" } ?? ""
+                showPassthroughError(reason == .uncaughtSignal
+                    ? L10n.f("Pass-through stopped (signal %d)%@", status, detail)
+                    : L10n.f("Pass-through stopped (code %d)%@", status, detail))
+            }
+            updateMarkState()
+            next?()   // Start pressed meanwhile, or new devices; no retry after a failure
+            return
+        }
+        // A live session ended (Stop or a failure): back to pass-through when it is on.
+        defer { if let next { next() } else { resumePassthrough() } }
         running = false
         markTimer?.invalidate()
         markTimer = nil
@@ -558,8 +679,9 @@ final class EngineProcess: ObservableObject {
         if outState != .none { outState = .closed }
         if !stopRequested && !sawFatal && !(reason == .exit && status == 0) {
             let detail = stderrTail.map { ": \($0)" } ?? ""
-            let how = reason == .uncaughtSignal ? "was killed (signal \(status))" : "exited (code \(status))"
-            showError("Engine \(how)\(detail)", fatal: true)
+            showError(reason == .uncaughtSignal
+                ? L10n.f("Engine was killed (signal %d)%@", status, detail)
+                : L10n.f("Engine exited (code %d)%@", status, detail), fatal: true)
             if Self.isSetupProblem(detail) { needsSetup = true }
         }
     }
@@ -579,12 +701,20 @@ final class EngineProcess: ObservableObject {
 
     // MARK: Events
 
-    private func handle(line: String) {
+    private func handle(line: String, kind: Kind) {
         guard let data = line.data(using: .utf8),
               let e = try? JSONDecoder().decode(EngineEvent.self, from: data) else {
             return  // stdout is JSON-only by contract; ignore anything else
         }
         defer { updateMarkState() }
+        if kind == .passthrough {
+            // ready (mode passthrough), error and bye only; never live state.
+            if e.ev == "error", e.fatal == true {
+                sawFatal = true
+                showPassthroughError(L10n.f("Pass-through: %@", e.text ?? L10n.t("unknown error")))
+            }
+            return
+        }
         switch e.ev {
         case "ready":
             ready = true
@@ -602,7 +732,7 @@ final class EngineProcess: ObservableObject {
             let state = SessionState(rawValue: e.state ?? "") ?? .none
             if e.dir == "in" { inState = state } else if e.dir == "out" { outState = state }
             if let detail = e.detail, detail.hasPrefix("error") {
-                showError("\(e.dir?.uppercased() ?? "") session \(state.rawValue): \(detail)", fatal: false)
+                showError(L10n.f("%@ session %@: %@", e.dir?.uppercased() ?? "", state.spoken, detail), fatal: false)
             }
         case "audio":
             if let dir = e.dir {
@@ -619,6 +749,11 @@ final class EngineProcess: ObservableObject {
                 if e.est == true { engineEstDirs.insert(dir) }
                 recomputeCost()
             }
+        case "untranslated":
+            if let dir = Direction(rawValue: e.dir ?? ""), let row = e.row,
+               let i = rows.firstIndex(where: { $0.dir == dir && $0.key == row }), rows[i].pending {
+                rows[i].settled = true
+            }
         case "latency":
             if let dir = e.dir { lastUtterance[dir] = (e.onset_to_audio_ms, e.src_final_to_dst_final_ms) }
         case "saved":
@@ -626,7 +761,7 @@ final class EngineProcess: ObservableObject {
         case "error":
             let fatal = e.fatal ?? false
             if fatal { sawFatal = true }
-            let text = e.text ?? "Unknown engine error"
+            let text = e.text ?? L10n.t("Unknown engine error")
             showError(text, fatal: fatal)
             if fatal && Self.isSetupProblem(text) { needsSetup = true }
         case "bye":
@@ -667,6 +802,24 @@ final class EngineProcess: ObservableObject {
     }
 
     private func joined(_ a: String, _ b: String) -> String { a.isEmpty ? b : a + " " + b }
+
+    /// Backstop for `untranslated` (an older engine, or an utterance closed by the next onset):
+    /// a row still waiting `pendingGiveUp` seconds after its source last changed, once a newer
+    /// row exists in its direction, is settled. While a row waits only its source changes, so
+    /// `updatedAt` is when its source was last finalised. Driven by the 0.5 s state timer.
+    static let pendingGiveUp: TimeInterval = 10
+
+    private func settleStaleRows(now: Date = Date()) {
+        var newerIn: Set<Direction> = []
+        for i in rows.indices.reversed() {
+            let r = rows[i]
+            if r.pending && !r.src.isEmpty && newerIn.contains(r.dir)
+                && now.timeIntervalSince(r.updatedAt) >= Self.pendingGiveUp {
+                rows[i].settled = true
+            }
+            newerIn.insert(r.dir)
+        }
+    }
 
     private func trimRows() {
         if rows.count > Self.maxRows { rows.removeFirst(rows.count - Self.maxRows) }
@@ -741,7 +894,7 @@ final class EngineProcess: ObservableObject {
             }
             let errLine = String(decoding: errData, as: UTF8.self)
                 .split(whereSeparator: \.isNewline).last.map(String.init)
-            return .failure(EngineError.badDeviceList(errLine ?? "no JSON on stdout (exit \(p.terminationStatus))"))
+            return .failure(EngineError.badDeviceList(errLine ?? L10n.f("no JSON on stdout (exit %d)", p.terminationStatus)))
         } catch {
             return .failure(error)
         }

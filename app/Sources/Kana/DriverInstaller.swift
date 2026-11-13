@@ -43,11 +43,11 @@ enum DriverInstaller {
 
         var errorDescription: String? {
             switch self {
-            case .download(let f, let why): return "Could not download \(f): \(why)"
-            case .checksum(let f): return "\(f) did not match its published checksum, so it was not installed."
-            case .signature(let f): return "\(f) is not signed by Existential Audio, so it was not installed."
-            case .cancelled: return "Cancelled. Nothing was installed."
-            case .script(let msg): return "The installer stopped: \(msg)"
+            case .download(let f, let why): return L10n.f("Could not download %@: %@", f, why)
+            case .checksum(let f): return L10n.f("%@ did not match its published checksum, so it was not installed.", f)
+            case .signature(let f): return L10n.f("%@ is not signed by Existential Audio, so it was not installed.", f)
+            case .cancelled: return L10n.t("Cancelled. Nothing was installed.")
+            case .script(let msg): return L10n.f("The installer stopped: %@", msg)
             }
         }
     }
@@ -147,8 +147,9 @@ enum DriverInstaller {
 
     /// The AppleScript that asks for the password once and runs `shellCommand` as root.
     static func appleScript(for pkgs: [(Driver, URL)]) -> String {
-        let names = pkgs.map(\.0.name).joined(separator: " and ")
-        let prompt = "kana wants to install the \(names) audio drivers."
+        let list = pkgs.map(\.0.name)
+        let names = list.count == 2 ? L10n.f("%@ and %@", list[0], list[1]) : list.joined(separator: ", ")
+        let prompt = L10n.f("kana wants to install the %@ audio drivers.", names)
         return "do shell script \(asString(shellCommand(for: pkgs))) with prompt \(asString(prompt)) with administrator privileges"
     }
 

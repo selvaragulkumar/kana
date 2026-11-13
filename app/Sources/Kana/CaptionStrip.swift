@@ -60,7 +60,7 @@ final class CaptionController: NSObject, NSWindowDelegate {
         p.hidesOnDeactivate = false
         p.isReleasedWhenClosed = false
         p.becomesKeyOnlyIfNeeded = true
-        p.title = "\(Theme.name) captions"
+        p.title = "\(Theme.name) captions"   // borderless, never shown; l10n:skip
         p.delegate = self
         let view = CaptionView()
             .environmentObject(engine)
@@ -150,7 +150,7 @@ struct CaptionView: View {
                 }
             }
             if lines.isEmpty {
-                Text("Captions appear here. Drag the handle to move.")
+                Text(L10n.t("Captions appear here. Drag the handle to move."))
                     .font(Theme.ui(13))
                     .foregroundStyle(Theme.text4)
             }

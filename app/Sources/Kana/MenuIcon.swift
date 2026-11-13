@@ -30,7 +30,7 @@ enum MenuIcon {
             return true
         }
         img.isTemplate = !talking
-        img.accessibilityDescription = talking ? "kana, talking" : "kana"
+        img.accessibilityDescription = talking ? L10n.f("kana, %@", MarkState.talking.spoken) : Theme.name
         return img
     }
 }

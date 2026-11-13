@@ -6,7 +6,8 @@ import UniformTypeIdentifiers
 
 /// `kana --render-intro <dir>`: renders the opening intro, the panel, the minimized bar and the
 /// panel → bar transition to PNG frames (plus GIFs and contact sheets) without opening any
-/// window. Views are drawn by an NSHostingView that is never put in a window.
+/// window. Views are drawn by an NSHostingView that is never put in a window. `--lang ja` (or
+/// KANA_LANG=ja) renders the Japanese UI.
 @MainActor
 enum IntroRender {
     static let scale: CGFloat = 2
@@ -16,7 +17,7 @@ enum IntroRender {
         EngineProcess.previewMode = true
         let prefs = Prefs.shared
         let actions = AppActions(prefs: prefs)
-        let hotkey = Hotkey {}
+        let hotkey = Hotkey(prefs: prefs, isTalking: { false }, setTalk: { _ in })
 
         func panel(_ engine: EngineProcess, t: Double?) -> some View {
             PanelView()
@@ -63,6 +64,7 @@ enum IntroRender {
         let barSize = MiniBarController.size
         func bar(_ e: EngineProcess) -> some View {
             MiniBarView(onExpand: {}, onClose: {}).environmentObject(e).environmentObject(CaptionHover())
+                .environmentObject(prefs)
         }
         let talking = EngineProcess(prefs: prefs)
         talking.loadPreview(rows: demoRows, running: true, live: true, talking: true)
@@ -200,7 +202,7 @@ enum IntroRender {
 
 /// `kana --render-setup <dir>`: the Setup page in its first-launch states, drawn offscreen like
 /// IntroRender (no window). Device, key and permission states are stubbed; Accessibility shows
-/// this process's real state.
+/// this process's real state. `--lang ja` (or KANA_LANG=ja) renders the Japanese UI.
 @MainActor
 enum SetupRender {
     static func run(to dir: URL) {
@@ -208,16 +210,16 @@ enum SetupRender {
         EngineProcess.previewMode = true
         let prefs = Prefs.shared
         let actions = AppActions(prefs: prefs)
-        let hotkey = Hotkey {}
+        let hotkey = Hotkey(prefs: prefs, isTalking: { false }, setTalk: { _ in })
         let engine = EngineProcess(prefs: prefs)
         engine.loadPreview(rows: [], running: false, live: false)
         let both = [CADevice(id: 1, name: "BlackHole 2ch", inputChannels: 2, outputChannels: 2),
                     CADevice(id: 2, name: "BlackHole 16ch", inputChannels: 16, outputChannels: 16)]
         let states: [(String, [CADevice], KeySource, AVAuthorizationStatus, SetupModel.InstallState)] = [
             ("setup-1-fresh", [], .missing, .notDetermined, .idle),
-            ("setup-2-installing", [], .missing, .notDetermined, .working("Waiting for your password…")),
+            ("setup-2-installing", [], .missing, .notDetermined, .working(L10n.t("Waiting for your password…"))),
             ("setup-3-restart", [], .missing, .notDetermined, .needsRestart),
-            ("setup-4-key", both, .missing, .notDetermined, .done("Installed. No restart needed.")),
+            ("setup-4-key", both, .missing, .notDetermined, .done(L10n.t("Installed. No restart needed."))),
             ("setup-5-ready", both, .keychain, .authorized, .idle),
         ]
         for (name, devices, key, mic, install) in states {
@@ -227,6 +229,7 @@ enum SetupRender {
                 .environmentObject(hotkey)
                 .environmentObject(engine)
                 .environmentObject(actions)
+                .environmentObject(prefs)
                 .padding(20)
                 .frame(width: PanelView.size.width, height: PanelView.size.height, alignment: .top)
                 .background(RoundedRectangle(cornerRadius: 18).fill(Theme.bg))

@@ -32,8 +32,8 @@ because that would create a feedback loop.
 |---|---|---|
 | `--mic NAME` | system default input | Your real microphone. Matched as a case-insensitive substring. |
 | `--spk NAME` | system default output | Your earphones. Matched as a substring. |
-| `--meet-mic NAME` | `BlackHole 2ch` | The device the meeting app uses as its microphone. |
-| `--meet-spk NAME` | `BlackHole 16ch` | The device the meeting app uses as its speakers. |
+| `--meet-mic NAME` | `BlackHole 2ch` (Windows: `CABLE-A`) | The device the meeting app uses as its microphone. A VB-Audio cable may be named by either end ("CABLE-A Output" finds "CABLE-A Input"). |
+| `--meet-spk NAME` | `BlackHole 16ch` (Windows: `CABLE-B`) | The device the meeting app uses as its speakers. |
 | `--in LANG` | `en` | The language you hear (BCP-47). |
 | `--out LANG` | `ja` | The language the meeting hears (BCP-47). |
 | `--provider gemini\|openai` | `gemini` | The translation engine. `openai` uses `gpt-realtime-translate` (see [OpenAI provider](#openai-provider)). |
@@ -45,7 +45,8 @@ because that would create a feedback loop.
 | `--dump-in WAV` | none | Also writes the inbound translated audio (24 kHz mono) to this file. |
 | `--dump-out WAV` | none | Also writes the outbound translated audio to this file. |
 | `--only in\|out` | both | Runs a single direction. |
-| `--list-devices` | | Lists audio devices and exits. With `--json` it prints one JSON line. |
+| `--list-devices` | | Lists audio devices and exits. With `--json` it prints one JSON line, with only the `--host-api` devices when one is set. |
+| `--host-api NAME` | `auto` | Only devices of this PortAudio host API are used (a substring, such as `wasapi` or `mme`); a missing `--mic`/`--spk` then means that host API's default device. `auto` is WASAPI on Windows, where every device is listed once per host API and PortAudio's default (MME) is slow, and no filter elsewhere. `all` is no filter. Windows support is groundwork, see [research/windows.md](research/windows.md). |
 | `--vad auto\|off` | `auto` | Voice-activity gating of what is sent. With `off`, every chunk is streamed. |
 | `--vad-threshold RMS` | `200` | The absolute speech level: the int16 RMS of a 100 ms chunk. |
 | `--vad-hangover MS` | `2000` | How long audio is still sent after speech ends, before the stream end. |
@@ -53,12 +54,41 @@ because that would create a feedback loop.
 | `--backend developer\|vertex` | `developer` | Where the Live sessions run. `developer` is the Gemini Developer API (`generativelanguage.googleapis.com`) with `GEMINI_API_KEY`. `vertex` is Vertex AI at location `global` (the only location serving Live Translate) with application-default credentials; the Live config is the same. `ready` then reports `in_model` / `out_model` with an `@vertex` suffix. Measured side by side in [LATENCY.md](LATENCY.md). |
 | `--gcp-project ID` | `GOOGLE_CLOUD_PROJECT`, then `gcloud config get-value project` | The Google Cloud project for `--backend vertex`. Without one the engine exits with a fatal error. |
 | `--capture-latency low\|default` | `low` | With `low`, a BlackHole capture device (the meeting audio) is opened at PortAudio latency `low` with 10 ms blocks, collected into the 100 ms chunks the session gets. Each chunk then reaches the engine about 7 ms after its last sample instead of about 67 ms. Other inputs (your microphone) keep the defaults: they were not measured. `default` opens every input as before. See [LATENCY.md](LATENCY.md). |
-| `--save-dir DIR` | `~/Library/Application Support/kana` | Transcripts are written to `DIR/transcripts/`. |
+| `--save-dir DIR` | `~/Library/Application Support/kana` (Windows: `%LOCALAPPDATA%\kana`) | Transcripts are written to `DIR/transcripts/`. |
 | `--no-save` | | Saves no transcripts. |
+| `--passthrough` | | No translation, no network, no key. Copies the meeting (`--meet-spk`) to your earphones (`--spk`) and your microphone (`--mic`) to the meeting (`--meet-mic`), untranslated. See [Pass-through](#pass-through). |
 | `--json` | | Runs the JSON-lines protocol described below. |
 
 Exit codes: `0` is a clean exit and `2` is a fatal setup error, such as a missing key, a missing
 device or a device that fails to open.
+
+## Pass-through
+
+`--passthrough` makes the meeting behave as if kana were not there, while keeping the meeting
+app's devices on BlackHole. The menu-bar app runs it whenever it is open but not live (pref "Pass
+audio through when idle", on by default), so Meet is never silent between sessions.
+
+| Loop | From | To |
+|---|---|---|
+| inbound | the meeting (`--meet-spk`, BlackHole 16ch) | your earphones (`--spk`) |
+| outbound | your microphone (`--mic`) | the meeting (`--meet-mic`, BlackHole 2ch) |
+
+- **The microphone is live to the meeting.** Pass-through does not gate the microphone by talk:
+  the meeting hears it directly, exactly as without kana, and you mute in the meeting app. This is
+  the one mode where kana sends your microphone with talk off, so the app says it in plain words
+  ("Meet hears your mic directly · mute in Meet") and the talk key does nothing.
+- **Native quality.** Each loop opens its input with one channel (channel 0 of the device) at the
+  device's native rate, and its output at the same rate when the device accepts it, otherwise at
+  the output's native rate with linear resampling. No 16 kHz step. Blocks are 10 ms at PortAudio
+  latency `low`, int16; the mono signal is written to up to two output channels. Above 50 ms
+  queued the oldest block is dropped (clock drift between the two devices); an underrun plays
+  silence.
+- **Loop-proof by construction.** It writes only to your earphones and to BlackHole 2ch, never to
+  BlackHole 16ch. It refuses to start (fatal error, exit 2) when the earphones are a BlackHole
+  device (for example when the system output was left on BlackHole) or when a BlackHole sink is
+  also a captured source.
+- No key is read and no connection is opened. `--in`, `--out`, `--model`, `--provider`, `--vad`
+  and the file and dump flags do not apply. No transcripts are saved.
 
 ## Terminal mode
 
@@ -80,7 +110,8 @@ error. Strings are UTF-8, not `\u` escapes.
 | `{"cmd":"talk","on":false}` | Mutes the outbound direction. |
 | `{"cmd":"quit"}` | Shuts down cleanly with `bye`. End of input on stdin does the same. |
 
-Any other line produces a non-fatal `error` event and is otherwise ignored.
+Any other line produces a non-fatal `error` event and is otherwise ignored. In `--passthrough`
+only `quit` applies; `talk` gets a non-fatal `error`.
 
 ### Events (stdout), in the order they first appear
 
@@ -90,6 +121,13 @@ are the models each direction actually uses (with an `@vertex` suffix under `--b
 and `register` is the `--register` flag.
 ```json
 {"t": 1794481886.512, "ev": "ready", "in": {"src": "BlackHole 16ch", "sink": "MacBook Pro Speakers"}, "out": {"src": "MacBook Pro Microphone", "sink": "BlackHole 2ch"}, "model": "gemini-3.5-live-translate-preview", "register": "default", "in_model": "gemini-3.5-live-translate-preview", "out_model": "gemini-3.5-live-translate-preview", "in_lang": "en", "out_lang": "ja"}
+```
+
+With `--passthrough`, `ready` has `"mode": "passthrough"` and only the two loops; a live `ready`
+has no `mode`. Pass-through sends no `saved`, `talk`, `session`, `transcript`, `latency`, `audio`
+or `usage`: after `ready` come only `error` and `bye`.
+```json
+{"t": 1794481886.512, "ev": "ready", "mode": "passthrough", "in": {"src": "BlackHole 16ch", "sink": "AirPods Pro"}, "out": {"src": "AirPods Pro", "sink": "BlackHole 2ch"}}
 ```
 
 **`saved`**: sent right after `ready`, unless `--no-save` is set. It names the two transcript files.
@@ -151,6 +189,17 @@ A source with no sentence end (cut by a turn end or a reconnect) is continued by
 A row is final 12 s after its last change; a short source still waiting then is folded into the
 row above if that row's translation arrived after it. Nothing is dropped, and nothing is folded
 across utterances.
+
+**`untranslated`**: row `row` has a final source and the model said nothing for it, for example
+because the speech was already in the target language (the other person's voice reaching your
+microphone). It is sent when an utterance closes after 1.5 s of quiet (see Utterances and latency),
+once for each row of that utterance still waiting for a translation, just before that utterance's
+`latency` event. The app then shows the row as settled instead of pending. It is not sent when an
+utterance is closed by the next onset, because the translation may still be on its way. If a
+translation arrives later after all, a `transcript` event fills the row as usual.
+```json
+{"t": 1794481315.120, "ev": "untranslated", "dir": "out", "row": 5}
+```
 
 **`latency`**: sent once per utterance, when it closes. Either field is `null` when it could not
 be measured. The definitions are below.
@@ -294,7 +343,16 @@ Capture is cut into 100 ms chunks at 16 kHz. Each chunk's level is its int16 RMS
   with it as a pre-roll, so word starts are not clipped.
 - **Hangover**: after the last speech chunk, audio keeps being sent for `--vad-hangover` (2 s).
   Then `audio_stream_end` is sent once and sending stops until the next onset.
-- **While muted** (outbound with push-to-talk off), nothing is sent and nothing counts as gated.
+- **Keepalive**: when the gate has sent nothing for 20 s while a session is up, one 100 ms chunk
+  of PCM16 silence is sent, and again every 20 s after that. Without it Gemini closed an inbound
+  session after about 4 minutes of a silent meeting with error 1008 "Session closed due to client
+  inactivity" (2026-11-13), and the reconnect lost a second or two of speech. The Live API docs
+  name no inactivity window, so 20 s is our choice, not a documented limit. The silence is billed
+  like any input audio and counted in `sent_s`: 0.1 s per 20 s, about 0.5 % of the audio the gate
+  holds back. It is never speech: no onset, no utterance, no `latency` event.
+- **While muted** (outbound with push-to-talk off), no microphone audio is sent and nothing counts
+  as gated. The keepalive still runs, with the same zero-filled chunks, so a long-muted outbound
+  session is not closed as idle either.
 - **With `--vad off`**, every chunk is sent. Onsets are still detected for the latency readout.
 - **Chunks captured while a direction is reconnecting** are dropped, never queued, so no chunk is
   sent twice.

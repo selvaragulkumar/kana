@@ -6,6 +6,8 @@ Already shipped in 0.1.0 and therefore not listed: the Setup doctor, the Keychai
 
 ## Daily use
 
+- **Transcript pairing under overlapping turns.** In the first real call (docs/VERIFICATION.md, 2026-11-13) a translation was shown beside the following source when turns overlapped and mixed languages. Pair by utterance id from the engine rather than by arrival order.
+
 1. **Hands-free mode with ducking.** Voice activity opens the outbound path, and inbound playback ducks while you talk. Push-to-talk stays the default and the state is always shown loudly. *Why:* holding a key through a long one-on-one is tiring.
 2. **Glossary.** Names and product terms passed to the models as instructions. Live Translate accepts an instruction but only partly honours it (see [REGISTER.md](REGISTER.md)), so this needs measuring before it is promised. *Why:* names are where live interpretation fails most visibly.
 3. **Key check against Google.** The Setup page checks only the key's format today. A real one-call check through the engine would catch a revoked or mistyped key before a meeting. *Why:* a bad key should fail in Setup, not at the start of a call.
@@ -16,7 +18,8 @@ Already shipped in 0.1.0 and therefore not listed: the Setup doctor, the Keychai
 5. **Notarised DMG.** `app/release.sh` already builds the DMG (bundled engine, one-click drivers) and `checksums.txt`, and notarises when given a Developer ID; what is missing is the Developer ID itself. *Why:* no Gatekeeper warning, and macOS stops forgetting the Accessibility grant after every rebuild.
 6. **Homebrew tap.** `brew install --cask` from a tap that depends on the BlackHole casks. *Why:* one line installs the app and both drivers.
 7. **Sparkle updates.** In-app updates from an appcast published with each release. *Why:* users get fixes without visiting GitHub.
+8. **Windows.** The same engine and protocol with a Tauri 2 tray app and VB-Audio's VB-CABLE A+B as the two cables; milestones and the checks that need a real Windows machine are in [superpowers/specs/2026-11-13-windows-design.md](superpowers/specs/2026-11-13-windows-design.md), the audit in [research/windows.md](research/windows.md). *Why:* the owner asked for "the same one for Windows too", and many Meet users are on Windows.
 
 ## Docs
 
-8. **Keep README.ja.md in step.** Every change to the English README gets the same change in [README.ja.md](../README.ja.md). *Why:* half of every conversation kana was built for is in Japanese.
+9. **Keep README.ja.md in step.** Every change to the English README gets the same change in [README.ja.md](../README.ja.md). *Why:* half of every conversation kana was built for is in Japanese.

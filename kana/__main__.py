@@ -10,7 +10,7 @@ import sys
 import wave
 from pathlib import Path
 
-from . import audio, backend, events
+from . import audio, backend, events, paths
 from .openai_session import OPENAI_MODEL, OpenAIDirection
 from .ptt import PTT
 from .session import AUDIO_RATES_PER_MIN, DEFAULT_MODEL, FALLBACK_MODEL, KEIGO_INSTRUCTION, Direction
@@ -18,6 +18,7 @@ from .transcripts import TranscriptWriter
 from .vad import DEFAULT_HANGOVER_MS, VAD
 
 ROOT = Path(__file__).resolve().parent.parent
+MEET_MIC, MEET_SPK = audio.meeting_cables()  # BlackHole 2ch/16ch on macOS, CABLE-A/CABLE-B on Windows
 
 
 def parse_args(argv=None):
@@ -25,8 +26,8 @@ def parse_args(argv=None):
                                 description="Two-way live voice translation for meetings (Gemini Live).")
     p.add_argument("--mic", help="your real microphone (substring; default: system default input)")
     p.add_argument("--spk", help="your earphones (substring; default: system default output)")
-    p.add_argument("--meet-mic", default="BlackHole 2ch", help="device Meet uses as Microphone (default: %(default)s)")
-    p.add_argument("--meet-spk", default="BlackHole 16ch", help="device Meet uses as Speakers (default: %(default)s)")
+    p.add_argument("--meet-mic", default=MEET_MIC, help="device Meet uses as Microphone (default: %(default)s)")
+    p.add_argument("--meet-spk", default=MEET_SPK, help="device Meet uses as Speakers (default: %(default)s)")
     p.add_argument("--in", dest="in_lang", default="en", help="language you hear (BCP-47, default: %(default)s)")
     p.add_argument("--out", dest="out_lang", default="ja", help="language Meet hears (BCP-47, default: %(default)s)")
     p.add_argument("--provider", choices=["gemini", "openai"],
@@ -45,6 +46,10 @@ def parse_args(argv=None):
     p.add_argument("--dump-out", help="also write outbound translated audio (24 kHz) to this WAV")
     p.add_argument("--only", choices=["in", "out"], help="run a single direction")
     p.add_argument("--list-devices", action="store_true", help="list audio devices and exit")
+    p.add_argument("--host-api", default="auto",
+                   help="audio host API whose devices are used (substring of a PortAudio host API name): "
+                        "auto = Windows WASAPI on Windows, every host API elsewhere; all = no filter "
+                        "(default: %(default)s; docs/research/windows.md)")
     p.add_argument("--vad", choices=["auto", "off"], default="auto",
                    help="voice-activity gating of what is sent: auto = silence is not streamed (default: %(default)s)")
     p.add_argument("--vad-threshold", type=float, default=200.0,
@@ -64,12 +69,36 @@ def parse_args(argv=None):
                         "(default: %(default)s; docs/LATENCY.md)")
     p.add_argument("--gcp-project", help="Google Cloud project for --backend vertex "
                                          "(default: GOOGLE_CLOUD_PROJECT, then `gcloud config get-value project`)")
-    p.add_argument("--save-dir", default="~/Library/Application Support/kana",
-                   help="transcripts go to <dir>/transcripts/YYYY-MM-DD-HHMM.md/.srt (default: %(default)s)")
+    p.add_argument("--save-dir",
+                   help="transcripts go to <dir>/transcripts/YYYY-MM-DD-HHMM.md/.srt "
+                        f"(default: {paths.SUPPORT_DIR_HELP})")
     p.add_argument("--no-save", action="store_true", help="do not save transcripts")
+    p.add_argument("--passthrough", action="store_true",
+                   help="no translation, no network, no key: copy the meeting (--meet-spk) to your earphones "
+                        "(--spk) and your microphone (--mic) to the meeting (--meet-mic) untranslated. The "
+                        "microphone is NOT gated by talk; mute in the meeting app (docs/ENGINE.md)")
     p.add_argument("--json", action="store_true",
                    help="JSON lines on stdout, commands on stdin (protocol for the menu-bar app)")
-    return resolve_provider(p.parse_args(argv))
+    return resolve_platform(resolve_provider(p.parse_args(argv)))
+
+
+def resolve_platform(args, platform=None):
+    """Fills args.save_dir (paths.support_dir()) and args.host_api: "auto" becomes
+    WASAPI on Windows and None (no filter) elsewhere, "all" becomes None."""
+    if args.save_dir is None:
+        args.save_dir = str(paths.support_dir(platform))
+    if args.host_api == "auto":
+        args.host_api = audio.default_host_api(platform)
+    elif args.host_api.lower() == "all":
+        args.host_api = None
+    return args
+
+
+def resolve_device(args, name, kind):
+    """(index, name) of a device; the host API filter is passed only when one is set."""
+    host = {"host_api": args.host_api} if getattr(args, "host_api", None) else {}
+    i = audio.find_device(name, kind, **host)
+    return i, audio.device_name(i, kind)
 
 
 def resolve_provider(args):
@@ -103,8 +132,7 @@ def plan(args):
     """Resolve devices for each enabled direction. Returns {dir: (src, sink)} where
     src is ("file", path) or ("dev", index, name) and sink is (index, name)."""
     def dev(name, kind):
-        i = audio.find_device(name, kind)
-        return i, audio.device_name(i, kind)
+        return resolve_device(args, name, kind)
 
     dirs = {}
     if args.only != "out":
@@ -122,10 +150,12 @@ def plan(args):
     return dirs
 
 
-def devices_json(devices) -> dict:
-    """{"inputs":[{"index","name"}], "outputs":[...]} from sd.query_devices()."""
+def devices_json(devices, hostapi: int | None = None) -> dict:
+    """{"inputs":[{"index","name"}], "outputs":[...]} from sd.query_devices(). With
+    `hostapi` (an index) only that host API's devices are listed: Windows lists each
+    endpoint once per host API."""
     return {kind + "s": [{"index": i, "name": d["name"]} for i, d in enumerate(devices)
-                         if d[f"max_{kind}_channels"] > 0]
+                         if d[f"max_{kind}_channels"] > 0 and (hostapi is None or d.get("hostapi") == hostapi)]
             for kind in ("input", "output")}
 
 
@@ -232,6 +262,62 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
                     w.close()
 
 
+def plan_passthrough(args) -> dict:
+    """{"IN": ((i, name) meeting capture, (i, name) earphones),
+        "OUT": ((i, name) microphone, (i, name) meeting microphone)}, loop-checked."""
+    def dev(name, kind):
+        return resolve_device(args, name, kind)
+    routes = {"IN": (dev(args.meet_spk, "input"), dev(args.spk, "output")),
+              "OUT": (dev(args.mic, "input"), dev(args.meet_mic, "output"))}
+    audio.check_passthrough(routes)
+    return routes
+
+
+def passthrough_ready_fields(routes) -> dict:
+    return {"mode": "passthrough",
+            **{label.lower(): {"src": src[1], "sink": sink[1]} for label, (src, sink) in routes.items()}}
+
+
+async def run_passthrough(routes, emit=None, commands=None, make=None) -> None:
+    """Pass-through: one audio.Passthrough per route until quit, EOF (JSON mode)
+    or Ctrl-C (terminal). `make` replaces audio.Passthrough in tests."""
+    make = make or audio.Passthrough
+    with contextlib.ExitStack() as stack:
+        for (src_i, _), (sink_i, _) in routes.values():
+            stack.enter_context(make(src_i, sink_i))
+        if emit is None:
+            for label, (src, sink) in routes.items():
+                print(f"  {label:<3} {src[1]} -> {sink[1]}")
+            print("  pass-through: no translation, the microphone is live to the meeting. Ctrl-C quits.")
+            await asyncio.Event().wait()
+        else:
+            emit("ready", **passthrough_ready_fields(routes))
+            await events.passthrough_command_loop(
+                commands if commands is not None else events.stdin_lines(), emit)
+
+
+def main_passthrough(args, emit, fatal) -> int:
+    try:
+        routes = plan_passthrough(args)
+    except audio.DeviceError as e:
+        return fatal(str(e))
+    if emit is None:
+        print("kana pass-through")
+    try:
+        asyncio.run(run_passthrough(routes, emit=emit))
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:  # device open failures etc.: report, exit 2
+        if emit is None:
+            raise
+        return fatal(f"{type(e).__name__}: {e}")
+    if emit is None:
+        print("bye")
+    else:
+        emit("bye")
+    return 0
+
+
 def summary(args, dirs) -> None:
     def src(s):
         return f"file {s[1]}" if s[0] == "file" else s[2]
@@ -247,6 +333,7 @@ def summary(args, dirs) -> None:
 
 
 def main(argv=None) -> int:
+    paths.utf8_stdio()  # Windows: the protocol is UTF-8, not the ANSI code page
     sys.stdout.reconfigure(line_buffering=True)  # transcripts show at once, even when piped
     args = parse_args(argv)
     emit = events.Emitter() if args.json else None
@@ -260,10 +347,16 @@ def main(argv=None) -> int:
     if args.list_devices:
         import sounddevice as sd
         if args.json:
-            print(json.dumps(devices_json(sd.query_devices()), ensure_ascii=False))
+            try:
+                ha = None if args.host_api is None else audio.host_api_index(args.host_api, sd.query_hostapis())
+            except audio.DeviceError as e:
+                return fatal(str(e))
+            print(json.dumps(devices_json(sd.query_devices(), ha), ensure_ascii=False))
         else:
             print(sd.query_devices())
         return 0
+    if args.passthrough:  # no key, no network: checked before the provider and key
+        return main_passthrough(args, emit, fatal)
     if args.provider_error:
         return fatal(args.provider_error)
     from dotenv import load_dotenv

@@ -14,7 +14,7 @@ enum KeychainStore {
             switch self {
             case .status(let s):
                 let msg = SecCopyErrorMessageString(s, nil) as String? ?? "OSStatus \(s)"
-                return "Keychain: \(msg)"
+                return L10n.f("Keychain: %@", msg)
             }
         }
     }

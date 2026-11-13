@@ -1,0 +1,3 @@
+/* Info.plist strings that macOS itself shows, in Japanese. These follow the macOS language
+   (not the ••• › Language override): the microphone permission prompt. */
+"NSMicrophoneUsageDescription" = "kana は、マイクと Meet の音声を取り込み、リアルタイムで通訳します。";

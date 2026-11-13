@@ -27,6 +27,20 @@ final class Prefs: ObservableObject {
         didSet { d.set(engineProvider, forKey: "engineProvider") }
     }
     var usesOpenAI: Bool { engineProvider == "openai" }
+    /// The talk key (••• › Talk key). Default Right ⌥: hold to talk, tap to toggle.
+    @Published var talkKey: TalkKey {
+        didSet { d.set(talkKey.rawValue, forKey: "talkKey") }
+    }
+    /// While open but not live, run the engine with `--passthrough` so Meet hears the mic and
+    /// you hear Meet, untranslated. On by default.
+    @Published var passthroughWhenIdle: Bool {
+        didSet { d.set(passthroughWhenIdle, forKey: "passthroughWhenIdle") }
+    }
+    /// UI language (••• › Language): System follows the first preferred language (Japanese or
+    /// English); English or 日本語 override it. Applied live: views observing Prefs re-render.
+    @Published var language: L10n.Choice {
+        didSet { d.set(language.rawValue, forKey: "uiLanguage"); L10n.set(language) }
+    }
     /// Paths from the engine's last `saved` event, kept across launches.
     @Published var lastTranscriptMD: String? {
         didSet { d.set(lastTranscriptMD, forKey: "lastTranscriptMD") }
@@ -39,6 +53,10 @@ final class Prefs: ObservableObject {
         lastTranscriptMD = d.string(forKey: "lastTranscriptMD")
         minimized = d.bool(forKey: "minimized")
         engineProvider = d.string(forKey: "engineProvider") == "openai" ? "openai" : "gemini"
+        talkKey = d.string(forKey: "talkKey").flatMap(TalkKey.init(rawValue:)) ?? .rightOption
+        passthroughWhenIdle = d.object(forKey: "passthroughWhenIdle") as? Bool ?? true
+        language = d.string(forKey: "uiLanguage").flatMap(L10n.Choice.init(rawValue:)) ?? .system
+        L10n.set(language)
     }
 }
 

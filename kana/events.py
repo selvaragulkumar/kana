@@ -2,7 +2,8 @@
 
 Engine -> app: one JSON object per line on stdout, each with "t" (unix
 seconds) and "ev". App -> engine: JSON lines on stdin, {"cmd":"talk","on":bool}
-and {"cmd":"quit"}; EOF on stdin also means quit."""
+and {"cmd":"quit"}; EOF on stdin also means quit. In --passthrough only quit
+applies."""
 from __future__ import annotations
 
 import asyncio
@@ -88,5 +89,25 @@ async def command_loop(lines, ptt, emit) -> None:
         if name == "talk" and isinstance(cmd.get("on"), bool):
             ptt.muted = not cmd["on"]
             emit("talk", on=not ptt.muted)
+            continue
+        emit("error", fatal=False, text=f"unknown command: {raw[:200]}")
+
+
+async def passthrough_command_loop(lines, emit) -> None:
+    """Pass-through takes only quit (or EOF); talk does not apply, because the
+    microphone goes to the meeting directly and is muted in the meeting app."""
+    async for raw in lines:
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            cmd = json.loads(raw)
+            name = cmd.get("cmd") if isinstance(cmd, dict) else None
+        except ValueError:
+            name = None
+        if name == "quit":
+            return
+        if name == "talk":
+            emit("error", fatal=False, text="talk does not apply in pass-through: mute in the meeting app")
             continue
         emit("error", fatal=False, text=f"unknown command: {raw[:200]}")
