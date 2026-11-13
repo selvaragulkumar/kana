@@ -180,7 +180,7 @@ Zoom と Teams も Meet と同じ 2 つの設定が必要だが、まだ試し�
 
 **トークキー。** 既定は右 ⌥ で、押している間だけ話し、短く押すと切り替わる。••• › **Talk key** (Setup › Permissions にもある) で、右 ⌘、Fn/🌐、従来の ⌃⌥Space (切り替えのみ) を選べる。Fn を使うときは、システム設定 › キーボード › "🌐キーを押して" を "何もしない" にする。そうしないと絵文字ピッカーが開く。トークキーにはアクセシビリティの許可が必要。パネルの **Open Settings** を押し、プライバシーとセキュリティ › アクセシビリティで kana をオンにする。許可がなくてもトークバーは使える。
 
-**パススルー。** kana を開いていて通訳していない間も、Meet は普通の通話として使える。会議の音声はイヤホンに、マイクの音声は Meet に、同じ BlackHole デバイスを通って翻訳なしでそのまま流れる。ヘッダーは "Not translating"、トークバーは "Meet hears your mic directly · mute in Meet" と表示される。このときマイクは Meet に直接届くので、ミュートは Meet 側で行う。**Start** で通訳に切り替わり、**Stop** で戻る。••• › **Pass audio through when idle** でオフにできる。BlackHole の 2 つのドライバーとマイクの許可が必要。
+**パススルー。** kana を開いていて通訳していない間も、Meet は普通の通話として使える。会議の音声はイヤホンに、マイクの音声は Meet に、同じ BlackHole デバイスを通って翻訳なしでそのまま流れる。ヘッダーは "Not translating"、トークバーは "Meet hears your mic directly · mute in Meet" と表示される。このときマイクは Meet に直接届くので、ミュートは Meet 側で行う。**Start** で通訳に切り替わり、**Stop** で戻る。••• › **Keep Meet audio on when not translating** でオフにできる。BlackHole の 2 つのドライバーとマイクの許可が必要。
 
 **ミニバー。** **−** でパネルを小さなバーにたためる。バーのマークをクリックすると Start / Stop になり、通訳中はゆっくり明滅する。バーをダブルクリックするか、展開ボタンでパネルに戻る。
 

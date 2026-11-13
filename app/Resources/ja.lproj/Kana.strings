@@ -21,10 +21,10 @@
 "Cancelled. Nothing was installed." = "キャンセルしました。何もインストールしていません。";
 "The installer stopped: %@" = "インストーラが停止しました: %@";
 "%@ and %@" = "%@ と %@";
-"kana wants to install the %@ audio drivers." = "kana が %@ のオーディオドライバーをインストールします。";
+"kana wants to install the %@ audio drivers." = "kana が %@ のオーディオドライバーをインストールしようとしています。";
 
 /* EngineProcess.swift */
-"An override command is in use." = "上書き用のコマンドを使用しています。";
+"An override command is in use." = "代わりのコマンドを使用中です。";
 "Choose the folder that holds the engine (.venv and the kana package)." = "エンジン (.venv と kana パッケージ) のあるフォルダを選んでください。";
 "Built in (Python %@)." = "内蔵 (Python %@)。";
 "Built in." = "内蔵。";
@@ -38,7 +38,7 @@
 "not running" = "停止中";
 "OpenAI: faster start, a voice adapted to the speaker's tone (not yours), no business keigo." = "OpenAI: 開始が速く、声は話し手の口調に合わせた音声 (あなたの声ではありません) です。ビジネス敬語は使えません。";
 "Business keigo: the outbound Japanese uses a stock voice, not yours." = "ビジネス敬語: 送信側の日本語は、あなたの声ではなく既定の音声になります。";
-"Register mirrors yours; your own voice both ways." = "丁寧さは話し手に合わせます。声は両方向とも本人の声です。";
+"Register mirrors yours; your own voice both ways." = "丁寧さは話し方に合わせます。声は双方向ともあなた自身の声です。";
 "Could not start engine: %@" = "エンジンを開始できませんでした: %@";
 "Pass-through could not start: %@" = "パススルーを開始できませんでした: %@";
 "Pass-through stopped (signal %d)%@" = "パススルーが停止しました (シグナル %d)%@";
@@ -81,9 +81,9 @@
 "Not translating · mute in Meet" = "通訳オフ · ミュートは Meet で";
 "Idle. Click the mark to start." = "待機中 · マークをクリックで開始";
 "Talking" = "話し中";
-"Not talking (%@)" = "話していません (%@)";
+"Not talking (%@)" = "マイクは送信していません (%@)";
 ", %.1f s delay" = "、遅延 %.1f s";
-"live" = "接続中";
+"live" = "接続済み";
 "est." = "(推定)";
 
 /* Models.swift */
@@ -122,7 +122,7 @@
 "Dismiss" = "閉じる";
 "Microphone" = "マイク";
 "Earphones" = "イヤホン";
-"System default" = "システムの既定";
+"System default" = "システムのデフォルト";
 "%@ (fake)" = "%@ (テスト用)";
 "%@ (not found)" = "%@ (見つかりません)";
 "You hear" = "あなたが聞く";
@@ -136,7 +136,7 @@
 "Business keigo needs the Gemini engine (••• › Engine): OpenAI takes no instruction." = "ビジネス敬語には Gemini エンジンが必要です (••• › エンジン)。OpenAI は指示を受け付けません。";
 "Business keigo: polite Japanese guaranteed, but the outbound voice is a stock voice, not yours." = "ビジネス敬語: 必ず丁寧な日本語になりますが、送信側の声はあなたの声ではなく既定の音声になります。";
 "Press Start to begin interpreting" = "開始を押すと通訳が始まります";
-"Transcripts appear here, original beside translation." = "ここに文字起こしが原文と訳文を並べて表示されます。";
+"Transcripts appear here, original beside translation." = "原文と訳文が並んでここに表示されます。";
 "Transcript" = "文字起こし";
 "↓ from Meet" = "↓ Meet から";
 "↑ from you" = "↑ あなたから";
@@ -182,16 +182,16 @@
 "2  Gemini API key" = "2  Gemini API キー";
 "Key found" = "キーがあります";
 "No key" = "キーがありません";
-"3  Permissions" = "3  許可";
+"3  Permissions" = "3  アクセス許可";
 "Allow" = "許可する";
 "Accessibility" = "アクセシビリティ";
 "Granted. %@ works in every app." = "許可済みです。%@ はどのアプリでも使えます。";
 "Needed for the %@ talk key." = "トークキー (%@) に必要です。";
-"Meet settings (set these by hand)" = "Meet の設定 (手動で設定します)";
+"Meet settings (set these by hand)" = "Meet の設定 (手動で設定してください)";
 "Meet › Settings › Audio › Microphone" = "Meet › 設定 › 音声 › マイク";
 "Meet › Settings › Audio › Speakers" = "Meet › 設定 › 音声 › スピーカー";
 "macOS › Sound › Output" = "macOS › サウンド › 出力";
-"your earphones" = "イヤホン";
+"your earphones" = "お使いのイヤホン";
 "Engine found" = "エンジンがあります";
 "Engine not found" = "エンジンが見つかりません";
 "Use Built-in" = "内蔵を使う";
@@ -201,7 +201,7 @@
 "That folder is not an engine" = "このフォルダはエンジンではありません";
 "Audio drivers" = "ドライバー";
 "Gemini key" = "Gemini キー";
-"Permissions" = "許可";
+"Permissions" = "アクセス許可";
 "Step %ld of 3 · %@" = "ステップ %ld/3 · %@";
 "Ready. Press Done, then Start in the panel." = "準備ができました。完了を押してから、パネルで開始を押してください。";
 "Install the two free BlackHole audio drivers." = "無料の BlackHole ドライバーを 2 つインストールします。";
@@ -213,7 +213,7 @@
 "Install audio drivers" = "ドライバーをインストール";
 "Installed, but macOS has not loaded the drivers yet. Restart your Mac, then open kana again." = "インストールしましたが、macOS がまだドライバーを読み込んでいません。Mac を再起動してから、もう一度 kana を開いてください。";
 "Audio stops for a second while macOS reloads its drivers. BlackHole is free software by Existential Audio (GPL-3.0, source: github.com/ExistentialAudio/BlackHole)." = "macOS がドライバーを読み込み直す間、音声が 1 秒ほど止まります。BlackHole は Existential Audio によるフリーソフトウェアです (GPL-3.0、ソース: github.com/ExistentialAudio/BlackHole)。";
-"Or in Terminal: %@" = "ターミナルでは: %@";
+"Or in Terminal: %@" = "またはターミナルで: %@";
 "Copied" = "コピーしました";
 "Copy" = "コピー";
 "Plays a 1 s tone into each BlackHole and listens for it. Not during a call." = "各 BlackHole に 1 秒の音を流し、返ってくるかを確かめます。通話中は使わないでください。";
@@ -235,7 +235,7 @@
 "Press to talk, press again to stop." = "押すと話し始め、もう一度押すと止まります。";
 "Granted." = "許可済みです。";
 "Denied. Turn kana on in Privacy › Microphone." = "拒否されています。プライバシーとセキュリティ › マイクで kana をオンにしてください。";
-"Not asked yet. The engine needs it to hear you." = "まだ許可を求めていません。あなたの声を聞くためにエンジンが使います。";
+"Not asked yet. The engine needs it to hear you." = "まだ許可されていません。あなたの声を聞くために必要です。";
 "In use: Keychain." = "使用中: キーチェーン";
 "In use: %@." = "使用中: %@";
 "In use: GEMINI_API_KEY from the environment." = "使用中: 環境変数の GEMINI_API_KEY";
@@ -252,4 +252,4 @@
 
 /* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */
 "powered by %@" = "powered by %@";
-"Made by ZAG. Opens withzag.com." = "ZAG が作っています。withzag.com を開きます。";
+"Made by ZAG. Opens withzag.com." = "ZAG が開発しています。クリックで withzag.com を開きます。";

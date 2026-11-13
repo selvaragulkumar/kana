@@ -265,6 +265,8 @@ struct SetupView: View {
     @EnvironmentObject private var engine: EngineProcess
     @EnvironmentObject private var actions: AppActions
     @EnvironmentObject private var prefs: Prefs
+    /// True until a UI language was chosen once; prefs.language changes re-render the view.
+    private var languageChoiceNeeded: Bool { _ = prefs.language; return LanguageChoiceCard.needed }
     var onDone: () -> Void
 
     @State private var keyField = ""
@@ -277,8 +279,10 @@ struct SetupView: View {
                 KanaMark(state: .idle, size: 24)
                 Text(L10n.t("Setup")).font(Theme.heading(L10n.t("Setup"), size: 20)).tracking(L10n.isJapanese ? 0 : -0.4)
                 Spacer()
+                LangSwitch().padding(.trailing, 6)
                 Button(L10n.t("Done"), action: onDone).buttonStyle(PrimaryButtonStyle())
             }
+            if languageChoiceNeeded { LanguageChoiceCard() }
             stepper
             ScrollView {
                 VStack(alignment: .leading, spacing: 10) {

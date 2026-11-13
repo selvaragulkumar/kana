@@ -217,6 +217,9 @@ struct PanelView: View {
                     .padding(.leading, 2)
                     .help(StatePill(live: engine.running, passing: engine.passingThrough).word
                           + (engine.model == nil ? "" : "\n" + engine.engineTooltip))
+                LangSwitch()
+                    .padding(.leading, 4)
+                    .opacity(f.content)
                     .opacity(f.content)
             }
             Spacer(minLength: 4)
