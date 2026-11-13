@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- **Credit line.** "a product of zag" with the ZAG wordmark under the panel footer and at the end of Setup, in English and Japanese; click opens withzag.com. Trademark note in docs/BRAND.md and the READMEs.
+- **Credit line.** "powered by zag" with the ZAG wordmark under the panel footer and at the end of Setup, in English and Japanese; click opens withzag.com. Trademark note in docs/BRAND.md and the READMEs.
 
 ## [0.1.0] - 2026-11-13
 

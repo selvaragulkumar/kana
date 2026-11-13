@@ -139,7 +139,6 @@
 "Transcript" = "Transcript";
 "↓ from Meet" = "↓ from Meet";
 "↑ from you" = "↑ from you";
-"Quit" = "Quit";
 "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved" = "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved";
 "Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage." = "Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage.";
 "Estimate from audio seconds until the engine reports token usage." = "Estimate from audio seconds until the engine reports token usage.";
@@ -251,5 +250,5 @@
 "Idle" = "Idle";
 
 /* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */
-"a product of %@" = "a product of %@";
+"powered by %@" = "powered by %@";
 "Made by ZAG. Opens withzag.com." = "Made by ZAG. Opens withzag.com.";

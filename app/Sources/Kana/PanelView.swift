@@ -177,7 +177,6 @@ struct PanelView: View {
                     transcript
                 }
                 footer
-                CreditLine()
             }
             .opacity(f.content)
             .offset(y: 8 * (1 - f.content))
@@ -215,8 +214,9 @@ struct PanelView: View {
                     .opacity(f.move)
                 StatePill(live: engine.running, passing: engine.passingThrough)
                     .fixedSize()
-                    .padding(.leading, 6)
-                    .help(engine.model == nil ? "" : engine.engineTooltip)
+                    .padding(.leading, 2)
+                    .help(StatePill(live: engine.running, passing: engine.passingThrough).word
+                          + (engine.model == nil ? "" : "\n" + engine.engineTooltip))
                     .opacity(f.content)
             }
             Spacer(minLength: 4)
@@ -235,6 +235,7 @@ struct PanelView: View {
                     Image(systemName: "xmark").font(.system(size: 12, weight: .semibold))
                 }
                 .buttonStyle(IconButtonStyle())
+                .keyboardShortcut("q")
                 .help(L10n.t("Quit kana"))
                 if engine.running {
                     Button(L10n.t("Stop")) { engine.stop() }
@@ -702,25 +703,16 @@ struct PanelView: View {
     // MARK: Footer
 
     private var footer: some View {
-        HStack(spacing: 10) {
-            TimelineView(.periodic(from: .now, by: 1)) { ctx in
-                Text(costLine(now: ctx.date))
-                    .monospacedDigit()
-                    .foregroundStyle(engine.running ? Theme.text : Theme.text3)
-                    .lineLimit(1)
-                    .fixedSize()
+        ZStack {
+            HStack(spacing: 10) {
+                costChip
+                Spacer(minLength: 4)
+                HStack(spacing: 12) {
+                    stream("IN", engine.inState, engine.latencyMs["in"])
+                    stream("OUT", engine.outState, engine.latencyMs["out"])
+                }
             }
-            .help(costTooltip)
-            Spacer(minLength: 4)
-            HStack(spacing: 12) {
-                stream("IN", engine.inState, engine.latencyMs["in"])
-                stream("OUT", engine.outState, engine.latencyMs["out"])
-                Button(L10n.t("Quit")) { actions.quit() }
-                    .buttonStyle(.plain)
-                    .font(Theme.ui(13, 500))
-                    .foregroundStyle(Theme.text)
-                    .keyboardShortcut("q")
-            }
+            CreditLine()
         }
         .font(Theme.ui(12))
         .foregroundStyle(Theme.text3)
@@ -728,9 +720,30 @@ struct PanelView: View {
         .overlay(alignment: .top) { Rectangle().fill(Theme.lineSoft).frame(height: 1) }
     }
 
+    /// The running cost as a small chip: a yen glyph and the amount, nothing else on the face.
+    private var costChip: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { ctx in
+            HStack(spacing: 3) {
+                Image(systemName: "yensign")
+                    .font(.system(size: 9, weight: .bold))
+                Text(costLine(now: ctx.date))
+                    .monospacedDigit()
+                    .font(Theme.ui(12, 600))
+            }
+            .foregroundStyle(engine.running ? Theme.text : Theme.text3)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(Theme.surface))
+            .overlay(Capsule().strokeBorder(Theme.c(0x2A2A2F)))
+        }
+        .help(costTooltip)
+    }
+
     /// Footer shows the yen only ("¥13"); time, dollars and the silence saved are in its tooltip.
     private func costLine(now: Date) -> String {
-        let jpy = "¥\(Int((engine.usd * EngineProcess.jpyPerUSD).rounded()))"
+        let jpy = "\(Int((engine.usd * EngineProcess.jpyPerUSD).rounded()))"
         let est = engine.running && engine.costIsEstimate ? " " + L10n.t("est.") : ""
         return jpy + est
     }

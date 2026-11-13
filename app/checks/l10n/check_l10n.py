@@ -25,6 +25,7 @@ TABLES = {lang: APP / "Resources" / f"{lang}.lproj" / "Kana.strings" for lang in
 # ja may equal en for these: names that stay in Latin letters, and symbols.
 ALLOW_SAME = {
     "OK",
+    "powered by %@",   # brand line stays English under the ZAG wordmark
 }
 
 KEY_RE = re.compile(r'L10n\.(?:t|f)\(\s*"((?:[^"\\\n]|\\.)*)"')

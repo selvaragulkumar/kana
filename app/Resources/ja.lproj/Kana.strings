@@ -140,7 +140,6 @@
 "Transcript" = "文字起こし";
 "↓ from Meet" = "↓ Meet から";
 "↑ from you" = "↑ あなたから";
-"Quit" = "終了";
 "Silence skipped (not sent): IN %.0f s · OUT %.0f s, about $%.3f saved" = "送信しなかった無音: IN %.0f s · OUT %.0f s、約 $%.3f の節約";
 "Estimate: OpenAI bills $0.034 per minute of audio sent and reports no usage." = "推定値: OpenAI は送信した音声 1 分につき $0.034 を請求し、使用量を返しません。";
 "Estimate from audio seconds until the engine reports token usage." = "エンジンがトークン使用量を返すまでは、音声の秒数からの推定値です。";
@@ -252,5 +251,5 @@
 "Idle" = "待機中";
 
 /* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */
-"a product of %@" = "%@ のプロダクト";
+"powered by %@" = "powered by %@";
 "Made by ZAG. Opens withzag.com." = "ZAG が作っています。withzag.com を開きます。";

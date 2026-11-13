@@ -196,21 +196,17 @@ struct StatePill: View {
     let live: Bool
     var passing = false
     var lang = L10n.lang   // re-renders the pill when the UI language changes
+    var word: String { live ? L10n.t("Live") : (passing ? L10n.t("Not translating") : L10n.t("Idle")) }
+    /// A dot, nothing else: orange with a ping while live, green while audio passes through
+    /// untranslated, grey when idle. The word is the tooltip and the accessibility label.
     var body: some View {
-        HStack(spacing: 6) {
-            ZStack {
-                Circle().fill(live ? Theme.accent : (passing ? Theme.ok : Theme.text4)).frame(width: 7, height: 7)
-                if live { PingRing() }
-            }
-            Text(live ? L10n.t("Live") : (passing ? L10n.t("Not translating") : L10n.t("Idle")))
-                .lineLimit(1)
+        ZStack {
+            Circle().fill(live ? Theme.accent : (passing ? Theme.ok : Theme.text4)).frame(width: 8, height: 8)
+            if live { PingRing() }
         }
-        .font(Theme.ui(12))
-        .foregroundStyle(live ? Theme.liveText : Theme.text2)
-        .padding(.horizontal, 9)
-        .padding(.vertical, 3)
-        .background(Capsule().fill(live ? Theme.accentBg : Theme.surface))
-        .overlay(Capsule().strokeBorder(live ? Theme.accentLine : Theme.c(0x2A2A2F)))
+        .frame(width: 16, height: 16)
+        .help(word)
+        .accessibilityLabel(Text(word))
     }
 }
 
