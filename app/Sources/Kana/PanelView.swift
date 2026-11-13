@@ -177,6 +177,7 @@ struct PanelView: View {
                     transcript
                 }
                 footer
+                CreditLine()
             }
             .opacity(f.content)
             .offset(y: 8 * (1 - f.content))

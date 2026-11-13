@@ -406,4 +406,8 @@ Finally, delete the cloned folder if you built from source (it may hold a `.env`
 
 Licensed under the [Apache License 2.0](LICENSE). Copyright 2026 [Selva Ragul Kumar](https://selvaragulkumar.com).
 
+<p align="center"><sub>a product of</sub>&nbsp; <a href="https://withzag.com"><img src="docs/images/zag-logo.png" height="19" alt="zag"></a></p>
+
+kana is a product of [ZAG](https://withzag.com). The kana mark and the ZAG wordmark are trademarks and are not covered by the Apache licence; see [docs/BRAND.md](docs/BRAND.md).
+
 kana is not affiliated with Google, Zoom, Microsoft or Existential Audio.

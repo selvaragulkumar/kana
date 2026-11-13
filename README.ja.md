@@ -389,4 +389,8 @@ brew uninstall --cask blackhole-2ch blackhole-16ch
 
 [Apache License 2.0](LICENSE) で公開。Copyright 2026 [Selva Ragul Kumar](https://selvaragulkumar.com)。
 
+<p align="center"><sub>a product of</sub>&nbsp; <a href="https://withzag.com"><img src="docs/images/zag-logo.png" height="19" alt="zag"></a></p>
+
+kana は [ZAG](https://withzag.com) のプロダクトです。kana のマークと ZAG のワードマークは商標で、Apache ライセンスの対象外です ([docs/BRAND.md](docs/BRAND.md))。
+
 kana は Google、Zoom、Microsoft、Existential Audio とは関係がない。

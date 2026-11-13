@@ -332,6 +332,7 @@ struct SetupView: View {
                         }
                     }
                     if let msg = model.engineMessage { check(false, L10n.t("That folder is not an engine"), msg) }
+                    CreditLine()
                 }
             }
             .scrollIndicators(.never)

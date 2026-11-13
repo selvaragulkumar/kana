@@ -251,3 +251,7 @@
 "Live" = "通訳中";
 "Pass-through" = "パススルー";
 "Idle" = "待機中";
+
+/* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */
+"a product of %@" = "%@ のプロダクト";
+"Made by ZAG. Opens withzag.com." = "ZAG が作っています。withzag.com を開きます。";

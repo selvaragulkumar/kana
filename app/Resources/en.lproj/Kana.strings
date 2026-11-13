@@ -250,3 +250,7 @@
 "Live" = "Live";
 "Pass-through" = "Pass-through";
 "Idle" = "Idle";
+
+/* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */
+"a product of %@" = "a product of %@";
+"Made by ZAG. Opens withzag.com." = "Made by ZAG. Opens withzag.com.";
