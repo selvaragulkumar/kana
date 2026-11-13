@@ -6,10 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.1.1] - 2026-11-13
+
+Same day as 0.1.0, after the first real call and a design pass on the panel.
+
 ### Added
 
 - **Language switch.** EN | JP in the panel header and in Setup, applied live; on first run Setup asks for the language before the steps. Japanese strings proofread.
 - **Credit line.** "powered by zag" with the ZAG wordmark under the panel footer and at the end of Setup, in English and Japanese; click opens withzag.com. Trademark note in docs/BRAND.md and the READMEs.
+
+
+### Changed
+
+- **Panel header and footer redesigned.** The state is one dot after the wordmark (orange with a ping while live, green while audio passes through untranslated, grey idle; the word is the tooltip). The footer is one row: a yen chip on the left (time, dollars and skipped silence in the tooltip), "powered by zag" in the middle, and ↓ ↑ per direction on the right, coloured by state. The Quit button is gone; × and ⌘Q quit.
+- **Plainer words.** The idle state is "Not translating" (通訳オフ), the toggle "Keep Meet audio on when not translating"; "Pass-through" no longer appears in the UI.
+- **Japanese proofread.** Fourteen strings reworded; "live" and "connecting" no longer share 接続中.
 
 ## [0.1.0] - 2026-11-13
 
@@ -77,5 +90,6 @@ App (`kana.app`, SwiftUI, macOS 14+):
 - **An idle direction no longer gets closed by the server.** With the voice gate closed nothing was sent, and after about 4 minutes of a silent meeting Gemini closed the inbound session ("1008 Session closed due to client inactivity"); the reconnect lost a second or two of speech and showed a warning. While a session is up, muted or not, the engine now sends 100 ms of zero-filled silence after every 20 s with nothing sent (never microphone audio while muted) (about 0.5 % of the gated audio, billed and counted in `sent_s`). It never counts as speech.
 - **Rows the model never translates no longer show typing dots forever.** When an utterance closes after 1.5 s of quiet with a row whose source is final and no translation, the engine sends a new `untranslated` event (`dir`, `row`), and the app shows a quiet grey "—" (tooltip "No translation") in place of the dots. This happened when the other person's Japanese reached the microphone on the outbound direction. As a backstop, the app settles a row the same way 10 s after its source was last updated once a newer row exists in that direction. A late translation still fills the row.
 
-[Unreleased]: https://github.com/selvaragulkumar/kana/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/selvaragulkumar/kana/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/selvaragulkumar/kana/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/selvaragulkumar/kana/releases/tag/v0.1.0

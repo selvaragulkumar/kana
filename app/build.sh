@@ -16,7 +16,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 NAME="kana"                    # visible app name, bundle and executable
 PRODUCT="Kana"                 # SwiftPM target name
 BUNDLE_ID="com.selvaragulkumar.kana"
-VERSION="0.1.0"
+VERSION="0.1.1"
 OUT="$HERE/build"
 APP="$OUT/$NAME.app"
 
