@@ -67,7 +67,7 @@ What kana does that we did not find combined anywhere else:
 
 - **Speech in both directions, voice preserved both ways.** You hear the meeting in English, in a voice that follows the speaker's. The meeting hears you in Japanese, in a voice that follows yours. This comes from Gemini Live Translate's voice mirroring. If you need guaranteed keigo instead, `--register business` trades your voice for it (see [Register](#register)).
 - **Loop-proof routing by construction.** The meeting's speaker and microphone are two different virtual devices, so the engine only hears the meeting and only the meeting hears the interpretation. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#why-the-routing-cannot-loop).
-- **Cost and delay on screen.** The footer shows the running cost from Google's own token counts, and the median delay from speech to interpreted audio for each direction.
+- **Cost and delay on screen.** The footer shows the running cost in yen from Google's own token counts, and the median delay from speech to interpreted audio for each direction on hover.
 - **Silence is not sent.** A voice-activity gate keeps silence off the wire, and silence that is not sent is not billed.
 - **Silence on same-language speech.** If you speak Japanese yourself, the outbound session says nothing, so you can switch languages mid-sentence.
 - **A scriptable engine.** The same Python engine runs in a terminal, under tests, or behind the app over a JSON-lines protocol.
@@ -174,9 +174,9 @@ Zoom and Teams need the same two settings as Meet, but we have not tried them ye
 2. Pick **Microphone** (your real microphone) and **Earphones**. The app remembers them.
 3. Check the language cards: **You hear English** on the left, **Meet hears 日本語** on the right, with a ⇄ button to swap them. Click either card for the presets, which pair English with Japanese, Chinese, Korean, Spanish, French, German, Hindi or Tamil. **Custom…** takes any two BCP-47 codes.
 4. When the meeting hears Japanese, a small **Business keigo** switch sits under the cards on the right. It is off by default, so the Japanese mirrors how you speak. Turn it on for `--register business`; its tooltip notes that the outbound voice becomes a stock voice, and the right card then reads "Meet hears · business keigo". See [Register](#register).
-5. Press **Start**. Both sessions connect, the pill in the header changes from Not translating (or Idle) to Live, and inbound interpretation starts right away.
+5. Press **Start**. Both sessions connect, the dot after the wordmark turns orange with a ping (grey when idle, green while audio passes through untranslated; hover it for the word), and inbound interpretation starts right away.
 6. To send your voice, hold **Right ⌥** from any app and speak; talk ends when you let go. A quick tap (under 350 ms) keeps talk on until the next tap. The talk bar ("Press to talk ⌥ right") toggles it with a click. While on it reads "Talking · English → 日本語". Outbound always starts muted.
-7. Read both directions in the transcript. The footer shows the call time and the running cost, for example "0:00 · $0.00 · ≈¥0", with " est." until the engine reports Google's token counts. The IN and OUT labels show a green dot when live and the median delay, for example "IN live · 1.8 s".
+7. Read both directions in the transcript. The footer is one row: a chip with the running cost in yen on the left (hover it for the call time, the dollar figure and the silence that was never sent; " est." until the engine reports Google's token counts), "powered by zag" in the middle, and ↓ ↑ on the right, one per direction, green when live, orange while connecting, grey when closed. Hover an arrow for the state and the median delay, for example "IN live · 1.8 s".
 
 A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in use, and "fake engine" when testing with `app/fake_engine.py`. With the default model it shows nothing.
 
@@ -198,9 +198,9 @@ A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in 
 
 **Mini bar.** **−** collapses the panel into a small bar. Click its mark to Start or Stop; it breathes while live. Double-click the bar, or its expand button, to get the panel back.
 
-**Quit.** The panel's **×** quits kana (stopping a session cleanly first), as do ••• › **Quit kana** and **Quit** in the footer. Open kana again from Applications or Spotlight.
+**Quit.** The panel's **×** (or ⌘Q) quits kana, stopping a session cleanly first; so does **Quit kana** in the menu-bar menu. Open kana again from Applications or Spotlight.
 
-**Language.** The UI is in English and Japanese and follows the system language (Japanese when your first preferred language is Japanese, English otherwise); ••• › **Language** overrides it with System, English or 日本語, applied at once without a restart.
+**Language.** The UI is in English and Japanese. The **EN | JP** switch in the panel header (and in Setup's header) changes it at once; on first run Setup asks for the language before the steps. By default it follows the system language (Japanese when your first preferred language is Japanese, English otherwise), and ••• › **Language** can set it back to System.
 
 ### Command line
 
