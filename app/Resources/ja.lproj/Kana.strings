@@ -78,7 +78,7 @@
 "Expand" = "パネルに戻す";
 "Close" = "閉じる";
 "Listening…" = "聞き取り中…";
-"Passing through · mute in Meet" = "パススルー中 · ミュートは Meet で";
+"Not translating · mute in Meet" = "通訳オフ · ミュートは Meet で";
 "Idle. Click the mark to start." = "待機中 · マークをクリックで開始";
 "Talking" = "話し中";
 "Not talking (%@)" = "話していません (%@)";
@@ -97,7 +97,7 @@
 "Captions" = "字幕";
 "Visible in screen share" = "画面共有に表示";
 "Save transcripts" = "文字起こしを保存";
-"Pass audio through when idle" = "待機中は音声をパススルー";
+"Keep Meet audio on when not translating" = "通訳していないときも音声を通す";
 "Talk key" = "トークキー";
 "Engine" = "エンジン";
 "Gemini · your own voice" = "Gemini · あなた自身の声";
@@ -109,7 +109,7 @@
 "Setup…" = "セットアップ…";
 "More" = "その他";
 "Meet hears your mic directly · mute in Meet" = "マイクは直接 Meet へ · ミュートは Meet で";
-"Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter." = "パススルー中: 翻訳はしません。kana がないときと同じように、マイクの音声がそのまま Meet に届くので、ミュートは Meet で行ってください。開始を押すと通訳に切り替わります。";
+"Not translating. Audio goes straight through: Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter." = "通訳オフ: 音声はそのまま通ります。kana がないときと同じように、マイクの音声がそのまま Meet に届くので、ミュートは Meet で行ってください。開始を押すと通訳に切り替わります。";
 "Talking · %@ → %@" = "話し中 · %@ → %@";
 "Press to talk" = "押して話す";
 "Start a session first" = "先に開始を押してください";
@@ -146,7 +146,6 @@
 "Estimate from audio seconds until the engine reports token usage." = "エンジンがトークン使用量を返すまでは、音声の秒数からの推定値です。";
 "Engine: %@" = "エンジン: %@";
 "retry" = "再接続中";
-"%@ live%@" = "%@%@";
 "%@ session. The number is the median delay from speech onset to translated audio." = "%@ セッション。数値は、話し始めから訳の音声が届くまでの遅延の中央値です。";
 "Last utterance: onset→audio %@, text→translation %@" = "直前の発話: 話し始め→音声 %@、原文→訳文 %@";
 "From Meet" = "Meet から";
@@ -245,11 +244,11 @@
 "Paste a key below. It is free to create and starts with AIza." = "下にキーを貼り付けてください。キーは無料で作成でき、AIza で始まります。";
 
 /* StatusController.swift */
-"Pass Audio Through When Idle" = "待機中は音声をパススルー";
+"Keep Meet Audio On When Not Translating" = "通訳していないときも音声を通す";
 
 /* Theme.swift */
 "Live" = "通訳中";
-"Pass-through" = "パススルー";
+"Not translating" = "通訳オフ";
 "Idle" = "待機中";
 
 /* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */

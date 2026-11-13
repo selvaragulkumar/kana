@@ -259,7 +259,7 @@ struct PanelView: View {
             Toggle(L10n.t("Captions"), isOn: $prefs.captionsOn)
             Toggle(L10n.t("Visible in screen share"), isOn: $prefs.visibleInShare)
             Toggle(L10n.t("Save transcripts"), isOn: $prefs.saveTranscripts)
-            Toggle(L10n.t("Pass audio through when idle"), isOn: Binding(
+            Toggle(L10n.t("Keep Meet audio on when not translating"), isOn: Binding(
                 get: { prefs.passthroughWhenIdle },
                 set: { prefs.passthroughWhenIdle = $0; engine.passthroughPrefChanged() }))
             Divider()
@@ -320,7 +320,7 @@ struct PanelView: View {
         .frame(maxWidth: .infinity, minHeight: 52, maxHeight: 52)
         .background(RoundedRectangle(cornerRadius: 14).fill(Theme.surface))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(Theme.line))
-        .help(L10n.t("Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter."))
+        .help(L10n.t("Not translating. Audio goes straight through: Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter."))
     }
 
     private var liveTalkBar: some View {
@@ -710,9 +710,9 @@ struct PanelView: View {
                     .lineLimit(1)
                     .fixedSize()
             }
-            .help(silenceTooltip)
+            .help(costTooltip)
             Spacer(minLength: 4)
-            HStack(spacing: 14) {
+            HStack(spacing: 12) {
                 stream("IN", engine.inState, engine.latencyMs["in"])
                 stream("OUT", engine.outState, engine.latencyMs["out"])
                 Button(L10n.t("Quit")) { actions.quit() }
@@ -728,13 +728,24 @@ struct PanelView: View {
         .overlay(alignment: .top) { Rectangle().fill(Theme.lineSoft).frame(height: 1) }
     }
 
+    /// Footer shows the yen only ("¥13"); time, dollars and the silence saved are in its tooltip.
     private func costLine(now: Date) -> String {
+        let jpy = "¥\(Int((engine.usd * EngineProcess.jpyPerUSD).rounded()))"
+        let est = engine.running && engine.costIsEstimate ? " " + L10n.t("est.") : ""
+        return jpy + est
+    }
+
+    private func costDetail(now: Date) -> String {
         let secs = engine.startedAt.map { max(0, Int(now.timeIntervalSince($0))) } ?? 0
         let time = String(format: "%d:%02d", secs / 60, secs % 60)
         let usd = String(format: "$%.2f", engine.usd)
         let jpy = "≈¥\(Int((engine.usd * EngineProcess.jpyPerUSD).rounded()))"
         let est = engine.running && engine.costIsEstimate ? " " + L10n.t("est.") : ""
         return "\(time) · \(usd) · \(jpy)\(est)"
+    }
+
+    private var costTooltip: String {
+        costDetail(now: Date()) + "\n" + silenceTooltip
     }
 
     private var silenceTooltip: String {
@@ -752,26 +763,27 @@ struct PanelView: View {
         return s
     }
 
+    /// One symbol per direction, nothing else: ↓ from Meet, ↑ from you, coloured by state
+    /// (green live, amber connecting or retrying, grey closed). Words and the delay are in the tooltip.
     private func stream(_ name: String, _ state: SessionState, _ latency: Double?) -> some View {
-        let live = state == .connected
         let word: String
+        let color: Color
         switch state {
-        case .connected: word = ""
-        case .connecting: word = "…"
-        case .reconnecting: word = L10n.t("retry")
-        case .closed: word = L10n.t("closed")
-        case .none: word = engine.running ? "–" : L10n.t("closed")
+        case .connected: word = L10n.t("live"); color = Theme.ok
+        case .connecting: word = "…"; color = Theme.accent
+        case .reconnecting: word = L10n.t("retry"); color = Theme.accent
+        case .closed: word = L10n.t("closed"); color = Theme.streamOff
+        case .none: word = engine.running ? "–" : L10n.t("closed"); color = Theme.streamOff
         }
         let lat = latency.map { String(format: " · %.1f s", $0 / 1000) } ?? ""
-        return HStack(spacing: 6) {
-            Circle().fill(live ? Theme.ok : Theme.streamOff).frame(width: 6, height: 6)
-            // Live: "IN live · 1.8 s". The Japanese drops the word (the green dot says it), so
-            // both directions and their delays fit the footer.
-            Text(live ? L10n.f("%@ live%@", name, lat) : "\(name) \(word)")
-                .monospacedDigit()
-                .lineLimit(1)
-        }
-        .help(latencyTooltip(name.lowercased()))
+        let label = "\(name) \(word)\(lat)"   // "IN live · 1.2 s"; the words are localized above
+        let tip = label + "\n" + latencyTooltip(name.lowercased())
+        return Text(verbatim: name == "IN" ? "↓" : "↑")
+            .font(Theme.ui(14, 600))
+            .foregroundStyle(color)
+            .frame(width: 14)
+            .help(tip)
+            .accessibilityLabel(Text(verbatim: label))
     }
 
     private func latencyTooltip(_ dir: String) -> String {

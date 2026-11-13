@@ -160,7 +160,7 @@ Zoom と Teams も Meet と同じ 2 つの設定が必要だが、まだ試し�
 2. **Microphone** (実際のマイク) と **Earphones** を選ぶ。選んだものは記憶される。
 3. 言語のカードを確認する。左が **You hear English**、右が **Meet hears 日本語** で、間の ⇄ ボタンで入れ替えられる。どちらかのカードをクリックするとプリセットが開く。プリセットは英語と、日本語、中国語、韓国語、スペイン語、フランス語、ドイツ語、ヒンディー語、タミル語のいずれかの組み合わせ。**Custom…** では任意の BCP-47 コードを 2 つ指定できる。
 4. 会議が日本語を聞く場合、カードの下の右側に小さな **Business keigo** のスイッチが出る。既定はオフで、日本語はあなたの話し方をそのまま映す。オンにすると `--register business` になる。スイッチのツールチップに、送信側の声が既製の声になることが書かれている。オンの間、右のカードは "Meet hears · business keigo" と表示される。[敬語の度合い](#敬語の度合い-register) を参照。
-5. **Start** を押す。2 本のセッションがつながり、ヘッダーの表示が Passing through (または Idle) から Live に変わり、受信側の通訳がすぐに始まる。
+5. **Start** を押す。2 本のセッションがつながり、ヘッダーの表示が Not translating (または Idle) から Live に変わり、受信側の通訳がすぐに始まる。
 6. 自分の声を送るときは、どのアプリからでも **右 ⌥** を押したまま話す。離すと止まる。短く (350 ms 未満) 押すと、次に押すまでオンのままになる。トークバー ("Press to talk ⌥ right") をクリックしても切り替えられる。オンの間は "Talking · English → 日本語" と表示される。送信側は必ずミュートで始まる。
 7. 文字起こしで両方向の内容を確認する。フッターには通話時間と料金の累計が "0:00 · $0.00 · ≈¥0" のように出る。エンジンが Google のトークン数を報告するまでは " est." が付く。IN と OUT のラベルには、接続中は緑の点と遅延の中央値が "IN live · 1.8 s" のように出る。
 
@@ -180,7 +180,7 @@ Zoom と Teams も Meet と同じ 2 つの設定が必要だが、まだ試し�
 
 **トークキー。** 既定は右 ⌥ で、押している間だけ話し、短く押すと切り替わる。••• › **Talk key** (Setup › Permissions にもある) で、右 ⌘、Fn/🌐、従来の ⌃⌥Space (切り替えのみ) を選べる。Fn を使うときは、システム設定 › キーボード › "🌐キーを押して" を "何もしない" にする。そうしないと絵文字ピッカーが開く。トークキーにはアクセシビリティの許可が必要。パネルの **Open Settings** を押し、プライバシーとセキュリティ › アクセシビリティで kana をオンにする。許可がなくてもトークバーは使える。
 
-**パススルー。** kana を開いていて通訳していない間も、Meet は普通の通話として使える。会議の音声はイヤホンに、マイクの音声は Meet に、同じ BlackHole デバイスを通って翻訳なしでそのまま流れる。ヘッダーは "Passing through"、トークバーは "Meet hears your mic directly · mute in Meet" と表示される。このときマイクは Meet に直接届くので、ミュートは Meet 側で行う。**Start** で通訳に切り替わり、**Stop** で戻る。••• › **Pass audio through when idle** でオフにできる。BlackHole の 2 つのドライバーとマイクの許可が必要。
+**パススルー。** kana を開いていて通訳していない間も、Meet は普通の通話として使える。会議の音声はイヤホンに、マイクの音声は Meet に、同じ BlackHole デバイスを通って翻訳なしでそのまま流れる。ヘッダーは "Not translating"、トークバーは "Meet hears your mic directly · mute in Meet" と表示される。このときマイクは Meet に直接届くので、ミュートは Meet 側で行う。**Start** で通訳に切り替わり、**Stop** で戻る。••• › **Pass audio through when idle** でオフにできる。BlackHole の 2 つのドライバーとマイクの許可が必要。
 
 **ミニバー。** **−** でパネルを小さなバーにたためる。バーのマークをクリックすると Start / Stop になり、通訳中はゆっくり明滅する。バーをダブルクリックするか、展開ボタンでパネルに戻る。
 
@@ -193,11 +193,11 @@ Zoom と Teams も Meet と同じ 2 つの設定が必要だが、まだ試し�
 | 英語の表示 | 日本語の表示 |
 |---|---|
 | Start / Stop | 開始 / 停止 |
-| Live / Pass-through / Idle | 通訳中 / パススルー / 待機中 |
+| Live / Not translating / Idle | 通訳中 / 通訳オフ / 待機中 |
 | Press to talk / Talking | 押して話す / 話し中 |
 | Captions | 字幕 |
 | Talk key | トークキー |
-| Pass audio through when idle | 待機中は音声をパススルー |
+| Keep Meet audio on when not translating | 通訳していないときも音声を通す |
 | Setup… / Done | セットアップ… / 完了 |
 | Install audio drivers | ドライバーをインストール |
 | Microphone / Earphones / Accessibility | マイク / イヤホン / アクセシビリティ |

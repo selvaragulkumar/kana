@@ -22,13 +22,15 @@ struct CreditLine: View {
                 .font(Theme.ui(11))
                 .foregroundStyle(Theme.text4)
                 .opacity(hovering ? 1 : 0.6)
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
                 .contentShape(Rectangle())
                 .onHover { hovering = $0; if $0 { NSCursor.pointingHand.push() } else { NSCursor.pop() } }
                 .onTapGesture { NSWorkspace.shared.open(Self.url) }
                 .help(L10n.t("Made by ZAG. Opens withzag.com."))
                 .accessibilityLabel(Text(L10n.f("a product of %@", "ZAG")))
         }
+        .padding(.top, -10)      // sit close under the footer rule
+        .padding(.bottom, -10)   // and use part of the panel's own inset
     }
 
     /// The localized template around the mark: "a product of %@" / "%@ のプロダクト".

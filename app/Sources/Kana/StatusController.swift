@@ -295,7 +295,7 @@ final class StatusController: NSObject, NSWindowDelegate {
         let langItem = NSMenuItem(title: L10n.t("Language"), action: nil, keyEquivalent: "")
         langItem.submenu = langs
         menu.addItem(langItem)
-        menu.addItem(actions.menuItem(L10n.t("Pass Audio Through When Idle"), state: prefs.passthroughWhenIdle) { [weak self] in
+        menu.addItem(actions.menuItem(L10n.t("Keep Meet Audio On When Not Translating"), state: prefs.passthroughWhenIdle) { [weak self] in
             guard let self else { return }
             self.prefs.passthroughWhenIdle.toggle()
             self.engine.passthroughPrefChanged()

@@ -202,7 +202,7 @@ struct StatePill: View {
                 Circle().fill(live ? Theme.accent : (passing ? Theme.ok : Theme.text4)).frame(width: 7, height: 7)
                 if live { PingRing() }
             }
-            Text(live ? L10n.t("Live") : (passing ? L10n.t("Pass-through") : L10n.t("Idle")))
+            Text(live ? L10n.t("Live") : (passing ? L10n.t("Not translating") : L10n.t("Idle")))
                 .lineLimit(1)
         }
         .font(Theme.ui(12))

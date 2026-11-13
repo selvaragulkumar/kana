@@ -142,7 +142,7 @@ struct MiniBarView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             } else {
                 Text(engine.running ? L10n.t("Listening…")
-                     : engine.passingThrough ? L10n.t("Passing through · mute in Meet") : L10n.t("Idle. Click the mark to start."))
+                     : engine.passingThrough ? L10n.t("Not translating · mute in Meet") : L10n.t("Idle. Click the mark to start."))
                     .font(Theme.ui(13))
                     .foregroundStyle(Theme.text4)
             }

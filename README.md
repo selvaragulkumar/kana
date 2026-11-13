@@ -174,7 +174,7 @@ Zoom and Teams need the same two settings as Meet, but we have not tried them ye
 2. Pick **Microphone** (your real microphone) and **Earphones**. The app remembers them.
 3. Check the language cards: **You hear English** on the left, **Meet hears 日本語** on the right, with a ⇄ button to swap them. Click either card for the presets, which pair English with Japanese, Chinese, Korean, Spanish, French, German, Hindi or Tamil. **Custom…** takes any two BCP-47 codes.
 4. When the meeting hears Japanese, a small **Business keigo** switch sits under the cards on the right. It is off by default, so the Japanese mirrors how you speak. Turn it on for `--register business`; its tooltip notes that the outbound voice becomes a stock voice, and the right card then reads "Meet hears · business keigo". See [Register](#register).
-5. Press **Start**. Both sessions connect, the pill in the header changes from Passing through (or Idle) to Live, and inbound interpretation starts right away.
+5. Press **Start**. Both sessions connect, the pill in the header changes from Not translating (or Idle) to Live, and inbound interpretation starts right away.
 6. To send your voice, hold **Right ⌥** from any app and speak; talk ends when you let go. A quick tap (under 350 ms) keeps talk on until the next tap. The talk bar ("Press to talk ⌥ right") toggles it with a click. While on it reads "Talking · English → 日本語". Outbound always starts muted.
 7. Read both directions in the transcript. The footer shows the call time and the running cost, for example "0:00 · $0.00 · ≈¥0", with " est." until the engine reports Google's token counts. The IN and OUT labels show a green dot when live and the median delay, for example "IN live · 1.8 s".
 
@@ -194,7 +194,7 @@ A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in 
 
 **Talk key.** Right ⌥ by default: hold to talk, tap to toggle. ••• › **Talk key** (also in Setup › Permissions) offers Right ⌘, Fn/🌐 and the old ⌃⌥Space, which only toggles. For Fn, set System Settings › Keyboard › "Press 🌐 key to" to "Do Nothing", or it opens the emoji picker. The talk key needs Accessibility access: press **Open Settings** in the panel and switch kana on under Privacy & Security › Accessibility. The talk bar works without it.
 
-**Pass-through.** While kana is open but not live, Meet still works like a normal call: the meeting plays in your earphones and your microphone goes to Meet, untranslated, through the same BlackHole devices. The pill reads "Passing through" and the talk bar says "Meet hears your mic directly · mute in Meet": your microphone is live to Meet then, so mute in Meet. **Start** swaps in the interpreter; **Stop** swaps it back. Turn it off with ••• › **Pass audio through when idle**; it needs both BlackHole drivers and microphone permission.
+**Pass-through.** While kana is open but not live, Meet still works like a normal call: the meeting plays in your earphones and your microphone goes to Meet, untranslated, through the same BlackHole devices. The pill reads "Not translating" and the talk bar says "Meet hears your mic directly · mute in Meet": your microphone is live to Meet then, so mute in Meet. **Start** swaps in the interpreter; **Stop** swaps it back. Turn it off with ••• › **Keep Meet audio on when not translating**; it needs both BlackHole drivers and microphone permission.
 
 **Mini bar.** **−** collapses the panel into a small bar. Click its mark to Start or Stop; it breathes while live. Double-click the bar, or its expand button, to get the panel back.
 

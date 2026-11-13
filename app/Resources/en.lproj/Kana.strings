@@ -77,7 +77,7 @@
 "Expand" = "Expand";
 "Close" = "Close";
 "Listening…" = "Listening…";
-"Passing through · mute in Meet" = "Passing through · mute in Meet";
+"Not translating · mute in Meet" = "Not translating · mute in Meet";
 "Idle. Click the mark to start." = "Idle. Click the mark to start.";
 "Talking" = "Talking";
 "Not talking (%@)" = "Not talking (%@)";
@@ -96,7 +96,7 @@
 "Captions" = "Captions";
 "Visible in screen share" = "Visible in screen share";
 "Save transcripts" = "Save transcripts";
-"Pass audio through when idle" = "Pass audio through when idle";
+"Keep Meet audio on when not translating" = "Keep Meet audio on when not translating";
 "Talk key" = "Talk key";
 "Engine" = "Engine";
 "Gemini · your own voice" = "Gemini · your own voice";
@@ -108,7 +108,7 @@
 "Setup…" = "Setup…";
 "More" = "More";
 "Meet hears your mic directly · mute in Meet" = "Meet hears your mic directly · mute in Meet";
-"Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter." = "Passing through: no translation. Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter.";
+"Not translating. Audio goes straight through: Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter." = "Not translating. Audio goes straight through: Meet hears your microphone as if kana were not there, so mute in Meet. Start swaps in the interpreter.";
 "Talking · %@ → %@" = "Talking · %@ → %@";
 "Press to talk" = "Press to talk";
 "Start a session first" = "Start a session first";
@@ -145,7 +145,6 @@
 "Estimate from audio seconds until the engine reports token usage." = "Estimate from audio seconds until the engine reports token usage.";
 "Engine: %@" = "Engine: %@";
 "retry" = "retry";
-"%@ live%@" = "%@ live%@";
 "%@ session. The number is the median delay from speech onset to translated audio." = "%@ session. The number is the median delay from speech onset to translated audio.";
 "Last utterance: onset→audio %@, text→translation %@" = "Last utterance: onset→audio %@, text→translation %@";
 "From Meet" = "From Meet";
@@ -244,11 +243,11 @@
 "Paste a key below. It is free to create and starts with AIza." = "Paste a key below. It is free to create and starts with AIza.";
 
 /* StatusController.swift */
-"Pass Audio Through When Idle" = "Pass Audio Through When Idle";
+"Keep Meet Audio On When Not Translating" = "Keep Meet Audio On When Not Translating";
 
 /* Theme.swift */
 "Live" = "Live";
-"Pass-through" = "Pass-through";
+"Not translating" = "Not translating";
 "Idle" = "Idle";
 
 /* Credit line under the footer and at the end of Setup. %@ is the drawn ZAG wordmark. */
