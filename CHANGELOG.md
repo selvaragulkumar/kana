@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
-- **Language switch.** EN | 日本語 in the panel header and in Setup, applied live; on first run Setup asks for the language before the steps. Japanese strings proofread.
+- **Language switch.** EN | JP in the panel header and in Setup, applied live; on first run Setup asks for the language before the steps. Japanese strings proofread.
 - **Credit line.** "powered by zag" with the ZAG wordmark under the panel footer and at the end of Setup, in English and Japanese; click opens withzag.com. Trademark note in docs/BRAND.md and the READMEs.
 
 ## [0.1.0] - 2026-11-13

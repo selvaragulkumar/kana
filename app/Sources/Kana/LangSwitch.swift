@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// EN | 日本語, the visible UI-language switch (header of the panel and of Setup). Sets the
+/// EN | JP, the visible UI-language switch (header of the panel and of Setup). Sets the
 /// override in Prefs, so it applies live; ••• › Language still offers "System".
 struct LangSwitch: View {
     @EnvironmentObject private var prefs: Prefs
@@ -8,7 +8,7 @@ struct LangSwitch: View {
     var body: some View {
         HStack(spacing: 0) {
             segment("EN", .en)
-            segment("日本語", .ja)
+            segment("JP", .ja)
         }
         .background(Capsule().fill(Theme.surface))
         .overlay(Capsule().strokeBorder(Theme.c(0x2A2A2F)))
@@ -21,6 +21,8 @@ struct LangSwitch: View {
         return Button { prefs.language = choice } label: {
             Text(verbatim: label)
                 .font(Theme.ui(11, on ? 600 : 500))
+                .lineLimit(1)
+                .fixedSize()
                 .foregroundStyle(on ? Theme.text : Theme.text4)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
