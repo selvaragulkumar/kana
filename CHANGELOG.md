@@ -40,6 +40,11 @@ App (`kana.app`, SwiftUI, macOS 14+):
 - **Fake engine** (`app/fake_engine.py`) for testing the app without audio, a key or a network.
 - Built with `app/build.sh` and the Command Line Tools only.
 
+- **One-shot install.** `app/release.sh` builds a DMG with the Python engine bundled inside `kana.app` (`app/bundle_engine.sh`, a pinned relocatable Python 3.13), so no Homebrew, Python or terminal is needed. First launch runs a Setup flow: one click downloads and installs both BlackHole drivers with a single administrator prompt (installer SHA-256 and signer checked), then the Gemini key, then microphone and Accessibility access. `kana --driver-install-dry-run` prints the admin command without installing.
+- **Playback catch-up** (`--catch-up on`, the default). While playback is behind the model, its streamed silence is skipped, so the first translated audio arrives sooner: median speech onset to audio 1954 → 1632 ms (en→ja) and 2360 → 1961 ms (ja→en) in the benchmark. `tools/latency_bench.py` and `docs/LATENCY.md` hold the method, every candidate tried and the numbers.
+- **Transcript rows paired by timing**, not order, so a short tag the model folds into the previous sentence no longer shifts every later row.
+- **App polish.** Opening animation from the design handoff (brackets trace in, once per launch), eased connecting spin, flicker-free minimize and expand, panel stays open until ×, launching kana again opens the panel, and builds sign with a stable local identity so macOS keeps the Accessibility grant across rebuilds.
+
 #### Changed
 
 - Renamed from meet-translate to kana. The Python package is now `kana` (`python -m kana`, console script `kana`), and the app is `kana.app` with the bundle id `com.selvaragulkumar.kana`.
