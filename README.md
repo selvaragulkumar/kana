@@ -155,6 +155,7 @@ Set the meeting app once:
 | App | Where | Microphone | Speaker |
 |---|---|---|---|
 | Google Meet (browser) | Settings (gear icon) › Audio | BlackHole 2ch | BlackHole 16ch |
+| Zoom (browser), one 85-minute call on 2026-11-16 | Settings › Audio | BlackHole 2ch | BlackHole 16ch |
 | Zoom (desktop), not yet tested by us | Settings › Audio | BlackHole 2ch | BlackHole 16ch |
 | Microsoft Teams (desktop), not yet tested by us | Settings › Devices › Audio devices | BlackHole 2ch | BlackHole 16ch |
 
@@ -162,7 +163,7 @@ Leave the macOS sound output on your earphones (System Settings › Sound › Ou
 
 The app's **Setup** page, under ••• › **Setup…**, checks the wiring for you. It also opens by itself on the first open after a launch while a driver, the key or microphone access is missing, and when a start fails with a device or key error. The main panel does not show routing or BlackHole warnings; Setup does. It shows the three first-run steps (audio drivers with the **Install audio drivers** button, the key, microphone and Accessibility access), the meeting settings and the engine in use. **Test devices** plays a 1-second tone into each BlackHole device and listens for it. Do not run it during a call.
 
-Zoom and Teams need the same two settings as Meet, but we have not tried them yet.
+Zoom in the browser worked with the same two settings as Meet. Zoom desktop and Teams need the same settings, but we have not tried them yet. If the devices are set the wrong way round, kana shows the other side's speech as rows "from you" with no translation: swap them.
 
 ## Usage
 
