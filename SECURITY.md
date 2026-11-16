@@ -52,7 +52,7 @@ How Google stores and uses the audio you send depends on your Gemini API tier an
 - **Microphone.** Needed to read your mic and the BlackHole 16ch device. macOS asks once for kana.app, or for your terminal app when you run the engine from a terminal.
 - **Accessibility.** Only for the global ⌃⌥Space hotkey. The app uses it to receive key-down events and checks only for that one key combination. Without it, the talk bar in the panel still works.
 
-The panel and the caption strip are hidden from screen sharing, recordings and screenshots by default; turn on "Visible in screen share" to show them.
+The panel and the mini bar (which shows the captions) are hidden from screen sharing, recordings and screenshots by default; turn on "Visible in screen share" to show them.
 
 The app is ad-hoc signed and not sandboxed. Build it from source if you want to read every line that runs.
 

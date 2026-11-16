@@ -11,9 +11,6 @@
 "%@: silence came back. Check Microphone access for kana." = "%@: 無音が返ってきました。kana のマイクの許可を確認してください。";
 "%@: unexpected signal (%@)" = "%@: 想定外の信号です (%@)";
 
-/* CaptionStrip.swift */
-"Captions appear here. Drag the handle to move." = "ここに字幕が表示されます。ハンドルをドラッグすると移動できます。";
-
 /* DriverInstaller.swift */
 "Could not download %@: %@" = "%@ をダウンロードできませんでした: %@";
 "%@ did not match its published checksum, so it was not installed." = "%@ は公開されているチェックサムと一致しないため、インストールしませんでした。";
@@ -80,8 +77,6 @@
 "Listening…" = "聞き取り中…";
 "Not translating · mute in Meet" = "通訳オフ · ミュートは Meet で";
 "Idle. Click the mark to start." = "待機中 · マークをクリックで開始";
-"Talking" = "話し中";
-"Not talking (%@)" = "マイクは送信していません (%@)";
 ", %.1f s delay" = "、遅延 %.1f s";
 "live" = "接続済み";
 "est." = "(推定)";
@@ -94,7 +89,6 @@
 /* PanelView.swift */
 "Minimize" = "最小化";
 "Quit kana" = "kana を終了";
-"Captions" = "字幕";
 "Visible in screen share" = "画面共有に表示";
 "Save transcripts" = "文字起こしを保存";
 "Keep Meet audio on when not translating" = "通訳していないときも音声を通す";

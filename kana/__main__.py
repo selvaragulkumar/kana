@@ -11,9 +11,11 @@ import wave
 from pathlib import Path
 
 from . import audio, backend, events, paths
+from .eventlog import EventLog
 from .openai_session import OPENAI_MODEL, OpenAIDirection
 from .ptt import PTT
-from .session import AUDIO_RATES_PER_MIN, DEFAULT_MODEL, FALLBACK_MODEL, KEIGO_INSTRUCTION, Direction
+from .session import (AUDIO_RATES_PER_MIN, DEFAULT_MODEL, FALLBACK_MODEL, KEIGO_INSTRUCTION, Direction,
+                      own_language_checker)
 from .transcripts import TranscriptWriter
 from .vad import DEFAULT_HANGOVER_MS, VAD
 
@@ -77,6 +79,10 @@ def parse_args(argv=None):
                    help="no translation, no network, no key: copy the meeting (--meet-spk) to your earphones "
                         "(--spk) and your microphone (--mic) to the meeting (--meet-mic) untranslated. The "
                         "microphone is NOT gated by talk; mute in the meeting app (docs/ENGINE.md)")
+    p.add_argument("--voice-own-language", choices=["off", "on"], default="off",
+                   help="inbound speech that is already the language you hear (room audio coming back on the "
+                        "meeting): off = transcribed but not played; on = played like the rest "
+                        "(default: %(default)s; docs/ENGINE.md)")
     p.add_argument("--json", action="store_true",
                    help="JSON lines on stdout, commands on stdin (protocol for the menu-bar app)")
     return resolve_platform(resolve_provider(p.parse_args(argv)))
@@ -126,6 +132,14 @@ def open_dump(path):
     w.setsampwidth(2)
     w.setframerate(audio.OUT_RATE)
     return w
+
+
+def reopen_resolver(args, index, name, kind):
+    """For a device that stopped mid-call: its index again after PortAudio re-read the
+    device list, found by the name it had (a system default stays the default)."""
+    if index is None:
+        return lambda: None
+    return lambda: resolve_device(args, name, kind)[0]
 
 
 def plan(args):
@@ -204,20 +218,31 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
     writer = None if args.no_save else TranscriptWriter(Path(args.save_dir).expanduser(),
                                                         title=f"{args.out_lang} ↔ {args.in_lang}")
 
+    elog = EventLog(writer.events) if writer else None  # raw per-call events (kana/eventlog.py)
+    exit_reason = "stopped"
+    if elog:
+        elog(None, "start", model=args.model, in_lang=args.in_lang, out_lang=args.out_lang,
+             dirs=[label.lower() for label in dirs], provider=getattr(args, "provider", "gemini"))
+
     def save(direction, row):  # one row per paired source/translation (kana/pairing.py)
         writer.add(direction, row.src_text, row.dst_text, row.first, row.last)
     tasks = []
     directions = {}
+    streams = []  # capture and playback, watched and reopened by audio.watch_streams
+    fatal_text = None
     with contextlib.ExitStack() as stack:
-        for label, ((kind, *src), (sink_i, _)) in dirs.items():
+        for label, ((kind, *src), (sink_i, sink_name)) in dirs.items():
             in_q, out_q = asyncio.Queue(maxsize=50), asyncio.Queue()
             if kind == "file":
                 pcm = audio.read_wav_16k(src[0])
             else:
-                stack.enter_context(audio.Capture(src[0], in_q, loop,
-                                                  **audio.capture_options(src[1], args.capture_latency)))
+                streams.append(stack.enter_context(audio.Capture(
+                    src[0], in_q, loop, **audio.capture_options(src[1], args.capture_latency),
+                    name=src[1], resolve=reopen_resolver(args, src[0], src[1], "input"))))
             catch_up = audio.CATCH_UP_MS if args.catch_up == "on" else None
-            player = stack.enter_context(audio.Playback(sink_i, catch_up_ms=catch_up))
+            player = stack.enter_context(audio.Playback(sink_i, catch_up_ms=catch_up, name=sink_name,
+                                                        resolve=reopen_resolver(args, sink_i, sink_name, "output")))
+            streams.append(player)
             tasks.append(asyncio.create_task(player.pump(out_q)))
             model, instruction = direction_models(args)[label]
             cls = OpenAIDirection if getattr(args, "provider", "gemini") == "openai" else Direction
@@ -225,7 +250,10 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
                           is_muted=(lambda: ptt.muted) if label == "OUT" else (lambda: False),
                           dump=dumps[label], emit=emit,
                           vad=VAD(gate=args.vad == "auto", threshold=args.vad_threshold, hangover_ms=args.vad_hangover),
-                          on_row=save if writer else None)
+                          on_row=save if writer else None,
+                          log=elog.for_dir(label.lower()) if elog else None,
+                          own_language=own_language_checker(args.in_lang, args.out_lang) if label == "IN" else None,
+                          voice_own_language=getattr(args, "voice_own_language", "off") == "on")
             directions[label] = d
             tasks.append(asyncio.create_task(d.run()))
             if kind == "file":
@@ -245,14 +273,31 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
             tasks.append(asyncio.create_task(events.audio_ticker(directions, emit)))
 
             async def commands_then_stop():
+                nonlocal exit_reason
                 try:
-                    await events.command_loop(commands if commands is not None else events.stdin_lines(),
-                                              ptt, emit)
+                    exit_reason = await events.command_loop(
+                        commands if commands is not None else events.stdin_lines(), ptt, emit) or exit_reason
                 finally:
                     stop.set()
             tasks.append(asyncio.create_task(commands_then_stop()))
+
+        async def watch_then_stop():
+            """Reopens a stopped device while the sessions stay up; ends the run only if
+            it stays gone (audio.REOPEN_GIVE_UP_S)."""
+            nonlocal fatal_text
+            say = emit if emit is not None else (lambda ev, **f: print(f"  ({f.get('text', ev)})"))
+            try:
+                await audio.watch_streams([st for st in streams if hasattr(st, "problem")], say,
+                                          (lambda ev, **f: elog(None, ev, **f)) if elog else None)
+            except audio.DeviceLost as e:
+                fatal_text = str(e)
+                stop.set()
+        tasks.append(asyncio.create_task(watch_then_stop()))
         try:
             await stop.wait()
+        except BaseException as e:  # Ctrl-C, cancellation, a device error
+            exit_reason = type(e).__name__
+            raise
         finally:
             for t in tasks:
                 t.cancel()
@@ -260,6 +305,11 @@ async def amain(args, dirs, connect, emit=None, commands=None) -> None:
             for w in dumps.values():
                 if w:
                     w.close()
+            if elog:
+                elog(None, "exit", reason="device lost" if fatal_text else exit_reason)
+                elog.close()
+    if fatal_text:
+        raise audio.DeviceLost(fatal_text)
 
 
 def plan_passthrough(args) -> dict:

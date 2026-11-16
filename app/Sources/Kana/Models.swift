@@ -20,7 +20,7 @@ struct TranscriptRow: Identifiable, Equatable {
     let dir: Direction
     var src: String
     var dst: String
-    /// Last time either side changed; the caption strip fades lines out from here.
+    /// Last time either side changed; the pending-translation give-up timer counts from here.
     var updatedAt = Date()
     /// The engine's row number in this direction (`row` on transcript events); the engine pairs.
     var key: Int? = nil

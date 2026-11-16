@@ -1,7 +1,7 @@
-"""Source/translation pairing by timing (kana/pairing.py), replayed from
+"""Pairing v1 (kana/pairing_v1.py, sentence level), replayed from
 timed event sequences. Each replay is checked twice: through the ops the app
 applies (by row id) and through the rows saved to the transcript files."""
-from kana.pairing import SEAL_S, Pairer, join_text, units
+from kana.pairing_v1 import SEAL_S, Pairer, join_text, units
 
 
 class App:

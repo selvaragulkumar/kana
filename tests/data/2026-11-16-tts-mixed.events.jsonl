@@ -1,0 +1,470 @@
+{"t":1794797569.008,"ev":"start","model":"gemini-3.5-live-translate-preview","in_lang":"en","out_lang":"ja","dirs":["in"],"provider":"gemini"}
+{"t":1794797569.072,"ev":"device","state":"open","name":"BlackHole 2ch","kind":"output"}
+{"t":1794797570.3,"dir":"in","ev":"connected","n":1,"resumed":false}
+{"t":1794797570.311,"dir":"in","ev":"utterance_open","seq":1,"onset":true}
+{"t":1794797573.301,"dir":"in","ev":"input_transcription","text":"それでは、本日の議題から"}
+{"t":1794797573.301,"dir":"in","ev":"echo","seq":1,"echo":false,"play":true,"words":0}
+{"t":1794797573.301,"dir":"in","ev":"transcript","kind":"src","text":"それでは、本日の議題から","row":1,"row_text":"それでは、本日の議題から"}
+{"t":1794797573.473,"dir":"in","ev":"output_transcription","text":"So, let's start"}
+{"t":1794797573.473,"dir":"in","ev":"transcript","kind":"dst","text":"So, let's start","row":1,"row_text":"So, let's start"}
+{"t":1794797573.497,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797573.633,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797573.636,"dir":"in","ev":"usage","prompt":50,"response":50,"total":100}
+{"t":1794797573.678,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797573.931,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797574.016,"dir":"in","ev":"input_transcription","text":"始めさせて"}
+{"t":1794797574.016,"dir":"in","ev":"transcript","kind":"src","text":"始めさせて","row":1,"row_text":"それでは、本日の議題から始めさせて"}
+{"t":1794797574.171,"dir":"in","ev":"output_transcription","text":" with today's agenda."}
+{"t":1794797574.172,"dir":"in","ev":"transcript","kind":"dst","text":" with today's agenda.","row":1,"row_text":"So, let's start with today's agenda."}
+{"t":1794797574.188,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797574.218,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797574.427,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797574.68,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797574.925,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797574.982,"dir":"in","ev":"input_transcription","text":"いただきます。"}
+{"t":1794797574.982,"dir":"in","ev":"transcript","kind":"src","text":"いただきます。","row":1,"row_text":"それでは、本日の議題から始めさせていただきます。"}
+{"t":1794797575.181,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797575.183,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797575.427,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797575.437,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797575.681,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797575.712,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797575.933,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797576.097,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797576.186,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797576.411,"dir":"in","ev":"utterance_close","seq":1,"quiet":false}
+{"t":1794797576.412,"dir":"in","ev":"utterance_open","seq":2,"onset":true}
+{"t":1794797576.429,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797576.681,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797576.93,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797577.182,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797577.223,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797577.283,"dir":"in","ev":"input_transcription","text":"さ"}
+{"t":1794797577.283,"dir":"in","ev":"echo","seq":2,"echo":false,"play":true,"words":0}
+{"t":1794797577.283,"dir":"in","ev":"transcript","kind":"src","text":"さ","row":2,"row_text":"さ"}
+{"t":1794797577.421,"dir":"in","ev":"output_transcription","text":" So,"}
+{"t":1794797577.421,"dir":"in","ev":"transcript","kind":"dst","text":" So,","row":2,"row_text":"So,"}
+{"t":1794797577.434,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797577.49,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797577.688,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797577.929,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797578.176,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797578.321,"dir":"in","ev":"input_transcription","text":"り、could you share"}
+{"t":1794797578.321,"dir":"in","ev":"transcript","kind":"src","text":"り、could you share","row":2,"row_text":"さり、could you share"}
+{"t":1794797578.434,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797578.525,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797578.682,"dir":"in","ev":"output_transcription","text":" could you share"}
+{"t":1794797578.682,"dir":"in","ev":"transcript","kind":"dst","text":" could you share","row":2,"row_text":"So, could you share"}
+{"t":1794797578.693,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797578.825,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797578.932,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797579.133,"dir":"in","ev":"input_transcription","text":" the screen again?"}
+{"t":1794797579.133,"dir":"in","ev":"transcript","kind":"src","text":" the screen again?","row":2,"row_text":"さり、could you share the screen again?"}
+{"t":1794797579.182,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797579.328,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797579.43,"dir":"in","ev":"output_transcription","text":" the screen again?"}
+{"t":1794797579.431,"dir":"in","ev":"transcript","kind":"dst","text":" the screen again?","row":2,"row_text":"So, could you share the screen again?"}
+{"t":1794797579.441,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797579.68,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797579.929,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797580.041,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797580.178,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797580.399,"dir":"in","ev":"input_transcription","text":" I can't see the"}
+{"t":1794797580.399,"dir":"in","ev":"transcript","kind":"src","text":" I can't see the","row":3,"row_text":"I can't see the"}
+{"t":1794797580.435,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797580.602,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797580.688,"dir":"in","ev":"output_transcription","text":" I can't see the"}
+{"t":1794797580.688,"dir":"in","ev":"transcript","kind":"dst","text":" I can't see the","row":3,"row_text":"I can't see the"}
+{"t":1794797580.701,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797580.925,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797581.175,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797581.262,"dir":"in","ev":"input_transcription","text":" slides."}
+{"t":1794797581.262,"dir":"in","ev":"transcript","kind":"src","text":" slides.","row":3,"row_text":"I can't see the slides."}
+{"t":1794797581.272,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797581.421,"dir":"in","ev":"output_transcription","text":" slides."}
+{"t":1794797581.421,"dir":"in","ev":"transcript","kind":"dst","text":" slides.","row":3,"row_text":"I can't see the slides."}
+{"t":1794797581.436,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797581.461,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797581.685,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797581.713,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797581.929,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797582.177,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797582.311,"dir":"in","ev":"utterance_close","seq":2,"quiet":false}
+{"t":1794797582.311,"dir":"in","ev":"utterance_open","seq":3,"onset":true}
+{"t":1794797582.357,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797582.453,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797582.681,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797582.948,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797583.195,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797583.275,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797583.427,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797583.472,"dir":"in","ev":"input_transcription","text":"はい。"}
+{"t":1794797583.472,"dir":"in","ev":"echo","seq":3,"echo":false,"play":true,"words":0}
+{"t":1794797583.472,"dir":"in","ev":"transcript","kind":"src","text":"はい。","row":4,"row_text":"はい。"}
+{"t":1794797583.678,"dir":"in","ev":"output_transcription","text":" Yes."}
+{"t":1794797583.678,"dir":"in","ev":"transcript","kind":"dst","text":" Yes.","row":4,"row_text":"Yes."}
+{"t":1794797583.694,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797583.694,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797583.931,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797584.178,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797584.433,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797584.574,"dir":"in","ev":"input_transcription","text":"少々お待ち"}
+{"t":1794797584.574,"dir":"in","ev":"transcript","kind":"src","text":"少々お待ち","row":5,"row_text":"少々お待ち"}
+{"t":1794797584.589,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797584.687,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797584.774,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797584.926,"dir":"in","ev":"output_transcription","text":" So, please wait"}
+{"t":1794797584.926,"dir":"in","ev":"transcript","kind":"dst","text":" So, please wait","row":5,"row_text":"So, please wait"}
+{"t":1794797584.94,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797585.178,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797585.433,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797585.492,"dir":"in","ev":"input_transcription","text":"ください。今、"}
+{"t":1794797585.492,"dir":"in","ev":"transcript","kind":"src","text":"ください。今、","row":5,"row_text":"少々お待ちください。今、"}
+{"t":1794797585.676,"dir":"in","ev":"output_transcription","text":" a moment."}
+{"t":1794797585.676,"dir":"in","ev":"transcript","kind":"dst","text":" a moment.","row":5,"row_text":"So, please wait a moment."}
+{"t":1794797585.689,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797585.692,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797585.932,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797585.933,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797586.176,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797586.43,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797586.479,"dir":"in","ev":"input_transcription","text":"画面を共有"}
+{"t":1794797586.479,"dir":"in","ev":"transcript","kind":"src","text":"画面を共有","row":6,"row_text":"画面を共有"}
+{"t":1794797586.676,"dir":"in","ev":"output_transcription","text":" I'm sharing the screen"}
+{"t":1794797586.677,"dir":"in","ev":"transcript","kind":"dst","text":" I'm sharing the screen","row":6,"row_text":"I'm sharing the screen"}
+{"t":1794797586.689,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797586.689,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797586.939,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797587.178,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797587.292,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797587.43,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797587.478,"dir":"in","ev":"input_transcription","text":"します。"}
+{"t":1794797587.478,"dir":"in","ev":"transcript","kind":"src","text":"します。","row":6,"row_text":"画面を共有します。"}
+{"t":1794797587.659,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797587.677,"dir":"in","ev":"output_transcription","text":" now."}
+{"t":1794797587.677,"dir":"in","ev":"transcript","kind":"dst","text":" now.","row":6,"row_text":"I'm sharing the screen now."}
+{"t":1794797587.693,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797587.913,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797587.961,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797588.175,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797588.434,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797588.607,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797588.611,"dir":"in","ev":"utterance_close","seq":3,"quiet":false}
+{"t":1794797588.611,"dir":"in","ev":"utterance_open","seq":4,"onset":true}
+{"t":1794797588.703,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797588.794,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797588.928,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797589.182,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797589.555,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797589.676,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797589.805,"dir":"in","ev":"input_transcription","text":"オッケー。"}
+{"t":1794797589.805,"dir":"in","ev":"echo","seq":4,"echo":false,"play":true,"words":0}
+{"t":1794797589.805,"dir":"in","ev":"transcript","kind":"src","text":"オッケー。","row":7,"row_text":"オッケー。"}
+{"t":1794797589.923,"dir":"in","ev":"output_transcription","text":" Okay."}
+{"t":1794797589.923,"dir":"in","ev":"transcript","kind":"dst","text":" Okay.","row":7,"row_text":"Okay."}
+{"t":1794797589.938,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797589.992,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797590.106,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797590.182,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797590.423,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797590.644,"dir":"in","ev":"input_transcription","text":" I can see it"}
+{"t":1794797590.644,"dir":"in","ev":"transcript","kind":"src","text":" I can see it","row":8,"row_text":"I can see it"}
+{"t":1794797590.679,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797590.83,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797590.928,"dir":"in","ev":"output_transcription","text":" I can see it"}
+{"t":1794797590.928,"dir":"in","ev":"transcript","kind":"dst","text":" I can see it","row":8,"row_text":"I can see it"}
+{"t":1794797590.943,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797591.177,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797591.427,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797591.678,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797591.718,"dir":"in","ev":"input_transcription","text":" now. Thank you"}
+{"t":1794797591.718,"dir":"in","ev":"transcript","kind":"src","text":" now. Thank you","row":8,"row_text":"I can see it now. Thank you"}
+{"t":1794797591.741,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797591.912,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797591.926,"dir":"in","ev":"output_transcription","text":" now. Thank you"}
+{"t":1794797591.926,"dir":"in","ev":"transcript","kind":"dst","text":" now. Thank you","row":8,"row_text":"I can see it now. Thank you"}
+{"t":1794797591.95,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797592.177,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797592.429,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797592.624,"dir":"in","ev":"input_transcription","text":" very much."}
+{"t":1794797592.624,"dir":"in","ev":"transcript","kind":"src","text":" very much.","row":8,"row_text":"I can see it now. Thank you very much."}
+{"t":1794797592.68,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797592.82,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797592.933,"dir":"in","ev":"output_transcription","text":" very much."}
+{"t":1794797592.933,"dir":"in","ev":"transcript","kind":"dst","text":" very much.","row":8,"row_text":"I can see it now. Thank you very much."}
+{"t":1794797592.951,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797593.111,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797593.178,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797593.429,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797593.513,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797593.675,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797593.878,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797593.939,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797594.176,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797594.212,"dir":"in","ev":"utterance_close","seq":4,"quiet":false}
+{"t":1794797594.212,"dir":"in","ev":"utterance_open","seq":5,"onset":true}
+{"t":1794797594.448,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797594.609,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797594.68,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797594.93,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797595.068,"dir":"in","ev":"input_transcription","text":"こち"}
+{"t":1794797595.068,"dir":"in","ev":"echo","seq":5,"echo":false,"play":true,"words":0}
+{"t":1794797595.068,"dir":"in","ev":"transcript","kind":"src","text":"こち","row":9,"row_text":"こち"}
+{"t":1794797595.177,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797595.278,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797595.435,"dir":"in","ev":"output_transcription","text":" This"}
+{"t":1794797595.435,"dir":"in","ev":"transcript","kind":"dst","text":" This","row":9,"row_text":"This"}
+{"t":1794797595.448,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797595.684,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797595.93,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797595.987,"dir":"in","ev":"input_transcription","text":"らが先月"}
+{"t":1794797595.987,"dir":"in","ev":"transcript","kind":"src","text":"らが先月","row":9,"row_text":"こちらが先月"}
+{"t":1794797596.182,"dir":"in","ev":"output_transcription","text":" is last month's"}
+{"t":1794797596.182,"dir":"in","ev":"transcript","kind":"dst","text":" is last month's","row":9,"row_text":"This is last month's"}
+{"t":1794797596.196,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797596.196,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797596.201,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797596.44,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797596.682,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797596.935,"dir":"in","ev":"input_transcription","text":"の数字になり"}
+{"t":1794797596.935,"dir":"in","ev":"transcript","kind":"src","text":"の数字になり","row":9,"row_text":"こちらが先月の数字になり"}
+{"t":1794797596.977,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797597.104,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797597.184,"dir":"in","ev":"output_transcription","text":" figures."}
+{"t":1794797597.184,"dir":"in","ev":"transcript","kind":"dst","text":" figures.","row":9,"row_text":"This is last month's figures."}
+{"t":1794797597.199,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797597.435,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797597.683,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797597.761,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797597.934,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797597.975,"dir":"in","ev":"input_transcription","text":"ます。全体"}
+{"t":1794797597.976,"dir":"in","ev":"transcript","kind":"src","text":"ます。","row":9,"row_text":"こちらが先月の数字になります。"}
+{"t":1794797597.976,"dir":"in","ev":"transcript","kind":"src","text":"全体","row":10,"row_text":"全体"}
+{"t":1794797598.185,"dir":"in","ev":"output_transcription","text":" Overall,"}
+{"t":1794797598.185,"dir":"in","ev":"transcript","kind":"dst","text":" Overall,","row":10,"row_text":"Overall,"}
+{"t":1794797598.19,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797598.19,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797598.437,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797598.69,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797598.932,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797598.968,"dir":"in","ev":"input_transcription","text":"で1割ほど"}
+{"t":1794797598.968,"dir":"in","ev":"transcript","kind":"src","text":"で1割ほど","row":10,"row_text":"全体で1割ほど"}
+{"t":1794797599.116,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797599.156,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797599.178,"dir":"in","ev":"output_transcription","text":" it's increased by"}
+{"t":1794797599.178,"dir":"in","ev":"transcript","kind":"dst","text":" it's increased by","row":10,"row_text":"Overall, it's increased by"}
+{"t":1794797599.195,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797599.482,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797599.691,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797599.955,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797599.986,"dir":"in","ev":"input_transcription","text":"増えています。"}
+{"t":1794797599.987,"dir":"in","ev":"transcript","kind":"src","text":"増えています。","row":10,"row_text":"全体で1割ほど増えています。"}
+{"t":1794797600.182,"dir":"in","ev":"output_transcription","text":" about 10%."}
+{"t":1794797600.182,"dir":"in","ev":"transcript","kind":"dst","text":" about 10%.","row":10,"row_text":"Overall, it's increased by about 10%."}
+{"t":1794797600.191,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797600.405,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797600.43,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797600.654,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797600.69,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797600.713,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797600.93,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797601.04,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797601.193,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797601.412,"dir":"in","ev":"utterance_close","seq":5,"quiet":false}
+{"t":1794797601.413,"dir":"in","ev":"utterance_open","seq":6,"onset":true}
+{"t":1794797601.439,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797601.685,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797601.928,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797602.074,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797602.185,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797602.246,"dir":"in","ev":"input_transcription","text":" That's"}
+{"t":1794797602.246,"dir":"in","ev":"transcript","kind":"src","text":" That's","row":11,"row_text":"That's"}
+{"t":1794797602.432,"dir":"in","ev":"output_transcription","text":" That's"}
+{"t":1794797602.432,"dir":"in","ev":"transcript","kind":"dst","text":" That's","row":11,"row_text":"That's"}
+{"t":1794797602.45,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797602.45,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797602.673,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797602.928,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797603.183,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797603.263,"dir":"in","ev":"input_transcription","text":" great news. Let's"}
+{"t":1794797603.263,"dir":"in","ev":"echo","seq":6,"echo":true,"play":false,"words":4}
+{"t":1794797603.263,"dir":"in","ev":"transcript","kind":"src","text":" great news. Let's","row":11,"row_text":"That's great news. Let's","echo":true}
+{"t":1794797603.423,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797603.429,"dir":"in","ev":"output_transcription","text":" great news."}
+{"t":1794797603.429,"dir":"in","ev":"transcript","kind":"dst","text":" great news.","row":11,"row_text":"That's great news.","echo":true}
+{"t":1794797603.44,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797603.461,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797603.68,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797603.938,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797604.196,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797604.328,"dir":"in","ev":"input_transcription","text":" look at the details"}
+{"t":1794797604.328,"dir":"in","ev":"transcript","kind":"src","text":" look at the details","row":11,"row_text":"That's great news. Let's look at the details","echo":true}
+{"t":1794797604.428,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797604.517,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797604.682,"dir":"in","ev":"output_transcription","text":" Let's look at the details"}
+{"t":1794797604.682,"dir":"in","ev":"transcript","kind":"dst","text":" Let's look at the details","row":11,"row_text":"That's great news. Let's look at the details","echo":true}
+{"t":1794797604.694,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797604.824,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797604.93,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797605.278,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797605.408,"dir":"in","ev":"input_transcription","text":" next."}
+{"t":1794797605.409,"dir":"in","ev":"transcript","kind":"src","text":" next.","row":11,"row_text":"That's great news. Let's look at the details next.","echo":true}
+{"t":1794797605.43,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797605.688,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797605.709,"dir":"in","ev":"output_transcription","text":" next."}
+{"t":1794797605.709,"dir":"in","ev":"transcript","kind":"dst","text":" next.","row":11,"row_text":"That's great news. Let's look at the details next.","echo":true}
+{"t":1794797605.728,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797605.913,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797605.983,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797605.983,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797606.181,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797606.513,"dir":"in","ev":"utterance_close","seq":6,"quiet":false}
+{"t":1794797606.513,"dir":"in","ev":"utterance_open","seq":7,"onset":true}
+{"t":1794797606.659,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797606.662,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797606.71,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797607.217,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797607.411,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797607.411,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797607.425,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797607.75,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797607.944,"dir":"in","ev":"input_transcription","text":"ありが"}
+{"t":1794797607.944,"dir":"in","ev":"echo","seq":7,"echo":false,"play":true,"words":0}
+{"t":1794797607.944,"dir":"in","ev":"transcript","kind":"src","text":"ありが","row":12,"row_text":"ありが"}
+{"t":1794797607.96,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797608.114,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797608.179,"dir":"in","ev":"output_transcription","text":" Thank"}
+{"t":1794797608.18,"dir":"in","ev":"transcript","kind":"dst","text":" Thank","row":12,"row_text":"Thank"}
+{"t":1794797608.194,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797608.443,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797608.687,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797608.801,"dir":"in","ev":"input_transcription","text":"とうございます。"}
+{"t":1794797608.801,"dir":"in","ev":"transcript","kind":"src","text":"とうございます。","row":12,"row_text":"ありがとうございます。"}
+{"t":1794797608.967,"dir":"in","ev":"output_transcription","text":" you very much."}
+{"t":1794797608.967,"dir":"in","ev":"transcript","kind":"dst","text":" you very much.","row":12,"row_text":"Thank you very much."}
+{"t":1794797608.97,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797609.036,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797609.037,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797609.197,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797609.435,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797609.645,"dir":"in","ev":"input_transcription","text":"では、次の"}
+{"t":1794797609.645,"dir":"in","ev":"transcript","kind":"src","text":"では、次の","row":13,"row_text":"では、次の"}
+{"t":1794797609.687,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797609.863,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797610.05,"dir":"in","ev":"output_transcription","text":" Now, let's"}
+{"t":1794797610.05,"dir":"in","ev":"transcript","kind":"dst","text":" Now, let's","row":13,"row_text":"Now, let's"}
+{"t":1794797610.05,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797610.192,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797610.505,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797610.55,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797610.683,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797610.7,"dir":"in","ev":"input_transcription","text":"ページに進み"}
+{"t":1794797610.701,"dir":"in","ev":"transcript","kind":"src","text":"ページに進み","row":13,"row_text":"では、次のページに進み"}
+{"t":1794797610.902,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797610.921,"dir":"in","ev":"output_transcription","text":" move on to the next"}
+{"t":1794797610.921,"dir":"in","ev":"transcript","kind":"dst","text":" move on to the next","row":13,"row_text":"Now, let's move on to the next"}
+{"t":1794797610.945,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797611.197,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797611.487,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797611.639,"dir":"in","ev":"input_transcription","text":"ます。"}
+{"t":1794797611.64,"dir":"in","ev":"transcript","kind":"src","text":"ます。","row":13,"row_text":"では、次のページに進みます。"}
+{"t":1794797611.813,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794797611.843,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797611.894,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797611.93,"dir":"in","ev":"output_transcription","text":" page."}
+{"t":1794797611.93,"dir":"in","ev":"transcript","kind":"dst","text":" page.","row":13,"row_text":"Now, let's move on to the next page."}
+{"t":1794797611.971,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797611.973,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797612.192,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797612.461,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797612.696,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797612.955,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794797613.222,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797613.442,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797613.657,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794797613.678,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797613.939,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797614.183,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797614.433,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797614.511,"dir":"in","ev":"utterance_close","seq":7,"quiet":true}
+{"t":1794797614.683,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797614.925,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797615.21,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797615.439,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797615.724,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797615.934,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797616.177,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797616.429,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797616.678,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797616.926,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797617.183,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797617.424,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797617.687,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797617.928,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797618.175,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797618.425,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797618.683,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797618.932,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797619.179,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797619.43,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797619.677,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797619.934,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797620.197,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797620.427,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797620.685,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797620.93,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797621.182,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797621.437,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797621.675,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797621.954,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797622.19,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797622.437,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797622.681,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797622.934,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797623.185,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797623.43,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797623.683,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797623.937,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797624.182,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797624.429,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797624.684,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797624.929,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797625.192,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797625.441,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797625.689,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797625.935,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797626.181,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797626.446,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797626.679,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797626.939,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797627.178,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797627.434,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797627.678,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797627.959,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797628.186,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797628.442,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797628.683,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797628.927,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797629.187,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797629.431,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797629.684,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797630.048,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797630.194,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797630.46,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797630.691,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797630.933,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797631.176,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797631.449,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797631.683,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797631.913,"dir":"in","ev":"keepalive"}
+{"t":1794797632.296,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797632.296,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797632.434,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797632.644,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794797632.843,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797632.964,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797633.371,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797633.431,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794797633.548,"dir":"in","ev":"closed","reason":"stopped"}
+{"t":1794797633.548,"dir":"in","ev":"stopped"}
+{"t":1794797633.548,"ev":"exit","reason":"quit"}

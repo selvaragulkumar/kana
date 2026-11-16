@@ -204,11 +204,12 @@ final class StatusController: NSObject, NSWindowDelegate {
 
     // MARK: Minimized bar
 
-    /// Default bar spot: the panel's header area (top-left of the panel).
+    /// Default bar spot: the panel's header area (top-left of the panel), kept on screen (the
+    /// bar is wider than the panel, which usually sits near the right edge).
     private func defaultBarFrame() -> NSRect {
         if panel.frame.width > 0 && panel.isVisible {
-            return NSRect(x: panel.frame.minX, y: panel.frame.maxY - MiniBarController.size.height,
-                          width: MiniBarController.size.width, height: MiniBarController.size.height)
+            return MiniBarController.clamped(NSRect(x: panel.frame.minX, y: panel.frame.maxY - MiniBarController.size.height,
+                                                    width: MiniBarController.size.width, height: MiniBarController.size.height))
         }
         let vf = (item.button?.window?.screen ?? NSScreen.main ?? NSScreen.screens[0]).visibleFrame
         return NSRect(x: vf.maxX - MiniBarController.size.width - 24, y: vf.maxY - MiniBarController.size.height - 12,
@@ -274,9 +275,6 @@ final class StatusController: NSObject, NSWindowDelegate {
 
     private func showContextMenu() {
         let menu = NSMenu()
-        menu.addItem(actions.menuItem(L10n.t("Captions"), state: prefs.captionsOn) { [weak self] in
-            self?.prefs.captionsOn.toggle()
-        })
         let keys = NSMenu()
         for key in TalkKey.allCases {
             keys.addItem(actions.menuItem(key.title, state: prefs.talkKey == key) { [weak self] in

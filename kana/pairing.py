@@ -1,66 +1,81 @@
-"""Pairs source sentences with their translations into rows, by timing and
-length rather than strict order.
+"""Pairing v2: source and translation chunks into rows, as they stream.
 
-The model does not translate sentence by sentence. It folds a short tag
-("Right?", 「ですよね」) into the translation before it, splits one long
-sentence into two translations, drops a translation now and then, and
-sometimes finishes a translation before the source transcript arrives. Pairing
-strictly in order lets one such event shift every later row.
+Measured on Gemini Live Translate (docs/research/transcription-timing.md): the
+server streams the input transcription as it hears it, one chunk about every
+second, and the output transcription of that chunk follows about 0.3 s later.
+The two streams interleave 1:1. What arrived "late and in large chunks" on the
+2026-11-16 call was the engine's own sentence buffer: spontaneous Japanese has
+no 。 for 20-30 s, so v1 (kana/pairing_v1.py) only saw the source when the
+speaker finally finished a sentence, then gave it the next translation. Live
+Translate sends no turn_complete, generation_complete or interrupted at all,
+so there are no turns to group by.
 
-One Pairer per direction. Each sentence goes in with the time it was
-finalised and the utterance it was heard in; out come ops, each the fields of
-one `transcript` event:
+So v2 takes chunks, not sentences, and pairs them by arrival: the source and
+translation of a stretch of speech fill the same row as they stream. A row is
+cut where the translation ends a sentence. Rules, per chunk:
 
-    {"kind", "text", "row", "row_text"}                  text added to `row`
-    {"kind": "src", "text", "row", "merge_into", "row_text"}
-                                                          row `row` (a lone
-                                                          src) is removed and
-                                                          its text appended to
-                                                          `merge_into`
+Translation chunk (it translates the source chunk that came just before it):
+  T1. The last row's translation has not ended a sentence -> append to it
+      (it may be a row the source opened a moment ago).
+  T2. The last row's translation is done, but the latest source chunk went
+      into that row after it was done (a tail, S5, or a source that filled an
+      early translation, S1/S2) and came less than LEAD_S ago, or the row's
+      source stops mid-clause -> append: the model is still translating that
+      source, in a second sentence. The row then holds several English
+      sentences for one Japanese sentence. This also heals a wrong guess: a
+      source put beside the wrong translation pulls its own translation in
+      after it, so rows can grow but never shift.
+  T3. Otherwise -> a new row.
+  When the row's translation ends a sentence (. ? !), it is done.
 
-`row_text` is the whole side of the receiving row after the change, so the app
-only sets it. Rows are numbered from 1 per direction, in the order opened.
+Source chunk:
+  S1. Late source: two or more rows at the end have a translation and no source
+      (the source of several English sentences arrives at once) -> split the
+      chunk at its clause ends and spread it over those rows in order, by
+      length (a monotonic alignment); never to a row after them.
+  S2. The last row has a translation and no source -> append to it.
+  S3. The last row's translation is not done -> append, unless it has a
+      translation and both streams were silent for GAP_S -> new row.
+      A source-only row that got no translation for DROP_S and is at a clause
+      end is given up (untranslated); the chunk opens a new row.
+  S4. The last row's translation is done and its source ends at a clause end
+      (、。？！) -> a new row; the translation that follows will join it.
+  S5. Otherwise the row's source stopped mid-clause: the chunk's text up to
+      its first clause end is the row's tail when it comes within TAIL_S of
+      the translation's end and is short (TAIL_UNITS); the rest opens a new
+      row. A long or late chunk opens a new row whole.
 
-Rules for a translation (dst) arriving, in this order:
-1. Continue: the last row's translation has no sentence end yet -> append.
-2. Nothing waiting for a translation: a split (the last row's translation is
-   still short of its source and arrived moments ago) -> append; else a
-   translation-only row, which the next source fills when the lengths fit.
-3. Fold: while two or more sources wait, the oldest is short (<= 3 words or
-   6 CJK characters), the same utterance as the row above, ended before that
-   row's translation arrived, and the new translation fits it badly but fits
-   the next one better -> fold it into the row above.
-4. Dropped translation: while two or more wait and the oldest is stale (lag +
-   3 s old, the next one ended a lag or more after it and at least half a lag
-   ago) and the new translation is not a clear length match for the oldest
-   but a bad one for the next -> leave the oldest untranslated.
-5. Split with sources waiting: the last row's translation is still short of
-   its source, the new one completes it, and it fits the oldest waiting
-   source badly -> append to the last row.
-6. Otherwise -> the oldest waiting source.
+Nothing is ever dropped: every chunk lands, whole or split, in rows in arrival
+order. A row is final SEAL_S after its last change; a row with a translation
+and no source waits LATE_S for a late source first.
 
-Nothing is ever dropped: every sentence lands in exactly one row. Text is only
-folded within one utterance."""
+Ops are the fields of one `transcript` event each, the same as v1:
+    {"kind", "text", "row", "row_text"}
+`text` is the chunk (or piece of it) added and `row_text` the whole side of
+the row after it, so the app only sets it. v2 never emits `merge_into`."""
 from __future__ import annotations
 
 import math
 import re
-import statistics
 from dataclasses import dataclass, field
 
 SENTENCE_END = tuple(".?!。？！")
+CLAUSE_END = tuple("、。？！，,.?!")
 
-SHORT_UNITS = 3.0      # a "short" source: <= 3 words / 6 CJK characters
-POOR_FIT = 2.5         # length ratio (either way) beyond which a pair fits badly
-UNDER_COVERED = 0.6    # translation/source length below which a translation looks unfinished
-SPLIT_S = 4.0          # a split's second half arrives within this of the first
-ORPHAN_FILL_S = 4.0    # a source arriving this soon after a translation-only row may fill it
-DEFAULT_LAG_S = 2.0    # source-final to translation-final, before any is measured
-STALE_EXTRA_S = 3.0    # a waiting source this much older than the lag counts as stale
-SEAL_S = 12.0          # a row this long untouched can no longer change; it is saved
+LEAD_S = 2.0        # a translation follows its source chunk by 0.26-0.52 s (measured); this is the bound
+TAIL_S = 2.5        # a source tail may finish a row this long after its translation ended
+TAIL_UNITS = 6.0    # ... and be at most this long (12 CJK characters)
+GAP_S = 3.0         # both streams silent this long: the next source starts a row
+ROW_MAX_UNITS = 80  # T2 without a tail stops growing a row whose source is this long (160 CJK characters)
+DROP_S = 5.0        # a source with no translation for this long is given up at its next clause end
+LATE_S = 30.0       # a translation-only row waits this long for a late source
+SEAL_S = 12.0       # a row this long untouched can no longer change; it is saved
 
-_CJK = re.compile(r"[぀-ヿ㐀-䶿一-鿿豈-﫿가-힯ｦ-ﾟ]")
+_CJK = re.compile(r"[぀-ヿ㐀-䶿一-鿿豈-﫿가-힯ｦ-ﾟ]")
+_CJK_ANY = "぀-ヿ㐀-䶿一-鿿豈-﫿가-힯　-〿＀-￯"  # letters and CJK/fullwidth punctuation
+_SPACE_NEAR_CJK = re.compile(rf"(?<=[{_CJK_ANY}]) +| +(?=[{_CJK_ANY}])")
 _WORD = re.compile(r"[A-Za-z0-9À-ɏ'’]+")
+_CLAUSE_SPLIT = re.compile(r"(?<=[、。？！，,.?!])")
 
 
 def units(text: str) -> float:
@@ -73,21 +88,46 @@ def fit(dst: str, src: str) -> float:
     return abs(math.log((units(dst) + 1) / (units(src) + 1)))
 
 
-def join_text(parts: list[str]) -> str:
-    """Joins sentences with a space, except where either side is CJK."""
+def clean(text: str) -> str:
+    """Whitespace collapsed, no space next to CJK text."""
+    return _SPACE_NEAR_CJK.sub("", " ".join(text.split()))
+
+
+def join_chunks(chunks: list[str]) -> str:
+    """Chunks as sent, which carry their own spaces, except that a chunk starting a new
+    sentence comes without one ("...today." + "Let's start"): a space goes there."""
     out = ""
-    for p in parts:
-        p = p.strip()
-        if not p:
-            continue
-        if out and not (_CJK.match(out[-1]) or _CJK.match(p[0]) or out[-1] in "。、？！"):
+    for c in chunks:
+        if out and c and out[-1] in ".?!,;:" and (c[0].isascii() and c[0].isalpha() or c[0] in "\"'"):
             out += " "
-        out += p
-    return out
+        out += c
+    return clean(out)
 
 
-def ended(text: str) -> bool:
-    return text.rstrip().endswith(SENTENCE_END)
+def ended(text: str, ends=SENTENCE_END) -> bool:
+    return text.rstrip().endswith(ends)
+
+
+def align(pieces: list[str], targets: list[str]) -> list[list[str]]:
+    """Splits `pieces` (in order) into len(targets) contiguous groups, minimising
+    the summed length misfit of each group against its target. Groups may be empty."""
+    n, k = len(pieces), len(targets)
+    inf = float("inf")
+    cost = [[inf] * (k + 1) for _ in range(n + 1)]
+    back = [[0] * (k + 1) for _ in range(n + 1)]
+    cost[0][0] = 0.0
+    for j in range(1, k + 1):
+        for i in range(n + 1):
+            for h in range(i + 1):
+                c = cost[h][j - 1] + fit(targets[j - 1], "".join(pieces[h:i]))
+                if c < cost[i][j]:
+                    cost[i][j], back[i][j] = c, h
+    groups, i = [], n
+    for j in range(k, 0, -1):
+        h = back[i][j]
+        groups.append(pieces[h:i])
+        i = h
+    return groups[::-1]
 
 
 @dataclass
@@ -96,19 +136,26 @@ class Row:
     utt: int
     first: float
     last: float
-    src: list[str] = field(default_factory=list)
+    src: list[str] = field(default_factory=list)   # chunks, as sent
     dst: list[str] = field(default_factory=list)
-    src_at: float | None = None   # last source sentence finalised
-    dst_at: float | None = None   # last translation sentence finalised
-    missed: bool = False          # given up waiting for a translation
+    src_at: float | None = None    # first source chunk
+    dst_at: float | None = None    # last translation chunk
+    done_at: float | None = None   # the translation ended a sentence
+    tail: float = 0.0              # source units added after the translation was done
+    tail_chunks: int = 0           # source chunks added after the translation was done (T2)
+    missed: bool = False           # given up waiting for a translation
 
     @property
     def src_text(self) -> str:
-        return join_text(self.src)
+        return join_chunks(self.src)
 
     @property
     def dst_text(self) -> str:
-        return join_text(self.dst)
+        return join_chunks(self.dst)
+
+    @property
+    def done(self) -> bool:
+        return self.done_at is not None
 
     @property
     def waiting(self) -> bool:
@@ -119,17 +166,13 @@ class Row:
 
 
 class Pairer:
+    chunks = True  # Direction feeds every transcription chunk, not sentences
+
     def __init__(self, on_row=None):
         self.rows: list[Row] = []      # open rows, oldest first; sealed ones are removed
         self.next_id = 1
-        self.lags: list[float] = []
         self.on_row = on_row           # (Row) once a row is sealed
-
-    # --- helpers -------------------------------------------------------------
-
-    @property
-    def lag(self) -> float:
-        return statistics.median(self.lags[-9:]) if self.lags else DEFAULT_LAG_S
+        self.last_src: tuple[Row, float] | None = None  # the row the latest source chunk went to, and when
 
     def _new(self, utt: int, at: float) -> Row:
         r = Row(self.next_id, utt, at, at)
@@ -137,119 +180,108 @@ class Pairer:
         self.rows.append(r)
         return r
 
-    def _above(self, r: Row) -> Row | None:
-        i = self.rows.index(r)
-        return self.rows[i - 1] if i > 0 else None
-
     @staticmethod
     def _op(kind: str, text: str, r: Row) -> dict:
         return {"kind": kind, "text": text, "row": r.id,
                 "row_text": r.src_text if kind == "src" else r.dst_text}
 
-    def _put_dst(self, r: Row, text: str, at: float) -> dict:
-        if not r.dst and r.src_at is not None and at >= r.src_at:
-            self.lags.append(at - r.src_at)
-        r.dst.append(text)
-        r.dst_at = at
+    def _put_src(self, r: Row, text: str, at: float) -> dict:
+        if r.src_at is None:
+            r.src_at = at
+        if r.done:
+            r.tail_chunks += 1  # its translation is still to come (T2)
+        r.src.append(text)
         r.touch(at)
-        return self._op("dst", text, r)
+        self.last_src = (r, at)
+        return self._op("src", text, r)
 
     # --- input ---------------------------------------------------------------
 
-    def src(self, text: str, at: float, utt: int) -> list[dict]:
-        last = self.rows[-1] if self.rows else None
-        if (last is not None and last.src and not last.dst and not ended(last.src[-1])
-                and last.utt == utt):
-            r = last  # the previous source was cut mid-sentence (turn end, reconnect): continue it
-        elif (last is not None and last.dst and not last.src and last.dst_at is not None
-              and at - last.dst_at <= ORPHAN_FILL_S and fit(last.dst_text, text) < math.log(POOR_FIT)):
-            r = last  # the translation arrived before its source
-        else:
-            r = self._new(utt, at)
-        r.src.append(text)
-        r.src_at = at
-        r.touch(at)
-        return [self._op("src", text, r)]
-
     def dst(self, text: str, at: float, utt: int) -> list[dict]:
-        ops: list[dict] = []
+        if not text.strip():
+            return []
         last = self.rows[-1] if self.rows else None
-        if last is not None and last.dst and not ended(last.dst[-1]):
-            return [self._put_dst(last, text, at)]  # rule 1
-        waiting = [r for r in self.rows if r.waiting]
-        filled = [r for r in self.rows if r.dst]
-        prev = filled[-1] if filled else None
-        if not waiting:  # rule 2
-            if prev is not None and prev is last and self._split(prev, text, at):
-                return [self._put_dst(prev, text, at)]
-            r = self._new(utt, at)
-            return [self._put_dst(r, text, at)]
-        while len(waiting) >= 2 and self._foldable(waiting[0], text, waiting[1]):  # rule 3
-            ops.append(self._fold(waiting.pop(0)))
-        while len(waiting) >= 2 and self._stale(waiting[0], waiting[1], text, at):  # rule 4
-            waiting.pop(0).missed = True
-        head = waiting[0]
-        prev = max((r for r in self.rows if r.dst and r.id < head.id), key=lambda r: r.id, default=None)
-        if (prev is not None and self._split(prev, text, at)
-                and fit(text, head.src_text) > math.log(POOR_FIT)):  # rule 5
-            ops.append(self._put_dst(prev, text, at))
-        else:  # rule 6
-            ops.append(self._put_dst(head, text, at))
+        fresh_tail = (last is not None and last.tail_chunks > 0 and self.last_src is not None
+                      and self.last_src[0] is last and at - self.last_src[1] <= LEAD_S)
+        if last is not None and not last.missed and not last.done:
+            r = last  # T1
+        elif last is not None and not last.missed and (fresh_tail or (
+                last.src and units(last.src_text) < ROW_MAX_UNITS and not ended(last.src_text, CLAUSE_END))):
+            r = last  # T2
+            r.done_at, r.tail, r.tail_chunks = None, 0.0, 0
+        else:
+            r = self._new(utt, at)  # T3
+        r.dst.append(text)
+        r.dst_at = at
+        r.touch(at)
+        if ended(r.dst_text):
+            r.done_at = at
+        return [self._op("dst", text, r)]
+
+    def src(self, text: str, at: float, utt: int) -> list[dict]:
+        if not text.strip():
+            return []
+        late = self._translation_only_tail(at)
+        if len(late) >= 2:  # S1
+            return self._spread(text, late, at)
+        last = self.rows[-1] if self.rows else None
+        if last is None or last.missed:
+            return [self._put_src(self._new(utt, at), text, at)]
+        if late:  # S2: the last row has a translation and no source yet
+            return [self._put_src(last, text, at)]
+        if not last.done:  # S3
+            if last.dst and at - last.last > GAP_S:
+                return [self._put_src(self._new(utt, at), text, at)]
+            if (not last.dst and last.src_at is not None and at - last.src_at > DROP_S
+                    and ended(last.src_text, CLAUSE_END)):
+                last.missed = True
+                return [self._put_src(self._new(utt, at), text, at)]
+            return [self._put_src(last, text, at)]
+        if not last.src or ended(last.src_text, CLAUSE_END):  # S4
+            return [self._put_src(self._new(utt, at), text, at)]
+        return self._tail(last, text, at, utt)  # S5
+
+    def _translation_only_tail(self, at: float) -> list[Row]:
+        """Rows at the end with a translation and no source, recent enough to take a late source."""
+        out = []
+        for r in reversed(self.rows):
+            if r.src or not r.dst or r.missed or (r.dst_at is not None and at - r.dst_at > LATE_S):
+                break
+            out.append(r)
+        return out[::-1]
+
+    def _spread(self, text: str, rows: list[Row], at: float) -> list[dict]:
+        pieces = [p for p in _CLAUSE_SPLIT.split(text) if p]
+        ops = []
+        for r, group in zip(rows, align(pieces, [r.dst_text for r in rows])):
+            part = "".join(group)
+            if part.strip():
+                ops.append(self._put_src(r, part, at))
         return ops
 
-    def _split(self, prev: Row, text: str, at: float) -> bool:
-        """`text` looks like the second half of prev's translation."""
-        if not prev.src or prev.dst_at is None or at - prev.dst_at > SPLIT_S:
-            return False
-        src_u = units(prev.src_text) + 1
-        now = (units(prev.dst_text) + 1) / src_u
-        after = (units(prev.dst_text) + units(text) + 1) / src_u
-        return now < UNDER_COVERED and abs(math.log(after)) < abs(math.log(now))
-
-    def _foldable(self, p: Row, text: str, nxt: Row) -> bool:
-        above = self._above(p)
-        return (above is not None and bool(above.dst) and bool(above.src) and above.utt == p.utt
-                and above.dst_at is not None and p.src_at is not None and p.src_at < above.dst_at
-                and units(p.src_text) <= SHORT_UNITS
-                and fit(text, p.src_text) > math.log(POOR_FIT)
-                and fit(text, nxt.src_text) < fit(text, p.src_text))
-
-    def _fold(self, p: Row) -> dict:
-        above = self._above(p)
-        above.src.extend(p.src)
-        above.src_at = max(above.src_at or p.src_at, p.src_at)
-        above.touch(p.first)
-        above.touch(p.last)
-        self.rows.remove(p)
-        op = self._op("src", p.src_text, above)
-        op["row"], op["merge_into"] = p.id, above.id
-        return op
-
-    def _stale(self, p: Row, nxt: Row, text: str, at: float) -> bool:
-        lag = self.lag
-        return (at - p.src_at >= lag + STALE_EXTRA_S
-                and nxt.src_at - p.src_at >= max(lag, 2.0)
-                and at - nxt.src_at >= 0.5 * lag
-                and not fit(text, nxt.src_text) > math.log(POOR_FIT) > fit(text, p.src_text))
+    def _tail(self, last: Row, text: str, at: float, utt: int) -> list[dict]:
+        m = re.search(r"[、。？！，,.?!]", text)
+        head, rest = (text[:m.end()], text[m.end():]) if m else (text, "")
+        if at - last.done_at <= TAIL_S and last.tail + units(head) <= TAIL_UNITS:
+            last.tail += units(head)
+            ops = [self._put_src(last, head, at)]
+            if rest.strip():
+                ops.append(self._put_src(self._new(utt, at), rest, at))
+            return ops
+        return [self._put_src(self._new(utt, at), text, at)]
 
     # --- sealing -------------------------------------------------------------
 
     def seal(self, now: float, force: bool = False) -> list[dict]:
-        """Seals the oldest rows untouched for SEAL_S (all with force), in order,
-        passing each to on_row. Before a row is sealed, a short source right
-        after it that never got a translation of its own, and ended before
-        this row's translation arrived, is folded into it. Returns the fold ops."""
-        ops = []
-        while self.rows and (force or now - self.rows[0].last >= SEAL_S):
+        """Seals the oldest rows untouched for SEAL_S (a translation-only row: LATE_S),
+        all of them with force, in order, passing each to on_row. Returns no ops (v2
+        never moves text at sealing; the list keeps v1's interface)."""
+        while self.rows:
             r = self.rows[0]
-            if len(self.rows) > 1:
-                nxt = self.rows[1]
-                later = self.rows[2:]
-                if (nxt.waiting and (force or now - nxt.last >= SEAL_S) and not any(x.dst for x in later)
-                        and r.src and r.dst and r.utt == nxt.utt and r.dst_at is not None
-                        and nxt.src_at < r.dst_at and units(nxt.src_text) <= SHORT_UNITS):
-                    ops.append(self._fold(nxt))
+            wait = LATE_S if (r.dst and not r.src and not r.missed) else SEAL_S
+            if not (force or now - r.last >= wait):
+                break
             self.rows.pop(0)
             if self.on_row is not None:
                 self.on_row(r)
-        return ops
+        return []

@@ -1,5 +1,6 @@
 """Saved call transcripts: one Markdown table and one SRT per run, appended
-utterance by utterance and flushed on every write so a crash loses nothing."""
+row by row and flushed on every write so a crash loses nothing. The raw events
+log beside them (`events`, .events.jsonl) is written by kana/eventlog.py."""
 from __future__ import annotations
 
 import datetime as dt
@@ -39,10 +40,11 @@ class TranscriptWriter:
         folder.mkdir(parents=True, exist_ok=True)
         stem = self.start_wall.strftime("%Y-%m-%d-%H%M")
         n = 1
-        while (folder / f"{stem}.md").exists() or (folder / f"{stem}.srt").exists():
+        while any((folder / f"{stem}{ext}").exists() for ext in (".md", ".srt", ".events.jsonl")):
             n += 1
             stem = f"{self.start_wall.strftime('%Y-%m-%d-%H%M')}-{n}"
         self.md, self.srt = folder / f"{stem}.md", folder / f"{stem}.srt"
+        self.events = folder / f"{stem}.events.jsonl"  # raw events log, written by kana/eventlog.py
         self.index = 0
         head = f"# kana transcript {self.start_wall.strftime('%Y-%m-%d %H:%M')}\n\n"
         if title:

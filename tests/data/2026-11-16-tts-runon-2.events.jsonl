@@ -1,0 +1,1056 @@
+{"t":1794796291.662,"ev":"start","model":"gemini-3.5-live-translate-preview","in_lang":"en","out_lang":"ja","dirs":["in"],"provider":"gemini"}
+{"t":1794796292.068,"dir":"in","ev":"connected","n":1,"resumed":false}
+{"t":1794796292.094,"dir":"in","ev":"utterance_open","seq":1,"onset":true}
+{"t":1794796295.516,"dir":"in","ev":"input_transcription","text":"それで前回お話しした"}
+{"t":1794796295.516,"dir":"in","ev":"transcript","kind":"src","text":"それで前回お話しした","row":1,"row_text":"それで前回お話しした"}
+{"t":1794796295.934,"dir":"in","ev":"output_transcription","text":"So, as I mentioned"}
+{"t":1794796295.934,"dir":"in","ev":"transcript","kind":"dst","text":"So, as I mentioned","row":1,"row_text":"So, as I mentioned"}
+{"t":1794796295.94,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796295.941,"dir":"in","ev":"usage","prompt":50,"response":50,"total":100}
+{"t":1794796295.941,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796295.943,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796296.457,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796296.46,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796296.46,"dir":"in","ev":"input_transcription","text":"データの話なん"}
+{"t":1794796296.46,"dir":"in","ev":"transcript","kind":"src","text":"データの話なん","row":1,"row_text":"それで前回お話ししたデータの話なん"}
+{"t":1794796296.982,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796296.983,"dir":"in","ev":"output_transcription","text":" last time about the"}
+{"t":1794796296.983,"dir":"in","ev":"transcript","kind":"dst","text":" last time about the","row":1,"row_text":"So, as I mentioned last time about the"}
+{"t":1794796296.983,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796296.984,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796297.162,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796297.163,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796297.512,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796297.512,"dir":"in","ev":"input_transcription","text":"ですけど、"}
+{"t":1794796297.512,"dir":"in","ev":"transcript","kind":"src","text":"ですけど、","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、"}
+{"t":1794796298.031,"dir":"in","ev":"output_transcription","text":" data,"}
+{"t":1794796298.031,"dir":"in","ev":"transcript","kind":"dst","text":" data,","row":1,"row_text":"So, as I mentioned last time about the data,"}
+{"t":1794796298.031,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796298.031,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796298.033,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796298.155,"dir":"in","ev":"input_transcription","text":"あの、先週"}
+{"t":1794796298.156,"dir":"in","ev":"transcript","kind":"src","text":"あの、先週","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週"}
+{"t":1794796298.163,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796298.559,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796298.559,"dir":"in","ev":"output_transcription","text":" um, last"}
+{"t":1794796298.559,"dir":"in","ev":"transcript","kind":"dst","text":" um, last","row":1,"row_text":"So, as I mentioned last time about the data, um, last"}
+{"t":1794796298.559,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796298.559,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796298.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796299.079,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796299.133,"dir":"in","ev":"input_transcription","text":"から少しずつ"}
+{"t":1794796299.133,"dir":"in","ev":"transcript","kind":"src","text":"から少しずつ","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ"}
+{"t":1794796299.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796299.406,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796299.406,"dir":"in","ev":"output_transcription","text":" week I started"}
+{"t":1794796299.406,"dir":"in","ev":"transcript","kind":"dst","text":" week I started","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started"}
+{"t":1794796299.406,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796299.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796299.93,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796299.932,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796300.105,"dir":"in","ev":"input_transcription","text":"取り込みを始めて"}
+{"t":1794796300.106,"dir":"in","ev":"transcript","kind":"src","text":"取り込みを始めて","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めて"}
+{"t":1794796300.145,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796300.455,"dir":"in","ev":"output_transcription","text":" incorporating it little"}
+{"t":1794796300.455,"dir":"in","ev":"transcript","kind":"dst","text":" incorporating it little","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little"}
+{"t":1794796300.457,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796300.457,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796300.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796300.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796301.092,"dir":"in","ev":"input_transcription","text":"いて、"}
+{"t":1794796301.092,"dir":"in","ev":"transcript","kind":"src","text":"いて、","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、"}
+{"t":1794796301.176,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796301.21,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796301.293,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796301.403,"dir":"in","ev":"output_transcription","text":" by little, and"}
+{"t":1794796301.403,"dir":"in","ev":"transcript","kind":"dst","text":" by little, and","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and"}
+{"t":1794796301.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796301.707,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796301.902,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796302.127,"dir":"in","ev":"input_transcription","text":"メーカーさんから届い"}
+{"t":1794796302.127,"dir":"in","ev":"transcript","kind":"src","text":"メーカーさんから届い","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届い"}
+{"t":1794796302.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796302.33,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796302.405,"dir":"in","ev":"output_transcription","text":" the data from the manufacturer"}
+{"t":1794796302.405,"dir":"in","ev":"transcript","kind":"dst","text":" the data from the manufacturer","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer"}
+{"t":1794796302.42,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796302.647,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796302.671,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796302.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796303.122,"dir":"in","ev":"input_transcription","text":"たファイルが"}
+{"t":1794796303.122,"dir":"in","ev":"transcript","kind":"src","text":"たファイルが","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが"}
+{"t":1794796303.149,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796303.309,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796303.404,"dir":"in","ev":"output_transcription","text":" arrived,"}
+{"t":1794796303.404,"dir":"in","ev":"transcript","kind":"dst","text":" arrived,","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived,"}
+{"t":1794796303.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796303.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796303.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796304.034,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796304.127,"dir":"in","ev":"input_transcription","text":"形式がバラバラ"}
+{"t":1794796304.127,"dir":"in","ev":"transcript","kind":"src","text":"形式がバラバラ","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラ"}
+{"t":1794796304.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796304.323,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796304.425,"dir":"in","ev":"output_transcription","text":" but the formats were"}
+{"t":1794796304.425,"dir":"in","ev":"transcript","kind":"dst","text":" but the formats were","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were"}
+{"t":1794796304.427,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796304.651,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796304.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796305.177,"dir":"in","ev":"input_transcription","text":"だったので、まず"}
+{"t":1794796305.177,"dir":"in","ev":"transcript","kind":"src","text":"だったので、まず","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まず"}
+{"t":1794796305.177,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796305.371,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796305.405,"dir":"in","ev":"output_transcription","text":" all over the place,"}
+{"t":1794796305.405,"dir":"in","ev":"transcript","kind":"dst","text":" all over the place,","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place,"}
+{"t":1794796305.41,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796305.461,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796305.7,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796305.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796306.1,"dir":"in","ev":"input_transcription","text":"それを揃える"}
+{"t":1794796306.1,"dir":"in","ev":"transcript","kind":"src","text":"それを揃える","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃える"}
+{"t":1794796306.151,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796306.295,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796306.419,"dir":"in","ev":"output_transcription","text":" so I'm working"}
+{"t":1794796306.419,"dir":"in","ev":"transcript","kind":"dst","text":" so I'm working","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working"}
+{"t":1794796306.42,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796306.54,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796306.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796306.948,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796307.096,"dir":"in","ev":"input_transcription","text":"ところからこう"}
+{"t":1794796307.096,"dir":"in","ev":"transcript","kind":"src","text":"ところからこう","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう"}
+{"t":1794796307.274,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796307.292,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796307.404,"dir":"in","ev":"output_transcription","text":" on getting that sorted"}
+{"t":1794796307.404,"dir":"in","ev":"transcript","kind":"dst","text":" on getting that sorted","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted"}
+{"t":1794796307.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796307.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796307.901,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796307.926,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796308.114,"dir":"in","ev":"input_transcription","text":"手作業も"}
+{"t":1794796308.114,"dir":"in","ev":"transcript","kind":"src","text":"手作業も","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も"}
+{"t":1794796308.322,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796308.322,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796308.41,"dir":"in","ev":"output_transcription","text":" out, and I'm"}
+{"t":1794796308.411,"dir":"in","ev":"transcript","kind":"dst","text":" out, and I'm","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm"}
+{"t":1794796308.415,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796308.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796308.901,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796309.143,"dir":"in","ev":"input_transcription","text":"交えながらやって"}
+{"t":1794796309.143,"dir":"in","ev":"transcript","kind":"src","text":"交えながらやって","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやって"}
+{"t":1794796309.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796309.368,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796309.371,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796309.403,"dir":"in","ev":"output_transcription","text":" doing it manually"}
+{"t":1794796309.403,"dir":"in","ev":"transcript","kind":"dst","text":" doing it manually","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually"}
+{"t":1794796309.41,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796309.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796309.895,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796310.143,"dir":"in","ev":"input_transcription","text":"いて、で、今"}
+{"t":1794796310.143,"dir":"in","ev":"transcript","kind":"src","text":"いて、で、今","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今"}
+{"t":1794796310.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796310.318,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796310.417,"dir":"in","ev":"output_transcription","text":" as well, and"}
+{"t":1794796310.417,"dir":"in","ev":"transcript","kind":"dst","text":" as well, and","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and"}
+{"t":1794796310.419,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796310.559,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796310.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796310.941,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796311.164,"dir":"in","ev":"input_transcription","text":"は大体"}
+{"t":1794796311.165,"dir":"in","ev":"transcript","kind":"src","text":"は大体","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体"}
+{"t":1794796311.168,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796311.321,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796311.467,"dir":"in","ev":"output_transcription","text":" right now, I'm about"}
+{"t":1794796311.467,"dir":"in","ev":"transcript","kind":"dst","text":" right now, I'm about","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about"}
+{"t":1794796311.467,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796311.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796311.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796312.126,"dir":"in","ev":"input_transcription","text":"半分ぐらいまで来て"}
+{"t":1794796312.126,"dir":"in","ev":"transcript","kind":"src","text":"半分ぐらいまで来て","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来て"}
+{"t":1794796312.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796312.19,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796312.323,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796312.405,"dir":"in","ev":"output_transcription","text":" halfway through"}
+{"t":1794796312.405,"dir":"in","ev":"transcript","kind":"dst","text":" halfway through","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through"}
+{"t":1794796312.411,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796312.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796312.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796313.092,"dir":"in","ev":"input_transcription","text":"いるんですが、"}
+{"t":1794796313.092,"dir":"in","ev":"transcript","kind":"src","text":"いるんですが、","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、"}
+{"t":1794796313.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796313.286,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796313.409,"dir":"in","ev":"output_transcription","text":" it, but"}
+{"t":1794796313.409,"dir":"in","ev":"transcript","kind":"dst","text":" it, but","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but"}
+{"t":1794796313.416,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796313.583,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796313.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796313.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796314.116,"dir":"in","ev":"input_transcription","text":"残りの半分"}
+{"t":1794796314.116,"dir":"in","ev":"transcript","kind":"src","text":"残りの半分","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分"}
+{"t":1794796314.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796314.308,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796314.408,"dir":"in","ev":"output_transcription","text":" the remaining half"}
+{"t":1794796314.408,"dir":"in","ev":"transcript","kind":"dst","text":" the remaining half","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but the remaining half"}
+{"t":1794796314.412,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796314.647,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796314.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796314.954,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796315.136,"dir":"in","ev":"input_transcription","text":"が型番の"}
+{"t":1794796315.136,"dir":"in","ev":"transcript","kind":"src","text":"が型番の","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の"}
+{"t":1794796315.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796315.314,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796315.403,"dir":"in","ev":"output_transcription","text":" is about the model"}
+{"t":1794796315.404,"dir":"in","ev":"transcript","kind":"dst","text":" is about the model","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but the remaining half is about the model"}
+{"t":1794796315.409,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796315.66,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796315.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796316.183,"dir":"in","ev":"input_transcription","text":"表記が違う"}
+{"t":1794796316.183,"dir":"in","ev":"transcript","kind":"src","text":"表記が違う","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の表記が違う"}
+{"t":1794796316.183,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796316.19,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796316.351,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796316.409,"dir":"in","ev":"output_transcription","text":" numbers being written"}
+{"t":1794796316.409,"dir":"in","ev":"transcript","kind":"dst","text":" numbers being written","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but the remaining half is about the model numbers being written"}
+{"t":1794796316.417,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796316.711,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796316.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796317.232,"dir":"in","ev":"input_transcription","text":"ものが多くて、"}
+{"t":1794796317.232,"dir":"in","ev":"transcript","kind":"src","text":"ものが多くて、","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の表記が違うものが多くて、"}
+{"t":1794796317.233,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796317.347,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796317.405,"dir":"in","ev":"output_transcription","text":" differently, so"}
+{"t":1794796317.405,"dir":"in","ev":"transcript","kind":"dst","text":" differently, so","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but the remaining half is about the model numbers being written differently, so"}
+{"t":1794796317.411,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796317.758,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796317.758,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796317.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796318.28,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796318.28,"dir":"in","ev":"input_transcription","text":"そこがちょっと"}
+{"t":1794796318.28,"dir":"in","ev":"transcript","kind":"src","text":"そこがちょっと","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の表記が違うものが多くて、そこがちょっと"}
+{"t":1794796318.402,"dir":"in","ev":"output_transcription","text":" that's taking a bit"}
+{"t":1794796318.402,"dir":"in","ev":"transcript","kind":"dst","text":" that's taking a bit","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but the remaining half is about the model numbers being written differently, so that's taking a bit"}
+{"t":1794796318.405,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796318.405,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796318.808,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796318.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796318.924,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796319.145,"dir":"in","ev":"input_transcription","text":"時間がかかり"}
+{"t":1794796319.145,"dir":"in","ev":"transcript","kind":"src","text":"時間がかかり","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の表記が違うものが多くて、そこがちょっと時間がかかり"}
+{"t":1794796319.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796319.342,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796319.403,"dir":"in","ev":"output_transcription","text":" longer than expected."}
+{"t":1794796319.403,"dir":"in","ev":"transcript","kind":"dst","text":" longer than expected.","row":1,"row_text":"So, as I mentioned last time about the data, um, last week I started incorporating it little by little, and the data from the manufacturer arrived, but the formats were all over the place, so I'm working on getting that sorted out, and I'm doing it manually as well, and right now, I'm about halfway through it, but the remaining half is about the model numbers being written differently, so that's taking a bit longer than expected."}
+{"t":1794796319.409,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796319.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796319.895,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796320.093,"dir":"in","ev":"input_transcription","text":"そうな感じなん"}
+{"t":1794796320.093,"dir":"in","ev":"transcript","kind":"src","text":"そうな感じなん","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の表記が違うものが多くて、そこがちょっと時間がかかりそうな感じなん"}
+{"t":1794796320.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796320.377,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796320.377,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796320.399,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796320.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796320.903,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796321.054,"dir":"in","ev":"input_transcription","text":"ですよね。"}
+{"t":1794796321.055,"dir":"in","ev":"transcript","kind":"src","text":"ですよね。","row":1,"row_text":"それで前回お話ししたデータの話なんですけど、あの、先週から少しずつ取り込みを始めていて、メーカーさんから届いたファイルが形式がバラバラだったので、まずそれを揃えるところからこう手作業も交えながらやっていて、で、今は大体半分ぐらいまで来ているんですが、残りの半分が型番の表記が違うものが多くて、そこがちょっと時間がかかりそうな感じなんですよね。"}
+{"t":1794796321.151,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796321.245,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796321.426,"dir":"in","ev":"output_transcription","text":" Right?"}
+{"t":1794796321.426,"dir":"in","ev":"transcript","kind":"dst","text":" Right?","row":2,"row_text":"Right?"}
+{"t":1794796321.426,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796321.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796321.951,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796321.952,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796322.117,"dir":"in","ev":"input_transcription","text":"そうですね。"}
+{"t":1794796322.117,"dir":"in","ev":"transcript","kind":"src","text":"そうですね。","row":2,"row_text":"そうですね。"}
+{"t":1794796322.149,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796322.28,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796322.4,"dir":"in","ev":"output_transcription","text":" That's right."}
+{"t":1794796322.4,"dir":"in","ev":"transcript","kind":"dst","text":" That's right.","row":3,"row_text":"That's right."}
+{"t":1794796322.405,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796322.647,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796322.897,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796323.145,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796323.269,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796323.397,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796323.404,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796323.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796323.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796324.086,"dir":"in","ev":"input_transcription","text":"なるほど。"}
+{"t":1794796324.086,"dir":"in","ev":"transcript","kind":"src","text":"なるほど。","row":3,"row_text":"なるほど。"}
+{"t":1794796324.145,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796324.282,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796324.413,"dir":"in","ev":"output_transcription","text":" I see."}
+{"t":1794796324.413,"dir":"in","ev":"transcript","kind":"dst","text":" I see.","row":4,"row_text":"I see."}
+{"t":1794796324.419,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796324.646,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796324.706,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796324.902,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796325.12,"dir":"in","ev":"input_transcription","text":"それでうちの"}
+{"t":1794796325.12,"dir":"in","ev":"transcript","kind":"src","text":"それでうちの","row":4,"row_text":"それでうちの"}
+{"t":1794796325.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796325.337,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796325.4,"dir":"in","ev":"output_transcription","text":" So, on our"}
+{"t":1794796325.4,"dir":"in","ev":"transcript","kind":"dst","text":" So, on our","row":4,"row_text":"I see. So, on our"}
+{"t":1794796325.409,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796325.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796325.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796326.147,"dir":"in","ev":"input_transcription","text":"方で何か"}
+{"t":1794796326.147,"dir":"in","ev":"transcript","kind":"src","text":"方で何か","row":4,"row_text":"それでうちの方で何か"}
+{"t":1794796326.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796326.319,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796326.409,"dir":"in","ev":"output_transcription","text":" end, is there anything"}
+{"t":1794796326.409,"dir":"in","ev":"transcript","kind":"dst","text":" end, is there anything","row":4,"row_text":"I see. So, on our end, is there anything"}
+{"t":1794796326.413,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796326.498,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796326.669,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796326.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796327.115,"dir":"in","ev":"input_transcription","text":"先に準備してお"}
+{"t":1794796327.115,"dir":"in","ev":"transcript","kind":"src","text":"先に準備してお","row":4,"row_text":"それでうちの方で何か先に準備してお"}
+{"t":1794796327.197,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796327.307,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796327.414,"dir":"in","ev":"output_transcription","text":" we should prepare in advance?"}
+{"t":1794796327.414,"dir":"in","ev":"transcript","kind":"dst","text":" we should prepare in advance?","row":4,"row_text":"I see. So, on our end, is there anything we should prepare in advance?"}
+{"t":1794796327.416,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796327.72,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796327.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796328.245,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796328.245,"dir":"in","ev":"input_transcription","text":"けば早く"}
+{"t":1794796328.245,"dir":"in","ev":"transcript","kind":"src","text":"けば早く","row":4,"row_text":"それでうちの方で何か先に準備しておけば早く"}
+{"t":1794796328.403,"dir":"in","ev":"output_transcription","text":" so it can be done"}
+{"t":1794796328.403,"dir":"in","ev":"transcript","kind":"dst","text":" so it can be done","row":4,"row_text":"I see. So, on our end, is there anything we should prepare in advance? so it can be done"}
+{"t":1794796328.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796328.436,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796328.453,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796328.769,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796328.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796329.16,"dir":"in","ev":"input_transcription","text":"なったりするものなん"}
+{"t":1794796329.16,"dir":"in","ev":"transcript","kind":"src","text":"なったりするものなん","row":4,"row_text":"それでうちの方で何か先に準備しておけば早くなったりするものなん"}
+{"t":1794796329.162,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796329.312,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796329.41,"dir":"in","ev":"output_transcription","text":" faster?"}
+{"t":1794796329.41,"dir":"in","ev":"transcript","kind":"dst","text":" faster?","row":4,"row_text":"I see. So, on our end, is there anything we should prepare in advance? so it can be done faster?"}
+{"t":1794796329.412,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796329.647,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796329.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796329.902,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796330.068,"dir":"in","ev":"input_transcription","text":"ですか?"}
+{"t":1794796330.068,"dir":"in","ev":"transcript","kind":"src","text":"ですか?","row":4,"row_text":"それでうちの方で何か先に準備しておけば早くなったりするものなんですか?"}
+{"t":1794796330.145,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796330.259,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796330.398,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796330.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796330.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796331.097,"dir":"in","ev":"input_transcription","text":"あ、"}
+{"t":1794796331.097,"dir":"in","ev":"transcript","kind":"src","text":"あ、","row":5,"row_text":"あ、"}
+{"t":1794796331.1,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796331.145,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796331.281,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796331.4,"dir":"in","ev":"output_transcription","text":" Oh,"}
+{"t":1794796331.4,"dir":"in","ev":"transcript","kind":"dst","text":" Oh,","row":5,"row_text":"Oh,"}
+{"t":1794796331.405,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796331.647,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796331.91,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796332.103,"dir":"in","ev":"input_transcription","text":"そうですね。"}
+{"t":1794796332.103,"dir":"in","ev":"transcript","kind":"src","text":"そうですね。","row":5,"row_text":"あ、そうですね。"}
+{"t":1794796332.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796332.321,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796332.339,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796332.436,"dir":"in","ev":"output_transcription","text":" that's right."}
+{"t":1794796332.436,"dir":"in","ev":"transcript","kind":"dst","text":" that's right.","row":5,"row_text":"Oh, that's right."}
+{"t":1794796332.438,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796332.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796332.961,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796333.129,"dir":"in","ev":"input_transcription","text":"可能であれば"}
+{"t":1794796333.129,"dir":"in","ev":"transcript","kind":"src","text":"可能であれば","row":6,"row_text":"可能であれば"}
+{"t":1794796333.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796333.321,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796333.403,"dir":"in","ev":"output_transcription","text":" If possible,"}
+{"t":1794796333.403,"dir":"in","ev":"transcript","kind":"dst","text":" If possible,","row":6,"row_text":"If possible,"}
+{"t":1794796333.41,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796333.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796333.842,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796333.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796334.096,"dir":"in","ev":"input_transcription","text":"社内で使っ"}
+{"t":1794796334.096,"dir":"in","ev":"transcript","kind":"src","text":"社内で使っ","row":6,"row_text":"可能であれば社内で使っ"}
+{"t":1794796334.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796334.296,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796334.403,"dir":"in","ev":"output_transcription","text":" could you please"}
+{"t":1794796334.403,"dir":"in","ev":"transcript","kind":"dst","text":" could you please","row":6,"row_text":"If possible, could you please"}
+{"t":1794796334.407,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796334.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796334.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796335.141,"dir":"in","ev":"input_transcription","text":"ている型番の"}
+{"t":1794796335.143,"dir":"in","ev":"transcript","kind":"src","text":"ている型番の","row":6,"row_text":"可能であれば社内で使っている型番の"}
+{"t":1794796335.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796335.185,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796335.329,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796335.428,"dir":"in","ev":"output_transcription","text":" provide the list of"}
+{"t":1794796335.428,"dir":"in","ev":"transcript","kind":"dst","text":" provide the list of","row":6,"row_text":"If possible, could you please provide the list of"}
+{"t":1794796335.452,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796335.647,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796335.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796336.104,"dir":"in","ev":"input_transcription","text":"一覧を"}
+{"t":1794796336.104,"dir":"in","ev":"transcript","kind":"src","text":"一覧を","row":6,"row_text":"可能であれば社内で使っている型番の一覧を"}
+{"t":1794796336.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796336.265,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796336.404,"dir":"in","ev":"output_transcription","text":" model numbers used"}
+{"t":1794796336.404,"dir":"in","ev":"transcript","kind":"dst","text":" model numbers used","row":6,"row_text":"If possible, could you please provide the list of model numbers used"}
+{"t":1794796336.412,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796336.527,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796336.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796336.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796337.154,"dir":"in","ev":"input_transcription","text":"エクセルとかで一度"}
+{"t":1794796337.154,"dir":"in","ev":"transcript","kind":"src","text":"エクセルとかで一度","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度"}
+{"t":1794796337.156,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796337.35,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796337.407,"dir":"in","ev":"output_transcription","text":" in the company in Excel"}
+{"t":1794796337.407,"dir":"in","ev":"transcript","kind":"dst","text":" in the company in Excel","row":6,"row_text":"If possible, could you please provide the list of model numbers used in the company in Excel"}
+{"t":1794796337.412,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796337.68,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796337.9,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796338.064,"dir":"in","ev":"input_transcription","text":"いただけると"}
+{"t":1794796338.064,"dir":"in","ev":"transcript","kind":"src","text":"いただけると","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけると"}
+{"t":1794796338.066,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796338.201,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796338.264,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796338.404,"dir":"in","ev":"output_transcription","text":" or something?"}
+{"t":1794796338.404,"dir":"in","ev":"transcript","kind":"dst","text":" or something?","row":6,"row_text":"If possible, could you please provide the list of model numbers used in the company in Excel or something?"}
+{"t":1794796338.414,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796338.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796338.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796339.118,"dir":"in","ev":"input_transcription","text":"こちらで"}
+{"t":1794796339.118,"dir":"in","ev":"transcript","kind":"src","text":"こちらで","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけるとこちらで"}
+{"t":1794796339.145,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796339.319,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796339.36,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796339.401,"dir":"in","ev":"output_transcription","text":" Then we can"}
+{"t":1794796339.401,"dir":"in","ev":"transcript","kind":"dst","text":" Then we can","row":6,"row_text":"If possible, could you please provide the list of model numbers used in the company in Excel or something? Then we can"}
+{"t":1794796339.406,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796339.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796339.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796340.102,"dir":"in","ev":"input_transcription","text":"突き合わせができる"}
+{"t":1794796340.102,"dir":"in","ev":"transcript","kind":"src","text":"突き合わせができる","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけるとこちらで突き合わせができる"}
+{"t":1794796340.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796340.401,"dir":"in","ev":"output_transcription","text":" cross-reference it."}
+{"t":1794796340.401,"dir":"in","ev":"transcript","kind":"dst","text":" cross-reference it.","row":6,"row_text":"If possible, could you please provide the list of model numbers used in the company in Excel or something? Then we can cross-reference it."}
+{"t":1794796340.407,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796340.513,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796340.637,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796340.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796340.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796341.05,"dir":"in","ev":"input_transcription","text":"ので"}
+{"t":1794796341.05,"dir":"in","ev":"transcript","kind":"src","text":"ので","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけるとこちらで突き合わせができるので"}
+{"t":1794796341.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796341.248,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796341.4,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796341.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796341.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796342.024,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796342.074,"dir":"in","ev":"input_transcription","text":"かなり早く"}
+{"t":1794796342.074,"dir":"in","ev":"transcript","kind":"src","text":"かなり早く","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけるとこちらで突き合わせができるのでかなり早く"}
+{"t":1794796342.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796342.278,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796342.431,"dir":"in","ev":"output_transcription","text":" It would be much"}
+{"t":1794796342.431,"dir":"in","ev":"transcript","kind":"dst","text":" It would be much","row":6,"row_text":"If possible, could you please provide the list of model numbers used in the company in Excel or something? Then we can cross-reference it. It would be much"}
+{"t":1794796342.431,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796342.647,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796342.923,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796343.117,"dir":"in","ev":"input_transcription","text":"なると思います"}
+{"t":1794796343.117,"dir":"in","ev":"transcript","kind":"src","text":"なると思います","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけるとこちらで突き合わせができるのでかなり早くなると思います"}
+{"t":1794796343.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796343.317,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796343.444,"dir":"in","ev":"output_transcription","text":" faster, I think."}
+{"t":1794796343.444,"dir":"in","ev":"transcript","kind":"dst","text":" faster, I think.","row":6,"row_text":"If possible, could you please provide the list of model numbers used in the company in Excel or something? Then we can cross-reference it. It would be much faster, I think."}
+{"t":1794796343.445,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796343.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796343.764,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796343.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796344.119,"dir":"in","ev":"input_transcription","text":"し、あと"}
+{"t":1794796344.119,"dir":"in","ev":"transcript","kind":"src","text":"し、","row":6,"row_text":"可能であれば社内で使っている型番の一覧をエクセルとかで一度いただけるとこちらで突き合わせができるのでかなり早くなると思いますし、"}
+{"t":1794796344.119,"dir":"in","ev":"transcript","kind":"src","text":"あと","row":7,"row_text":"あと"}
+{"t":1794796344.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796344.305,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796344.41,"dir":"in","ev":"output_transcription","text":" Also,"}
+{"t":1794796344.41,"dir":"in","ev":"transcript","kind":"dst","text":" Also,","row":7,"row_text":"Also,"}
+{"t":1794796344.412,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796344.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796344.901,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796345.111,"dir":"in","ev":"input_transcription","text":"間違いも減らせる"}
+{"t":1794796345.112,"dir":"in","ev":"transcript","kind":"src","text":"間違いも減らせる","row":7,"row_text":"あと間違いも減らせる"}
+{"t":1794796345.148,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796345.304,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796345.41,"dir":"in","ev":"output_transcription","text":" it would reduce errors."}
+{"t":1794796345.41,"dir":"in","ev":"transcript","kind":"dst","text":" it would reduce errors.","row":7,"row_text":"Also, it would reduce errors."}
+{"t":1794796345.416,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796345.569,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796345.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796345.901,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796346.07,"dir":"in","ev":"input_transcription","text":"ので、そこ"}
+{"t":1794796346.07,"dir":"in","ev":"transcript","kind":"src","text":"ので、","row":7,"row_text":"あと間違いも減らせるので、"}
+{"t":1794796346.07,"dir":"in","ev":"transcript","kind":"src","text":"そこ","row":8,"row_text":"そこ"}
+{"t":1794796346.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796346.269,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796346.404,"dir":"in","ev":"output_transcription","text":" So,"}
+{"t":1794796346.404,"dir":"in","ev":"transcript","kind":"dst","text":" So,","row":8,"row_text":"So,"}
+{"t":1794796346.407,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796346.655,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796346.795,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796346.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796347.117,"dir":"in","ev":"input_transcription","text":"は是非お願い"}
+{"t":1794796347.117,"dir":"in","ev":"transcript","kind":"src","text":"は是非お願い","row":8,"row_text":"そこは是非お願い"}
+{"t":1794796347.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796347.307,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796347.401,"dir":"in","ev":"output_transcription","text":" I would really appreciate"}
+{"t":1794796347.402,"dir":"in","ev":"transcript","kind":"dst","text":" I would really appreciate","row":8,"row_text":"So, I would really appreciate"}
+{"t":1794796347.406,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796347.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796347.898,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796348.168,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796348.19,"dir":"in","ev":"input_transcription","text":"できればと思って"}
+{"t":1794796348.19,"dir":"in","ev":"transcript","kind":"src","text":"できればと思って","row":8,"row_text":"そこは是非お願いできればと思って"}
+{"t":1794796348.388,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796348.404,"dir":"in","ev":"output_transcription","text":" it if you could do that."}
+{"t":1794796348.404,"dir":"in","ev":"transcript","kind":"dst","text":" it if you could do that.","row":8,"row_text":"So, I would really appreciate it if you could do that."}
+{"t":1794796348.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796348.524,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796348.69,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796348.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796349.083,"dir":"in","ev":"input_transcription","text":"いて、で、"}
+{"t":1794796349.083,"dir":"in","ev":"transcript","kind":"src","text":"いて、","row":8,"row_text":"そこは是非お願いできればと思っていて、"}
+{"t":1794796349.083,"dir":"in","ev":"transcript","kind":"src","text":"で、","row":9,"row_text":"で、"}
+{"t":1794796349.214,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796349.283,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796349.404,"dir":"in","ev":"output_transcription","text":" And,"}
+{"t":1794796349.404,"dir":"in","ev":"transcript","kind":"dst","text":" And,","row":9,"row_text":"And,"}
+{"t":1794796349.409,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796349.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796349.9,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796350.049,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796350.101,"dir":"in","ev":"input_transcription","text":"もう1つだけ"}
+{"t":1794796350.102,"dir":"in","ev":"transcript","kind":"src","text":"もう1つだけ","row":9,"row_text":"で、もう1つだけ"}
+{"t":1794796350.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796350.302,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796350.403,"dir":"in","ev":"output_transcription","text":" just one more thing"}
+{"t":1794796350.403,"dir":"in","ev":"transcript","kind":"dst","text":" just one more thing","row":9,"row_text":"And, just one more thing"}
+{"t":1794796350.407,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796350.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796350.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796351.123,"dir":"in","ev":"input_transcription","text":"確認したいのが、"}
+{"t":1794796351.123,"dir":"in","ev":"transcript","kind":"src","text":"確認したいのが、","row":9,"row_text":"で、もう1つだけ確認したいのが、"}
+{"t":1794796351.149,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796351.325,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796351.418,"dir":"in","ev":"output_transcription","text":" I'd like to confirm,"}
+{"t":1794796351.418,"dir":"in","ev":"transcript","kind":"dst","text":" I'd like to confirm,","row":9,"row_text":"And, just one more thing I'd like to confirm,"}
+{"t":1794796351.42,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796351.422,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796351.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796351.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796352.13,"dir":"in","ev":"input_transcription","text":"写真の件"}
+{"t":1794796352.131,"dir":"in","ev":"transcript","kind":"src","text":"写真の件","row":9,"row_text":"で、もう1つだけ確認したいのが、写真の件"}
+{"t":1794796352.149,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796352.359,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796352.417,"dir":"in","ev":"output_transcription","text":" about the photos."}
+{"t":1794796352.417,"dir":"in","ev":"transcript","kind":"dst","text":" about the photos.","row":9,"row_text":"And, just one more thing I'd like to confirm, about the photos."}
+{"t":1794796352.422,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796352.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796352.881,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796352.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796353.107,"dir":"in","ev":"input_transcription","text":"ですけど、"}
+{"t":1794796353.108,"dir":"in","ev":"transcript","kind":"src","text":"ですけど、","row":9,"row_text":"で、もう1つだけ確認したいのが、写真の件ですけど、"}
+{"t":1794796353.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796353.309,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796353.41,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796353.651,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796353.933,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796354.059,"dir":"in","ev":"input_transcription","text":"以前いただいた"}
+{"t":1794796354.059,"dir":"in","ev":"transcript","kind":"src","text":"以前いただいた","row":10,"row_text":"以前いただいた"}
+{"t":1794796354.141,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796354.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796354.258,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796354.456,"dir":"in","ev":"output_transcription","text":" The images you sent"}
+{"t":1794796354.456,"dir":"in","ev":"transcript","kind":"dst","text":" The images you sent","row":10,"row_text":"The images you sent"}
+{"t":1794796354.458,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796354.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796354.9,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796355.125,"dir":"in","ev":"input_transcription","text":"画像の中に"}
+{"t":1794796355.125,"dir":"in","ev":"transcript","kind":"src","text":"画像の中に","row":10,"row_text":"以前いただいた画像の中に"}
+{"t":1794796355.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796355.291,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796355.314,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796355.407,"dir":"in","ev":"output_transcription","text":" before included"}
+{"t":1794796355.407,"dir":"in","ev":"transcript","kind":"dst","text":" before included","row":10,"row_text":"The images you sent before included"}
+{"t":1794796355.41,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796355.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796355.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796356.12,"dir":"in","ev":"input_transcription","text":"他社さんのロゴが"}
+{"t":1794796356.12,"dir":"in","ev":"transcript","kind":"src","text":"他社さんのロゴが","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが"}
+{"t":1794796356.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796356.404,"dir":"in","ev":"output_transcription","text":" another company's logo,"}
+{"t":1794796356.404,"dir":"in","ev":"transcript","kind":"dst","text":" another company's logo,","row":10,"row_text":"The images you sent before included another company's logo,"}
+{"t":1794796356.409,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796356.553,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796356.62,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796356.651,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796356.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796357.107,"dir":"in","ev":"input_transcription","text":"入っているもの"}
+{"t":1794796357.107,"dir":"in","ev":"transcript","kind":"src","text":"入っているもの","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているもの"}
+{"t":1794796357.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796357.316,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796357.403,"dir":"in","ev":"output_transcription","text":" so I'm"}
+{"t":1794796357.403,"dir":"in","ev":"transcript","kind":"dst","text":" so I'm","row":10,"row_text":"The images you sent before included another company's logo, so I'm"}
+{"t":1794796357.425,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796357.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796357.849,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796357.895,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796358.145,"dir":"in","ev":"input_transcription","text":"がいくつかあって、"}
+{"t":1794796358.145,"dir":"in","ev":"transcript","kind":"src","text":"がいくつかあって、","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、"}
+{"t":1794796358.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796358.347,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796358.401,"dir":"in","ev":"output_transcription","text":" wondering if there are a few"}
+{"t":1794796358.401,"dir":"in","ev":"transcript","kind":"dst","text":" wondering if there are a few","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few"}
+{"t":1794796358.406,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796358.653,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796358.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796359.175,"dir":"in","ev":"input_transcription","text":"それを"}
+{"t":1794796359.175,"dir":"in","ev":"transcript","kind":"src","text":"それを","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それを"}
+{"t":1794796359.176,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796359.341,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796359.396,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796359.41,"dir":"in","ev":"output_transcription","text":" of those, and"}
+{"t":1794796359.41,"dir":"in","ev":"transcript","kind":"dst","text":" of those, and","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and"}
+{"t":1794796359.415,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796359.699,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796359.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796360.141,"dir":"in","ev":"input_transcription","text":"そのまま使っ"}
+{"t":1794796360.141,"dir":"in","ev":"transcript","kind":"src","text":"そのまま使っ","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それをそのまま使っ"}
+{"t":1794796360.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796360.34,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796360.405,"dir":"in","ev":"output_transcription","text":" if it's okay to use"}
+{"t":1794796360.405,"dir":"in","ev":"transcript","kind":"dst","text":" if it's okay to use","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and if it's okay to use"}
+{"t":1794796360.411,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796360.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796360.667,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796360.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796361.127,"dir":"in","ev":"input_transcription","text":"ていいのかどうか"}
+{"t":1794796361.127,"dir":"in","ev":"transcript","kind":"src","text":"ていいのかどうか","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それをそのまま使っていいのかどうか"}
+{"t":1794796361.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796361.328,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796361.409,"dir":"in","ev":"output_transcription","text":" them as they are?"}
+{"t":1794796361.409,"dir":"in","ev":"transcript","kind":"dst","text":" them as they are?","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and if it's okay to use them as they are?"}
+{"t":1794796361.414,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796361.651,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796361.901,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796361.903,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796362.115,"dir":"in","ev":"input_transcription","text":"ちょっと判断"}
+{"t":1794796362.115,"dir":"in","ev":"transcript","kind":"src","text":"ちょっと判断","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それをそのまま使っていいのかどうかちょっと判断"}
+{"t":1794796362.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796362.319,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796362.41,"dir":"in","ev":"output_transcription","text":" I'm not sure"}
+{"t":1794796362.411,"dir":"in","ev":"transcript","kind":"dst","text":" I'm not sure","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and if it's okay to use them as they are? I'm not sure"}
+{"t":1794796362.416,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796362.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796362.9,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796363.103,"dir":"in","ev":"input_transcription","text":"がつかなかった"}
+{"t":1794796363.103,"dir":"in","ev":"transcript","kind":"src","text":"がつかなかった","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それをそのまま使っていいのかどうかちょっと判断がつかなかった"}
+{"t":1794796363.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796363.404,"dir":"in","ev":"output_transcription","text":" how to handle that."}
+{"t":1794796363.404,"dir":"in","ev":"transcript","kind":"dst","text":" how to handle that.","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and if it's okay to use them as they are? I'm not sure how to handle that."}
+{"t":1794796363.409,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796363.507,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796363.572,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796363.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796363.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796364.128,"dir":"in","ev":"input_transcription","text":"ので一旦"}
+{"t":1794796364.128,"dir":"in","ev":"transcript","kind":"src","text":"ので一旦","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それをそのまま使っていいのかどうかちょっと判断がつかなかったので一旦"}
+{"t":1794796364.15,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796364.328,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796364.416,"dir":"in","ev":"output_transcription","text":" So I've put it on"}
+{"t":1794796364.416,"dir":"in","ev":"transcript","kind":"dst","text":" So I've put it on","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and if it's okay to use them as they are? I'm not sure how to handle that. So I've put it on"}
+{"t":1794796364.418,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796364.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796364.944,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796364.944,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796365.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796365.178,"dir":"in","ev":"input_transcription","text":"保留にしてあります。"}
+{"t":1794796365.178,"dir":"in","ev":"transcript","kind":"src","text":"保留にしてあります。","row":10,"row_text":"以前いただいた画像の中に他社さんのロゴが入っているものがいくつかあって、それをそのまま使っていいのかどうかちょっと判断がつかなかったので一旦保留にしてあります。"}
+{"t":1794796365.375,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796365.464,"dir":"in","ev":"output_transcription","text":" hold for now."}
+{"t":1794796365.464,"dir":"in","ev":"transcript","kind":"dst","text":" hold for now.","row":10,"row_text":"The images you sent before included another company's logo, so I'm wondering if there are a few of those, and if it's okay to use them as they are? I'm not sure how to handle that. So I've put it on hold for now."}
+{"t":1794796365.466,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796365.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796365.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796366.049,"dir":"in","ev":"input_transcription","text":"はい。"}
+{"t":1794796366.049,"dir":"in","ev":"transcript","kind":"src","text":"はい。","row":11,"row_text":"はい。"}
+{"t":1794796366.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796366.253,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796366.319,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796366.405,"dir":"in","ev":"output_transcription","text":" Yes."}
+{"t":1794796366.405,"dir":"in","ev":"transcript","kind":"dst","text":" Yes.","row":11,"row_text":"Yes."}
+{"t":1794796366.41,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796366.647,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796366.895,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796367.096,"dir":"in","ev":"input_transcription","text":"はい。"}
+{"t":1794796367.096,"dir":"in","ev":"transcript","kind":"src","text":"はい。","row":12,"row_text":"はい。"}
+{"t":1794796367.145,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796367.403,"dir":"in","ev":"output_transcription","text":" Yes."}
+{"t":1794796367.403,"dir":"in","ev":"transcript","kind":"dst","text":" Yes.","row":12,"row_text":"Yes."}
+{"t":1794796367.407,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796367.452,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796367.563,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796367.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796367.895,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796368.088,"dir":"in","ev":"input_transcription","text":"それ"}
+{"t":1794796368.088,"dir":"in","ev":"transcript","kind":"src","text":"それ","row":13,"row_text":"それ"}
+{"t":1794796368.162,"dir":"in","ev":"output_transcription","text":" So,"}
+{"t":1794796368.162,"dir":"in","ev":"transcript","kind":"dst","text":" So,","row":13,"row_text":"So,"}
+{"t":1794796368.168,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796368.251,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796368.396,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796368.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796368.736,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796368.897,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796369.136,"dir":"in","ev":"input_transcription","text":"は確認して"}
+{"t":1794796369.136,"dir":"in","ev":"transcript","kind":"src","text":"は確認して","row":13,"row_text":"それは確認して"}
+{"t":1794796369.144,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796369.375,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796369.405,"dir":"in","ev":"output_transcription","text":" I'll check that."}
+{"t":1794796369.405,"dir":"in","ev":"transcript","kind":"dst","text":" I'll check that.","row":13,"row_text":"So, I'll check that."}
+{"t":1794796369.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796369.661,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796369.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796370.097,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796370.185,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796370.185,"dir":"in","ev":"input_transcription","text":"また来週を"}
+{"t":1794796370.185,"dir":"in","ev":"transcript","kind":"src","text":"また来週を","row":13,"row_text":"それは確認してまた来週を"}
+{"t":1794796370.379,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796370.402,"dir":"in","ev":"output_transcription","text":" And I'll get back to you"}
+{"t":1794796370.402,"dir":"in","ev":"transcript","kind":"dst","text":" And I'll get back to you","row":13,"row_text":"So, I'll check that. And I'll get back to you"}
+{"t":1794796370.408,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796370.71,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796370.897,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796371.153,"dir":"in","ev":"input_transcription","text":"返事します。"}
+{"t":1794796371.153,"dir":"in","ev":"transcript","kind":"src","text":"返事します。","row":13,"row_text":"それは確認してまた来週を返事します。"}
+{"t":1794796371.158,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796371.347,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796371.416,"dir":"in","ev":"output_transcription","text":" next week."}
+{"t":1794796371.416,"dir":"in","ev":"transcript","kind":"dst","text":" next week.","row":13,"row_text":"So, I'll check that. And I'll get back to you next week."}
+{"t":1794796371.423,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796371.424,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796371.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796371.896,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796372.093,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794796372.147,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796372.186,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796372.396,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796372.647,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796372.702,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796372.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796373.145,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796373.293,"dir":"in","ev":"utterance_close","seq":1,"quiet":false}
+{"t":1794796373.293,"dir":"in","ev":"utterance_open","seq":2,"onset":true}
+{"t":1794796373.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796373.646,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796373.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796373.938,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796373.971,"dir":"in","ev":"input_transcription","text":"あ、"}
+{"t":1794796373.971,"dir":"in","ev":"transcript","kind":"src","text":"あ、","row":14,"row_text":"あ、"}
+{"t":1794796374.164,"dir":"in","ev":"output_transcription","text":" Oh,"}
+{"t":1794796374.164,"dir":"in","ev":"transcript","kind":"dst","text":" Oh,","row":14,"row_text":"Oh,"}
+{"t":1794796374.169,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796374.172,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796374.399,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796374.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796374.904,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796374.935,"dir":"in","ev":"input_transcription","text":"ありがとうござい"}
+{"t":1794796374.935,"dir":"in","ev":"transcript","kind":"src","text":"ありがとうござい","row":14,"row_text":"あ、ありがとうござい"}
+{"t":1794796375.131,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796375.161,"dir":"in","ev":"output_transcription","text":" thank you very"}
+{"t":1794796375.161,"dir":"in","ev":"transcript","kind":"dst","text":" thank you very","row":14,"row_text":"Oh, thank you very"}
+{"t":1794796375.167,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796375.43,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796375.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796375.953,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796375.953,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796375.962,"dir":"in","ev":"input_transcription","text":"ます。あと、"}
+{"t":1794796375.962,"dir":"in","ev":"transcript","kind":"src","text":"ます。あと、","row":14,"row_text":"あ、ありがとうございます。あと、"}
+{"t":1794796376.158,"dir":"in","ev":"output_transcription","text":" much. Also,"}
+{"t":1794796376.158,"dir":"in","ev":"transcript","kind":"dst","text":" much. Also,","row":14,"row_text":"Oh, thank you very much. Also,"}
+{"t":1794796376.165,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796376.168,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796376.398,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796376.647,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796376.895,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796376.911,"dir":"in","ev":"input_transcription","text":"来月の定例"}
+{"t":1794796376.911,"dir":"in","ev":"transcript","kind":"src","text":"来月の定例","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例"}
+{"t":1794796377.103,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796377.161,"dir":"in","ev":"output_transcription","text":" next month's regular"}
+{"t":1794796377.162,"dir":"in","ev":"transcript","kind":"dst","text":" next month's regular","row":14,"row_text":"Oh, thank you very much. Also, next month's regular"}
+{"t":1794796377.168,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796377.377,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796377.398,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796377.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796377.895,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796377.913,"dir":"in","ev":"input_transcription","text":"なんですけど、"}
+{"t":1794796377.913,"dir":"in","ev":"transcript","kind":"src","text":"なんですけど、","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、"}
+{"t":1794796378.116,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796378.165,"dir":"in","ev":"output_transcription","text":" meeting,"}
+{"t":1794796378.165,"dir":"in","ev":"transcript","kind":"dst","text":" meeting,","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting,"}
+{"t":1794796378.167,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796378.398,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796378.65,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796378.74,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796378.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796378.924,"dir":"in","ev":"input_transcription","text":"今のところ毎"}
+{"t":1794796378.924,"dir":"in","ev":"transcript","kind":"src","text":"今のところ毎","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎"}
+{"t":1794796379.123,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796379.158,"dir":"in","ev":"output_transcription","text":" but so far"}
+{"t":1794796379.158,"dir":"in","ev":"transcript","kind":"dst","text":" but so far","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far"}
+{"t":1794796379.165,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796379.4,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796379.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796379.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796379.942,"dir":"in","ev":"input_transcription","text":"週火曜日の"}
+{"t":1794796379.942,"dir":"in","ev":"transcript","kind":"src","text":"週火曜日の","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の"}
+{"t":1794796380.147,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796380.156,"dir":"in","ev":"output_transcription","text":" it's been every Tuesday"}
+{"t":1794796380.156,"dir":"in","ev":"transcript","kind":"dst","text":" it's been every Tuesday","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday"}
+{"t":1794796380.161,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796380.399,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796380.438,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796380.67,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796380.871,"dir":"in","ev":"input_transcription","text":"馬で考え"}
+{"t":1794796380.871,"dir":"in","ev":"transcript","kind":"src","text":"馬で考え","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考え"}
+{"t":1794796380.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796381.069,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796381.192,"dir":"in","ev":"output_transcription","text":" afternoon,"}
+{"t":1794796381.192,"dir":"in","ev":"transcript","kind":"dst","text":" afternoon,","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon,"}
+{"t":1794796381.192,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796381.399,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796381.717,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796381.868,"dir":"in","ev":"input_transcription","text":"ていて、"}
+{"t":1794796381.868,"dir":"in","ev":"transcript","kind":"src","text":"ていて、","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、"}
+{"t":1794796381.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796381.941,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796382.066,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796382.153,"dir":"in","ev":"output_transcription","text":" so if"}
+{"t":1794796382.154,"dir":"in","ev":"transcript","kind":"dst","text":" so if","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if"}
+{"t":1794796382.158,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796382.398,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796382.649,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796382.903,"dir":"in","ev":"input_transcription","text":"もし難しけれ"}
+{"t":1794796382.903,"dir":"in","ev":"transcript","kind":"src","text":"もし難しけれ","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しけれ"}
+{"t":1794796382.907,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796383.097,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796383.177,"dir":"in","ev":"output_transcription","text":" that's difficult,"}
+{"t":1794796383.177,"dir":"in","ev":"transcript","kind":"dst","text":" that's difficult,","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if that's difficult,"}
+{"t":1794796383.183,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796383.396,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796383.645,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796383.846,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796383.897,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796383.927,"dir":"in","ev":"input_transcription","text":"ば木曜日でも"}
+{"t":1794796383.927,"dir":"in","ev":"transcript","kind":"src","text":"ば木曜日でも","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しければ木曜日でも"}
+{"t":1794796384.129,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796384.16,"dir":"in","ev":"output_transcription","text":" we could do it on Thursday"}
+{"t":1794796384.16,"dir":"in","ev":"transcript","kind":"dst","text":" we could do it on Thursday","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if that's difficult, we could do it on Thursday"}
+{"t":1794796384.165,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796384.396,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796384.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796384.895,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796384.919,"dir":"in","ev":"input_transcription","text":"大丈夫なので、"}
+{"t":1794796384.919,"dir":"in","ev":"transcript","kind":"src","text":"大丈夫なので、","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しければ木曜日でも大丈夫なので、"}
+{"t":1794796385.121,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796385.151,"dir":"in","ev":"output_transcription","text":" too, so"}
+{"t":1794796385.151,"dir":"in","ev":"transcript","kind":"dst","text":" too, so","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if that's difficult, we could do it on Thursday too, so"}
+{"t":1794796385.155,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796385.201,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796385.397,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796385.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796385.918,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796385.943,"dir":"in","ev":"input_transcription","text":"その辺り"}
+{"t":1794796385.943,"dir":"in","ev":"transcript","kind":"src","text":"その辺り","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しければ木曜日でも大丈夫なので、その辺り"}
+{"t":1794796386.16,"dir":"in","ev":"output_transcription","text":" about that,"}
+{"t":1794796386.16,"dir":"in","ev":"transcript","kind":"dst","text":" about that,","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if that's difficult, we could do it on Thursday too, so about that,"}
+{"t":1794796386.166,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796386.362,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796386.368,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796386.44,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796386.648,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796386.964,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796386.983,"dir":"in","ev":"input_transcription","text":"またメールで"}
+{"t":1794796386.984,"dir":"in","ev":"transcript","kind":"src","text":"またメールで","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しければ木曜日でも大丈夫なので、その辺りまたメールで"}
+{"t":1794796387.154,"dir":"in","ev":"output_transcription","text":" I'll let you know by email."}
+{"t":1794796387.154,"dir":"in","ev":"transcript","kind":"dst","text":" I'll let you know by email.","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if that's difficult, we could do it on Thursday too, so about that, I'll let you know by email."}
+{"t":1794796387.158,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796387.39,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796387.397,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796387.645,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796387.834,"dir":"in","ev":"input_transcription","text":"ご相談させて"}
+{"t":1794796387.835,"dir":"in","ev":"transcript","kind":"src","text":"ご相談させて","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しければ木曜日でも大丈夫なので、その辺りまたメールでご相談させて"}
+{"t":1794796387.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796388.016,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796388.03,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796388.146,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796388.396,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796388.646,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796388.902,"dir":"in","ev":"input_transcription","text":"ください。"}
+{"t":1794796388.902,"dir":"in","ev":"transcript","kind":"src","text":"ください。","row":14,"row_text":"あ、ありがとうございます。あと、来月の定例なんですけど、今のところ毎週火曜日の馬で考えていて、もし難しければ木曜日でも大丈夫なので、その辺りまたメールでご相談させてください。"}
+{"t":1794796388.908,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796389.12,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796389.153,"dir":"in","ev":"output_transcription","text":" Please."}
+{"t":1794796389.153,"dir":"in","ev":"transcript","kind":"dst","text":" Please.","row":14,"row_text":"Oh, thank you very much. Also, next month's regular meeting, but so far it's been every Tuesday afternoon, so if that's difficult, we could do it on Thursday too, so about that, I'll let you know by email. Please."}
+{"t":1794796389.16,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796389.313,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796389.397,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796389.653,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796389.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796389.932,"dir":"in","ev":"input_transcription","text":"分かりました。"}
+{"t":1794796389.932,"dir":"in","ev":"transcript","kind":"src","text":"分かりました。","row":15,"row_text":"分かりました。"}
+{"t":1794796390.156,"dir":"in","ev":"output_transcription","text":" Understood."}
+{"t":1794796390.156,"dir":"in","ev":"transcript","kind":"dst","text":" Understood.","row":15,"row_text":"Understood."}
+{"t":1794796390.16,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796390.358,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796390.398,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796390.473,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796390.654,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796390.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796390.944,"dir":"in","ev":"input_transcription","text":"そんな感じ"}
+{"t":1794796390.944,"dir":"in","ev":"transcript","kind":"src","text":"そんな感じ","row":16,"row_text":"そんな感じ"}
+{"t":1794796391.16,"dir":"in","ev":"output_transcription","text":" That's about it."}
+{"t":1794796391.16,"dir":"in","ev":"transcript","kind":"dst","text":" That's about it.","row":16,"row_text":"That's about it."}
+{"t":1794796391.162,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796391.398,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796391.408,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796391.682,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796391.685,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796391.899,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796392.002,"dir":"in","ev":"input_transcription","text":"で進めましょう。"}
+{"t":1794796392.002,"dir":"in","ev":"transcript","kind":"src","text":"で進めましょう。","row":16,"row_text":"そんな感じで進めましょう。"}
+{"t":1794796392.208,"dir":"in","ev":"output_transcription","text":" Let's proceed with that."}
+{"t":1794796392.208,"dir":"in","ev":"transcript","kind":"dst","text":" Let's proceed with that.","row":16,"row_text":"That's about it. Let's proceed with that."}
+{"t":1794796392.208,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796392.208,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796392.397,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796392.651,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796392.894,"dir":"in","ev":"stream_end","why":"vad"}
+{"t":1794796392.898,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796392.981,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796393.064,"dir":"in","ev":"usage","prompt":25,"response":25,"total":50}
+{"t":1794796393.148,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796393.396,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796393.645,"dir":"in","ev":"audio","bytes":12000,"audible":true}
+{"t":1794796393.902,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796394.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796394.374,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796394.397,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796394.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796394.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796395.148,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796395.194,"dir":"in","ev":"utterance_close","seq":2,"quiet":true}
+{"t":1794796395.449,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796395.649,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796395.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796395.98,"dir":"in","ev":"session_resumption_update","resumable":true,"handle":true}
+{"t":1794796396.15,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796396.478,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796396.65,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796396.927,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796397.148,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796397.5,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796397.649,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796397.9,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796398.15,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796398.4,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796398.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796398.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796399.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796399.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796399.644,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796399.898,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796400.164,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796400.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796400.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796400.898,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796401.189,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796401.398,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796401.693,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796401.9,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796402.171,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796402.4,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796402.697,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796402.9,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796403.148,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796403.442,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796403.651,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796403.9,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796404.153,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796404.4,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796404.649,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796404.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796405.148,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796405.398,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796405.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796405.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796406.151,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796406.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796406.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796406.901,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796407.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796407.409,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796407.649,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796407.934,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796408.149,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796408.566,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796408.65,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796408.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796409.148,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796409.4,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796409.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796409.9,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796410.15,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796410.555,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796410.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796410.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796411.175,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796411.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796411.646,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796411.898,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796412.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796412.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796412.719,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796412.897,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796412.994,"dir":"in","ev":"keepalive"}
+{"t":1794796413.175,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796413.397,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796413.783,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796413.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796414.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796414.403,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796414.648,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796414.91,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796415.145,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796415.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796415.646,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796415.898,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796416.147,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796416.397,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796416.647,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796416.896,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796417.146,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796417.397,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796417.645,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796417.897,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796418.146,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796418.494,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796418.646,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796418.945,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796419.146,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796419.396,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796419.649,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796419.899,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796420.15,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796420.399,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796420.714,"dir":"in","ev":"audio","bytes":12000,"audible":false}
+{"t":1794796420.917,"dir":"in","ev":"closed","reason":"stopped"}
+{"t":1794796420.917,"dir":"in","ev":"stopped"}
+{"t":1794796420.918,"ev":"exit","reason":"quit"}

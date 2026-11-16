@@ -63,7 +63,7 @@ enum IntroRender {
         // 3. Minimized bar: idle, live with two lines, talking.
         let barSize = MiniBarController.size
         func bar(_ e: EngineProcess) -> some View {
-            MiniBarView(onExpand: {}, onClose: {}).environmentObject(e).environmentObject(CaptionHover())
+            MiniBarView(onExpand: {}, onClose: {}).environmentObject(e).environmentObject(BarHover())
                 .environmentObject(prefs)
         }
         let talking = EngineProcess(prefs: prefs)
@@ -71,7 +71,7 @@ enum IntroRender {
         var barLive: CGImage?
         for (name, e) in [("bar-idle", idle), ("bar-live", live), ("bar-talking", talking)] {
             if let img = image(bar(e), size: barSize) {
-                write(onCanvas(img, canvas: CGSize(width: 420, height: 104), at: CGPoint(x: 20, y: 20)),
+                write(onCanvas(img, canvas: CGSize(width: barSize.width + 40, height: barSize.height + 40), at: CGPoint(x: 20, y: 20)),
                       dir.appendingPathComponent("\(name).png"))
                 if name == "bar-live" { barLive = img }
             }
@@ -145,7 +145,7 @@ enum IntroRender {
 
     /// One collapse frame at progress p (0 = panel, 1 = bar).
     static func collapseFrame(panel: CGImage, bar: CGImage, p: Double, showBar: Bool) -> CGImage {
-        let canvas = CGSize(width: 480, height: 760)
+        let canvas = CGSize(width: max(480, MiniBarController.size.width + 40), height: 760)   // the bar is wider than the panel
         let c = context(canvas)
         let from = CGRect(x: 20, y: 20, width: 440, height: 720)            // y down
         let to = CGRect(x: 20, y: 20, width: MiniBarController.size.width, height: MiniBarController.size.height)
@@ -198,6 +198,58 @@ enum IntroRender {
         }
         write(c.makeImage()!, url)
     }
+}
+
+/// `kana --render-minibar <dir>`: the mini bar (the caption surface while minimized) idle, live
+/// with captions, talking, plus a hover still and a long-caption still, drawn offscreen like
+/// IntroRender (no window). `--lang ja` (or KANA_LANG=ja) renders the Japanese UI with Japanese
+/// captions (English heard, Japanese shown).
+@MainActor
+enum MiniBarRender {
+    static func run(to dir: URL) {
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        EngineProcess.previewMode = true
+        let prefs = Prefs.shared
+        let ja = L10n.isJapanese
+        let rows = ja ? jaRows : IntroRender.demoRows
+        let long = ja ? jaLong : enLong
+        func engine(_ rows: [TranscriptRow], running: Bool, talking: Bool = false) -> EngineProcess {
+            let e = EngineProcess(prefs: prefs)
+            e.loadPreview(rows: rows, running: running, live: running, talking: talking)
+            return e
+        }
+        let states: [(String, EngineProcess, Bool)] = [
+            ("minibar-idle", engine([], running: false), false),
+            ("minibar-live", engine(rows, running: true), false),
+            ("minibar-talking", engine(rows, running: true, talking: true), false),
+            ("minibar-hover", engine(rows, running: true), true),
+            ("minibar-long", engine(rows + [long], running: true), false),
+        ]
+        let size = MiniBarController.size
+        for (name, e, hovering) in states {
+            let hover = BarHover()
+            hover.inside = hovering
+            let view = MiniBarView(onExpand: {}, onClose: {})
+                .environmentObject(e).environmentObject(hover).environmentObject(prefs)
+            if let img = IntroRender.image(view, size: size) {
+                let framed = IntroRender.onCanvas(img, canvas: CGSize(width: size.width + 40, height: size.height + 40),
+                                                  at: CGPoint(x: 20, y: 20))
+                IntroRender.write(framed, dir.appendingPathComponent("\(name).png"))
+            }
+        }
+        print("rendered to \(dir.path)")
+    }
+
+    static let jaRows: [TranscriptRow] = [
+        TranscriptRow(dir: .inbound, src: "Hello, can you hear me?", dst: "こんにちは、聞こえますか？"),
+        TranscriptRow(dir: .outbound, src: "はい、よく聞こえます。", dst: "Yes, loud and clear."),
+        TranscriptRow(dir: .inbound, src: "I'd like to talk about the new catalogue today.", dst: "今日は新しいカタログについてご相談したいです。"),
+        TranscriptRow(dir: .inbound, src: "Let's start with the price list.", dst: "まず価格表から始めましょう。"),
+    ]
+    static let enLong = TranscriptRow(dir: .inbound, src: "来月から新しい価格表を使いますが、既存のお客様には三月末まで今の価格を適用する予定です。",
+                                      dst: "We will use the new price list from next month, but existing customers keep the current prices until the end of March.")
+    static let jaLong = TranscriptRow(dir: .inbound, src: "We will use the new price list from next month, but existing customers keep the current prices until the end of March.",
+                                      dst: "来月から新しい価格表を使いますが、既存のお客様には三月末まで今の価格を適用する予定です。")
 }
 
 /// `kana --render-setup <dir>`: the Setup page in its first-launch states, drawn offscreen like

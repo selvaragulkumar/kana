@@ -40,6 +40,8 @@ class Rec:
                "out": {"src": "MacBook Pro Microphone", "sink": "BlackHole 2ch"}}),
     ("talk", {"on": False}),
     ("transcript", {"dir": "in", "kind": "src", "text": "こんにちは。", "final": True}),
+    ("transcript", {"dir": "in", "kind": "src", "text": "Can you hear me?", "row": 4, "row_text": "Can you hear me?",
+                    "final": True, "echo": True}),
     ("untranslated", {"dir": "out", "row": 3}),
     ("session", {"dir": "out", "state": "reconnecting", "detail": "go_away"}),
     ("audio", {"dir": "in", "sent_s": 12.3, "recv_s": 9.8}),
@@ -56,7 +58,7 @@ def test_emitter_encodes_one_json_line(ev, fields):
     out = buf.getvalue()
     assert out.endswith("\n") and out.count("\n") == 1
     assert json.loads(out) == {"t": 1700000000.25, "ev": ev, **fields}
-    if ev == "transcript":
+    if ev == "transcript" and "echo" not in fields:
         assert "こんにちは" in out  # UTF-8, not \u escapes
 
 
@@ -148,8 +150,9 @@ async def test_direction_emits_transcripts_and_session_states():
     assert plain == []  # nothing plain in JSON mode
     assert rec.of("transcript") == [
         {"dir": "in", "kind": "src", "text": "こんにちは。", "row": 1, "row_text": "こんにちは。", "final": True},
-        {"dir": "in", "kind": "dst", "text": "Hello, nice weather.", "row": 1, "row_text": "Hello, nice weather.",
-         "final": True}]
+        {"dir": "in", "kind": "dst", "text": "Hello,", "row": 1, "row_text": "Hello,", "final": True},
+        {"dir": "in", "kind": "dst", "text": " nice weather.", "row": 1, "row_text": "Hello, nice weather.",
+         "final": True}]  # one event per transcription chunk (pairing v2); row_text is the whole side
     assert rec.of("session") == [
         {"dir": "in", "state": "connected", "detail": ""},
         {"dir": "in", "state": "reconnecting", "detail": "go_away"},
@@ -383,3 +386,35 @@ def test_main_passthrough_refuses_a_blackhole_earphone(monkeypatch, capsys):
     assert cli.main(["--json", "--passthrough"]) == 2
     out = [json.loads(l) for l in capsys.readouterr().out.splitlines()]
     assert out[-1]["ev"] == "error" and out[-1]["fatal"] is True and "BlackHole device" in out[-1]["text"]
+
+
+def test_fake_engine_streams_a_row_chunk_by_chunk_like_the_engine():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("fake_engine", Path(__file__).parent.parent / "app/fake_engine.py")
+    fake = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fake)
+    rec = Rec()
+    fake.stream_row(rec, "in", 3, "今日はお時間をいただき、ありがとうございます。", "Thank you for your time today.",
+                    sleep=lambda s: None)
+    got = [(f["kind"], f["text"], f["row"], f["row_text"]) for f in rec.of("transcript")]
+    assert got == [("src", "今日はお時間をいただき、", 3, "今日はお時間をいただき、"),
+                   ("dst", "Thank you for ", 3, "Thank you for"),
+                   ("src", "ありがとうございます。", 3, "今日はお時間をいただき、ありがとうございます。"),
+                   ("dst", "your time today.", 3, "Thank you for your time today.")]
+    rec2 = Rec()
+    fake.stream_row(rec2, "out", 1, "Hello.", None, sleep=lambda s: None)
+    assert [f["kind"] for f in rec2.of("transcript")] == ["src"]
+
+
+def test_fake_engine_marks_english_from_the_room_as_echo():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("fake_engine", Path(__file__).parent.parent / "app/fake_engine.py")
+    fake = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fake)
+    rec = Rec()
+    fake.stream_row(rec, "in", 6, "Sorry, could you share the screen again?", "Sorry, could you share the screen again?",
+                    sleep=lambda s: None, echo=True)
+    assert all(f["echo"] is True for f in rec.of("transcript"))
+    assert any(src.isascii() for src, _ in fake.INBOUND)  # the fake sends such a row

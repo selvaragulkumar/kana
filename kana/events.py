@@ -73,8 +73,8 @@ async def stdin_lines(stream=None):
         yield line
 
 
-async def command_loop(lines, ptt, emit) -> None:
-    """Apply app commands to the PTT until quit or EOF; returns on either."""
+async def command_loop(lines, ptt, emit) -> str:
+    """Apply app commands to the PTT until quit or EOF; returns "quit" or "eof"."""
     async for raw in lines:
         raw = raw.strip()
         if not raw:
@@ -85,12 +85,13 @@ async def command_loop(lines, ptt, emit) -> None:
         except ValueError:
             name = None
         if name == "quit":
-            return
+            return "quit"
         if name == "talk" and isinstance(cmd.get("on"), bool):
             ptt.muted = not cmd["on"]
             emit("talk", on=not ptt.muted)
             continue
         emit("error", fatal=False, text=f"unknown command: {raw[:200]}")
+    return "eof"
 
 
 async def passthrough_command_loop(lines, emit) -> None:

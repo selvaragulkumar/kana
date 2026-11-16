@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import re
 import statistics
 import time
 from dataclasses import dataclass, field
@@ -95,6 +96,46 @@ def modality_counts(details) -> dict:
 KEEPALIVE_S = 20.0
 KEEPALIVE_CHUNK = bytes(3200)  # 100 ms of 16 kHz mono int16 zeros
 
+# LiveServerMessage fields logged by name only (kana/eventlog.py); the rest are logged with fields.
+OTHER_MESSAGE_KINDS = ("setup_complete", "voice_activity", "voice_activity_detection_signal", "tool_call")
+
+# --- the listener's own language coming back (inbound echo) -----------------------
+# Speech in the room can reach the remote microphone and come back on the meeting
+# audio; Live Translate then re-voices it in the same language. An inbound utterance
+# whose first transcription is clearly already the listener's language is still
+# transcribed and paired, but its audio is not played (unless --voice-own-language on).
+ECHO_MIN_WORDS = 3
+ECHO_CLEAR_LETTERS = 6  # this many letters of another script, outweighing the Latin words: the meeting's language
+_LATIN_WORD = re.compile(r"[A-Za-zÀ-ɏ][A-Za-zÀ-ɏ'’-]*")
+LATIN_LANGS = {"en", "es", "fr", "de", "it", "pt", "nl", "sv", "da", "no", "nb", "fi", "pl", "cs", "ro", "hu",
+               "tr", "id", "ms", "vi", "tl", "ca"}
+
+
+def _non_latin_letters(text: str) -> int:
+    return sum(1 for ch in text if ch.isalpha() and ord(ch) > 0x24F)
+
+
+def own_language_checker(listener: str, meeting: str):
+    """A function text -> True (clearly the listener's language) / False (clearly not) /
+    None (not enough yet), or None when the check cannot tell the two languages apart by
+    script: only a Latin-script listener language against a meeting language written in
+    another script (ja, zh, ko, hi, ...) is checked."""
+    lst, mtg = listener.split("-")[0].lower(), meeting.split("-")[0].lower()
+    if lst not in LATIN_LANGS or mtg in LATIN_LANGS:
+        return None
+
+    def check(text: str) -> bool | None:
+        # Measured (docs/ENGINE.md): the Japanese ASR often writes the first English word in
+        # kana ("Okay" as オッケー, "Sorry" as さり), so a few such letters do not count against it.
+        words, other = len(_LATIN_WORD.findall(text)), _non_latin_letters(text)
+        if other >= ECHO_CLEAR_LETTERS and other > 2 * words:
+            return False
+        if words >= ECHO_MIN_WORDS and 2 * words >= other:
+            return True
+        return None
+    return check
+
+
 UTTERANCE_QUIET_S = 1.5  # close an utterance this long after its last event, once speech has ended
 
 
@@ -112,6 +153,8 @@ class Utterance:
     src: list[str] = field(default_factory=list)
     dst: list[str] = field(default_factory=list)
     seq: int = 0  # numbers utterances within a direction; pairing never folds text across them
+    echo: bool | None = None  # already the listener's language (None: not decided yet)
+    heard: str = ""           # its input transcription so far, for the echo decision
 
     def touch(self, now: float) -> None:
         self.last = max(self.last, now)
@@ -136,13 +179,21 @@ class Direction:
     def __init__(self, label, src, dst, model, in_q, out_q=None, *, connect,
                  is_muted=lambda: False, out=print, dump=None, backoff=(1, 2, 4), emit=None,
                  vad: VAD | None = None, on_utterance=None, clock=time.monotonic, instruction=None,
-                 on_row=None, live_options: dict | None = None, keepalive_s: float = KEEPALIVE_S):
+                 on_row=None, live_options: dict | None = None, keepalive_s: float = KEEPALIVE_S,
+                 log=None, own_language=None, voice_own_language: bool = False):
         self.label, self.src, self.dst, self.model = label, src, dst, model
         self.in_q, self.out_q, self.connect = in_q, out_q, connect
         self.is_muted, self.out, self.dump, self.backoff = is_muted, out, dump, backoff
         self.instruction = instruction
         self.live_options = live_options  # extra LiveConnectConfig fields
         self.emit = emit  # JSON mode: structured events replace the plain lines
+        # Raw events log (kana/eventlog.py), a callable (ev, **fields) bound to this direction.
+        self.elog = log if log is not None else (lambda ev, **fields: None)
+        # Inbound echo: own_language(text) -> True/False/None (own_language_checker), None = off.
+        self.own_language = own_language
+        self.voice_own_language = voice_own_language
+        self.echo_rows: dict[int, bool] = {}  # row -> echo flag sent with its transcript events
+        self.echo_dropped_bytes = 0           # model audio not played because it was an echo
         self.vad = vad if vad is not None else VAD(gate=False)
         self.on_utterance = on_utterance  # (dir, Utterance) when an utterance closes
         self.clock = clock
@@ -152,8 +203,9 @@ class Direction:
         self._idle_session = None
         self.utt: Utterance | None = None
         self._utt_seq = 0
-        # Source/translation rows, paired by timing (kana/pairing.py); on_row(dir, Row)
-        # receives each row once it can no longer change (saved transcripts).
+        # Source/translation rows (kana/pairing.py, v2: fed every transcription chunk as it
+        # arrives); on_row(dir, Row) receives each row once it can no longer change (saved
+        # transcripts). A pairer without `chunks` (kana/pairing_v1.py) is fed whole sentences.
         self.pairer = Pairer(on_row=(lambda r: on_row(label.lower(), r)) if on_row else None)
         self.latencies: list[int] = []
         # Server-reported tokens. Every usage_metadata message is a delta: Live
@@ -194,24 +246,30 @@ class Direction:
                         if self.connects > 1:
                             self.log("reconnected" + (" (resumed)" if self.handle else ""))
                         self.session = s
+                        self.elog("connected", n=self.connects, resumed=bool(self.handle))
                         self._session("connected")
                         reason = await self._receive(s)
                 except asyncio.CancelledError:
+                    reason = "stopped"
                     raise
                 except Exception as e:  # network, server, auth: retry with backoff
                     reason = f"error: {e!r}"[:200]
                 finally:
                     self.session = None
+                    self.elog("closed", reason=reason)
                     self._flush()
                 if reason == "go_away":
+                    self.elog("reconnecting", reason="go_away", delay=0)
                     self._session("reconnecting", "go_away")
                     continue  # reconnect at once with the latest handle
                 delay = self.backoff[min(self._fails, len(self.backoff) - 1)]
                 self._fails += 1
+                self.elog("reconnecting", reason=reason, delay=delay)
                 self.log(f"{reason}; reconnecting in {delay}s")
                 self._session("reconnecting", reason if reason.startswith("error") else "")
                 await asyncio.sleep(delay)
         finally:
+            self.elog("stopped")
             self._session("closed")
             pump.cancel()
             with contextlib.suppress(asyncio.CancelledError):
@@ -241,6 +299,7 @@ class Direction:
                 if s is not None and not was_muted:  # let the model finish the half-said sentence
                     with contextlib.suppress(Exception):
                         await s.send_realtime_input(audio_stream_end=True)
+                        self.elog("stream_end", why="mute")
                 was_muted = muted
                 if s is not None:  # idle clock runs while muted too: the server closes idle sessions
                     now = self.clock()  # and the keepalive is zeros, never the microphone
@@ -270,6 +329,7 @@ class Direction:
                     self._on_sent()
                 if dec.end:
                     await s.send_realtime_input(audio_stream_end=True)
+                    self.elog("stream_end", why="vad")
                 if not dec.send and now - self._last_send >= self.keepalive_s:
                     await self._keepalive(s, now)
             except Exception:
@@ -283,6 +343,7 @@ class Direction:
         self.keepalives += 1
         self.chunks_sent += 1
         self.bytes_sent += len(KEEPALIVE_CHUNK)
+        self.elog("keepalive")
         self._on_sent()
 
     # --- utterances: latency and saved transcripts ---------------------------
@@ -292,12 +353,14 @@ class Direction:
         self.close_utterance()
         self._utt_seq += 1
         self.utt = Utterance(onset=now, first=now, last=now, seq=self._utt_seq)
+        self.elog("utterance_open", seq=self._utt_seq, onset=True)
 
     def _current(self) -> Utterance:
         if self.utt is None:  # a transcript or audio with no onset seen (e.g. right after a reconnect)
             now = self.clock()
             self._utt_seq += 1
             self.utt = Utterance(onset=None, first=now, last=now, seq=self._utt_seq)
+            self.elog("utterance_open", seq=self._utt_seq, onset=False)
         return self.utt
 
     def maybe_close_utterance(self) -> None:
@@ -312,13 +375,45 @@ class Direction:
             self._emit_transcript(op)
 
     def _emit_transcript(self, op: dict) -> None:
+        if op.get("row") in self.echo_rows:
+            op = {**op, "echo": self.echo_rows[op["row"]]}
+        self.elog("transcript", **op)
         if self.emit is not None:
             self.emit("transcript", dir=self.label.lower(), **op, final=True)
+
+    def _decide_echo(self, u: Utterance, text: str) -> None:
+        """Decides from the utterance's first input chunks whether it is already the
+        listener's language. A later chunk in the meeting's script reverts it."""
+        if self.own_language is None or u.echo is False:
+            return
+        u.heard += text
+        verdict = self.own_language(u.heard if u.echo is None else text)  # after a yes: each new chunk alone
+        if verdict is None or verdict == u.echo:
+            return
+        if u.echo is True and verdict is False:
+            u.echo = False
+            self.elog("echo", seq=u.seq, echo=False, play=True, why="meeting language followed")
+            return
+        if u.echo is None:
+            u.echo = verdict
+            self.elog("echo", seq=u.seq, echo=verdict, play=not verdict or self.voice_own_language,
+                      words=len(_LATIN_WORD.findall(u.heard)))
+
+    def _mark_rows(self, u: Utterance, ops: list[dict]) -> None:
+        if u.echo:
+            for op in ops:
+                self.echo_rows[op["row"]] = True
+        elif u.echo is False:
+            for op in ops:  # a row that started as an echo and turned out to be the meeting's language
+                if op["row"] in self.echo_rows:
+                    self.echo_rows[op["row"]] = False
 
     def close_utterance(self, quiet: bool = False) -> None:
         """`quiet`: closed after UTTERANCE_QUIET_S with no transcript or audible model audio,
         so the model has finished answering it (a close by a new onset may not have)."""
         u, self.utt = self.utt, None
+        if u is not None:
+            self.elog("utterance_close", seq=u.seq, quiet=quiet)
         if u is None or not u.has_content:
             return
         if quiet and self.emit is not None:
@@ -327,6 +422,7 @@ class Direction:
             # The app stops showing them as pending. A late translation still fills the row.
             for r in self.pairer.rows:
                 if r.utt == u.seq and r.waiting:
+                    self.elog("untranslated", row=r.id)
                     self.emit("untranslated", dir=self.label.lower(), row=r.id)
         lat = u.latency()
         if lat["onset_to_audio_ms"] is not None:
@@ -346,14 +442,23 @@ class Direction:
                 got = True
                 self._fails = 0
                 upd = getattr(r, "session_resumption_update", None)
+                if upd:
+                    self.elog("session_resumption_update", resumable=bool(upd.resumable),
+                              handle=bool(upd.new_handle))  # never the handle itself
                 if upd and upd.resumable and upd.new_handle:
                     self.handle = upd.new_handle
+                for name in OTHER_MESSAGE_KINDS:
+                    if getattr(r, name, None):
+                        self.elog(name)
                 ga = getattr(r, "go_away", None)
                 if ga:
+                    self.elog("go_away", time_left=str(ga.time_left))
                     self.log(f"go_away, time left {ga.time_left}; reconnecting")
                     return "go_away"
                 um = getattr(r, "usage_metadata", None)
                 if um:
+                    self.elog("usage", prompt=um.prompt_token_count, response=um.response_token_count,
+                              total=getattr(um, "total_token_count", None))
                     self._usage(um)
                 sc = getattr(r, "server_content", None)
                 if sc:
@@ -388,6 +493,13 @@ class Direction:
         return round((self.tokens["in_audio"] * rate_in + self.tokens["out_audio"] * rate_out) / 1e6, 6)
 
     def _server_content(self, sc) -> None:
+        for name in ("input_transcription", "output_transcription"):
+            tr = getattr(sc, name, None)
+            if tr and (tr.text or getattr(tr, "finished", None)):
+                self.elog(name, text=tr.text or "", fin=getattr(tr, "finished", None))
+        it = getattr(sc, "interim_input_transcription", None)
+        if it and getattr(it, "text", None):
+            self.elog("interim_input_transcription", text=it.text)
         if sc.input_transcription and sc.input_transcription.text:
             self._add("in", sc.input_transcription.text)
         if sc.output_transcription and sc.output_transcription.text:
@@ -397,21 +509,40 @@ class Direction:
                 if p.inline_data and p.inline_data.data:
                     data = p.inline_data.data
                     self.audio_bytes += len(data)  # all of it: the billing basis
-                    if audible(data):  # the model streams silence between turns
+                    loud = audible(data)
+                    self.elog("audio", bytes=len(data), audible=loud)
+                    if loud:  # the model streams silence between turns
                         u, now = self._current(), self.clock()
                         if u.audio_at is None:
                             u.audio_at = now
                         u.touch(now)
-                    if self.out_q is not None:
+                    if self.utt is not None and self.utt.echo and not self.voice_own_language:
+                        self.echo_dropped_bytes += len(data)  # the listener's own language: not re-voiced
+                    elif self.out_q is not None:
                         self.out_q.put_nowait(data)
                     if self.dump is not None:
                         self.dump.writeframes(data)
+        for name in ("generation_complete", "interrupted", "waiting_for_input"):
+            if getattr(sc, name, None):
+                self.elog(name)
         if getattr(sc, "turn_complete", False):
+            reason = getattr(sc, "turn_complete_reason", None)
+            self.elog("turn_complete", reason=None if reason is None else str(reason).split(".")[-1])
             self._flush()
 
     def _add(self, kind: str, text: str) -> None:
         (self.in_text if kind == "in" else self.out_text).append(text)
         self._buf[kind] += text
+        if kind == "in":
+            self._decide_echo(self._current(), text)
+        if getattr(self.pairer, "chunks", False):
+            u, now = self._current(), self.clock()
+            u.touch(now)
+            pair = self.pairer.src if kind == "in" else self.pairer.dst
+            ops = pair(text, now, u.seq)
+            self._mark_rows(u, ops)
+            for op in ops:
+                self._emit_transcript(op)
         if self._buf[kind].rstrip().endswith(SENTENCE_END):
             self._flush(kind)
 
@@ -429,12 +560,13 @@ class Direction:
             else:
                 u.dst.append(text)
                 u.dst_final_at = now
-            pair = self.pairer.src if kind == "in" else self.pairer.dst
-            ops = pair(text, now, u.seq)
-            if self.emit is not None:
+            if not getattr(self.pairer, "chunks", False):  # a sentence-level pairer (v1)
+                pair = self.pairer.src if kind == "in" else self.pairer.dst
+                ops = pair(text, now, u.seq)
+                self._mark_rows(u, ops)
                 for op in ops:
                     self._emit_transcript(op)
-            else:
+            if self.emit is None:
                 self.out(f"{self.prefix} {'=> ' if kind == 'out' else ''}{text}")
 
     def transcript(self, kind: str) -> str:

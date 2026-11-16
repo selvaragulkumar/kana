@@ -9,7 +9,8 @@ Speaks the engine's --json protocol (docs/superpowers/specs/2026-11-12-menubar-a
          Honours {"cmd":"talk","on":bool} and {"cmd":"quit"} on stdin.
          Also reports register and in_model/out_model in ready (model "fake"), emits usage events,
          per-utterance latency events, gated_s/latency_ms on the audio tick, one outbound
-         row in four that gets no translation (an untranslated event), and a
+         row in four that gets no translation (an untranslated event), one inbound row in
+         six that is English from the room coming back ("echo": true, no audio), and a
          saved event; the Markdown/SRT files are written to <tmp>/kana-fake/transcripts
          (or --save-dir) unless --no-save is given.
   --provider openai: usage is priced per minute of audio sent and marked est (no token counts),
@@ -62,12 +63,44 @@ def stdin_loop():
     state["quit"] = True  # stdin closed: parent went away
 
 
+def chunks(text):
+    """Splits a sentence in two at its first comma or space past the first third, the way the
+    real engine streams a sentence as several transcription chunks (pairing v2)."""
+    for i, ch in enumerate(text):
+        if i >= len(text) // 3 and ch in "、, " and i < len(text) - 1:
+            return [text[:i + 1], text[i + 1:]]
+    return [text]
+
+
+def stream_row(emit, d, row, src, dst, pause=0.3, sleep=time.sleep, echo=False):
+    """Emits one row as the real engine does: a transcript event per chunk, source and
+    translation interleaved, row_text the whole side so far. dst None: source only.
+    echo: the source was already the listener's language (room audio coming back);
+    its events carry "echo": true and the real engine plays no audio for it."""
+    s_parts, d_parts = chunks(src), chunks(dst) if dst else []
+    s_text = d_text = ""
+    extra = {"echo": True} if echo else {}
+    for k in range(max(len(s_parts), len(d_parts))):
+        if k < len(s_parts):
+            s_text += s_parts[k]
+            emit("transcript", dir=d, kind="src", text=s_parts[k], row=row, row_text=s_text.strip(), final=True,
+                 **extra)
+            sleep(pause)
+        if k < len(d_parts):
+            d_text += d_parts[k]
+            emit("transcript", dir=d, kind="dst", text=d_parts[k], row=row, row_text=d_text.strip(), final=True,
+                 **extra)
+            sleep(pause)
+
+
 INBOUND = [
     ("こんにちは、聞こえますか？", "Hello, can you hear me?"),
     ("今日はお時間をいただきありがとうございます。", "Thank you for your time today."),
     ("では、見積もりの件から始めましょう。", "Let's start with the quotation."),
     ("来週の火曜日はいかがでしょうか。", "How about next Tuesday?"),
     ("資料は後ほどメールでお送りします。", "I'll send the materials by email later."),
+    # English from the room coming back on the meeting audio: an echo row, not played
+    ("Sorry, could you share the screen again?", "Sorry, could you share the screen again?"),
 ]
 OUTBOUND = [
     ("Yes, I can hear you clearly.", "はい、よく聞こえます。"),
@@ -127,17 +160,17 @@ def main():
     rows = {"in": 0, "out": 0}
 
     def utterance(d, src, dst, onset_ms):
-        rows[d] += 1  # the real engine pairs by timing and names the row (kana/pairing.py)
-        emit("transcript", dir=d, kind="src", text=src, row=rows[d], row_text=src, final=True)
-        time.sleep(0.4)
+        rows[d] += 1  # the real engine pairs chunks as they stream and names the row (kana/pairing.py)
+        echo = d == "in" and src.isascii()  # already the language you hear (--voice-own-language off)
+        stream_row(emit, d, rows[d], src, dst, echo=echo)
         if dst is None:  # the model said nothing (speech already in the target language)
             emit("untranslated", dir=d, row=rows[d])
             emit("latency", dir=d, onset_to_audio_ms=None, src_final_to_dst_final_ms=None)
             return
-        emit("transcript", dir=d, kind="dst", text=dst, row=rows[d], row_text=dst, final=True)
         lat[d].append(onset_ms)
         emit("latency", dir=d, onset_to_audio_ms=onset_ms, src_final_to_dst_final_ms=400 + onset_ms // 6)
-        recv[d] += 2.0
+        if not echo:
+            recv[d] += 2.0
         if md:
             with open(md, "a") as f:
                 f.write(f"| {'↓' if d == 'in' else '↑'} | {src} | {dst} |\n")

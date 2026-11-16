@@ -260,7 +260,6 @@ struct PanelView: View {
 
     private var overflowMenu: some View {
         Menu {
-            Toggle(L10n.t("Captions"), isOn: $prefs.captionsOn)
             Toggle(L10n.t("Visible in screen share"), isOn: $prefs.visibleInShare)
             Toggle(L10n.t("Save transcripts"), isOn: $prefs.saveTranscripts)
             Toggle(L10n.t("Keep Meet audio on when not translating"), isOn: Binding(

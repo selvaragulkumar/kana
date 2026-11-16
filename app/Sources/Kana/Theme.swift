@@ -164,7 +164,7 @@ struct SmallButtonStyle: ButtonStyle {
     }
 }
 
-/// Bare icon button (refresh, dismiss, captions, more).
+/// Bare icon button (refresh, dismiss, expand, more).
 struct IconButtonStyle: ButtonStyle {
     var color: Color = Theme.text3
     func makeBody(configuration: Configuration) -> some View {

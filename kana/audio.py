@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import collections
 import sys
+import time
 import wave
 
 import numpy as np
@@ -22,6 +23,16 @@ CHUNK_BYTES = IN_RATE * CHUNK_MS // 1000 * 2  # 3200
 
 class DeviceError(RuntimeError):
     pass
+
+
+class DeviceLost(DeviceError):
+    """A device that stopped mid-call and could not be reopened within REOPEN_GIVE_UP_S."""
+
+
+def _sd():
+    """The sounddevice module; tests replace this function with a fake."""
+    import sounddevice
+    return sounddevice
 
 
 # MME (the first Windows host API) cuts device names to 31 characters:
@@ -187,7 +198,7 @@ async def feed_file(pcm: bytes, q: asyncio.Queue) -> None:
 
 
 def _pick_rate(check, device, wanted: int, kind: str) -> int:
-    import sounddevice as sd
+    sd = _sd()
     try:
         check(device=device, samplerate=wanted, channels=1, dtype="int16")
         return wanted
@@ -228,36 +239,130 @@ def capture_options(device_name: str | None, setting: str = "low") -> dict:
     return {}
 
 
-class Capture:
+STALL_S = 2.0           # a running stream whose callback has not run for this long is stuck
+REOPEN_BACKOFF_S = (0.5, 1, 2, 4, 5)  # waits between reopen attempts (the last repeats)
+REOPEN_GIVE_UP_S = 60.0  # a device still gone this long after it stopped is fatal (DeviceLost)
+WATCH_S = 0.5           # how often watch_streams() checks the streams
+
+
+class _Watched:
+    """Health of one PortAudio stream, for watch_streams(). The callback stamps
+    `last_cb`; an exception in it or PortAudio finishing the stream on its own
+    (the device went away, an error) is recorded instead of ending the engine.
+    Status flags (input overflow, output underflow) are counted, not fatal.
+
+    A subclass sets `kind` and implements `_make(device)`, returning an unstarted
+    stream. `resolve()` gives the device index again (by name, after PortAudio
+    was re-initialised and indices may have changed)."""
+
+    kind = ""
+
+    def _init_watch(self, device, name, resolve, clock):
+        self.device, self.name = device, name or (f"device {device}" if device is not None else f"default {self.kind}")
+        self.resolve = resolve if resolve is not None else (lambda: self.device)
+        self.clock = clock
+        self.stream = None
+        self.error: str | None = None   # set from the PortAudio thread
+        self.finished = False
+        self.closing = False
+        self.xruns = 0
+        self.last_cb = clock()
+        self.opens = 0
+
+    def _stamp(self, status) -> None:
+        self.last_cb = self.clock()
+        if status:
+            self.xruns += 1
+
+    def _failed(self, e: BaseException) -> None:
+        self.error = f"{type(e).__name__}: {e}"[:200]
+
+    def _finished_cb(self) -> None:
+        if not self.closing:
+            self.finished = True
+
+    def open(self) -> None:
+        """Starts the stream on self.device, creating it first unless the constructor did."""
+        self.error, self.finished, self.closing = None, False, False
+        if self.stream is None:
+            self.stream = self._make(self.device)
+        self.last_cb = self.clock()
+        self.stream.start()
+        self.last_cb = self.clock()
+        self.opens += 1
+
+    def close(self) -> None:
+        self.closing = True
+        st, self.stream = self.stream, None
+        if st is None:
+            return
+        for step in (st.abort, st.close):  # abort: do not wait for buffers a dead device never drains
+            try:
+                step()
+            except Exception:
+                pass
+
+    def reopen(self) -> None:
+        self.close()
+        self.device = self.resolve()
+        self.open()
+
+    def problem(self, now: float) -> str | None:
+        """Why this stream is not delivering, or None while it is healthy."""
+        if self.stream is None:
+            return "not open"
+        if self.error:
+            return self.error
+        if self.finished or not getattr(self.stream, "active", True):
+            return "stream stopped"
+        if now - self.last_cb > STALL_S:
+            return f"no audio callback for {now - self.last_cb:.1f} s"
+        return None
+
+    def __enter__(self):
+        self.open()
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
+
+
+class Capture(_Watched):
     """Input stream -> asyncio queue of 3200-byte 16 kHz chunks.
 
     `block_ms` is the PortAudio block; smaller blocks are collected into 100 ms
     chunks. `latency` is passed to PortAudio ("low", "high" or seconds); None
     keeps sounddevice's default ("high"). With a 100 ms block PortAudio buffers
     the same either way; only a small block with "low" hands each chunk over
-    sooner (docs/LATENCY.md)."""
+    sooner (docs/LATENCY.md). Reopenable after a device loss (watch_streams)."""
+
+    kind = "input"
 
     def __init__(self, device: int | None, q: asyncio.Queue, loop: asyncio.AbstractEventLoop,
-                 latency: str | float | None = None, block_ms: int = CHUNK_MS):
-        import sounddevice as sd
+                 latency: str | float | None = None, block_ms: int = CHUNK_MS, name: str | None = None,
+                 resolve=None, clock=time.monotonic):
         self.q, self.loop = q, loop
+        self.latency, self.block_ms = latency, block_ms
+        self._init_watch(device, name, resolve, clock)
+        self.stream = self._make(device)  # created now (a bad device fails at start-up), started on enter
+
+    def _make(self, device):
+        sd = _sd()
         self.rate = _pick_rate(sd.check_input_settings, device, IN_RATE, "input")
         self.chunks = Rechunker()
-        kw = {} if latency is None else {"latency": latency}
-        self.stream = sd.InputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
-                                     blocksize=self.rate * block_ms // 1000, callback=self._cb, **kw)
+        kw = {} if self.latency is None else {"latency": self.latency}
+        return sd.InputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
+                              blocksize=self.rate * self.block_ms // 1000, callback=self._cb,
+                              finished_callback=self._finished_cb, **kw)
 
     def _cb(self, indata, frames, time_info, status):
-        for c in self.chunks.push(resample(indata[:, 0].copy(), self.rate, IN_RATE)):
-            self.loop.call_soon_threadsafe(put_latest, self.q, c)
-
-    def __enter__(self):
-        self.stream.start()
-        return self
-
-    def __exit__(self, *exc):
-        self.stream.stop()
-        self.stream.close()
+        self._stamp(status)
+        try:
+            for c in self.chunks.push(resample(indata[:, 0].copy(), self.rate, IN_RATE)):
+                self.loop.call_soon_threadsafe(put_latest, self.q, c)
+        except Exception as e:  # e.g. the loop is closing; recorded, the watcher reopens
+            self._failed(e)
+            raise _sd().CallbackAbort from e
 
 
 class Ring:
@@ -311,20 +416,33 @@ def catch_up(x: np.ndarray, queued: int, max_queued: int, floor: int = 64) -> np
 CATCH_UP_MS = 0  # see catch_up(); measured in docs/LATENCY.md
 
 
-class Playback:
-    """Output stream fed from 24 kHz PCM bytes; silence on underrun."""
+class Playback(_Watched):
+    """Output stream fed from 24 kHz PCM bytes; silence on underrun. Reopenable
+    after a device loss (watch_streams); while it is closed, feed() drops audio."""
+
+    kind = "output"
 
     def __init__(self, device: int | None, catch_up_ms: int | None = CATCH_UP_MS,
-                 latency: str | float | None = None):
-        import sounddevice as sd
+                 latency: str | float | None = None, name: str | None = None, resolve=None,
+                 clock=time.monotonic):
         self.ring = Ring()
         self.catch_up_ms = catch_up_ms  # None: queue everything back-to-back
+        self.latency = latency
+        self.rate = OUT_RATE
+        self._init_watch(device, name, resolve, clock)
+        self.stream = self._make(device)
+
+    def _make(self, device):
+        sd = _sd()
+        self.ring = Ring()  # nothing stale from before a loss
         self.rate = _pick_rate(sd.check_output_settings, device, OUT_RATE, "output")
-        kw = {} if latency is None else {"latency": latency}
-        self.stream = sd.OutputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
-                                      callback=self._cb, **kw)
+        kw = {} if self.latency is None else {"latency": self.latency}
+        return sd.OutputStream(device=device, samplerate=self.rate, channels=1, dtype="int16",
+                               callback=self._cb, finished_callback=self._finished_cb, **kw)
 
     def feed(self, pcm: bytes) -> None:
+        if getattr(self, "closing", False):
+            return  # closed or being reopened: late audio would only queue up behind the call
         x = np.frombuffer(pcm, dtype="<i2")
         if self.catch_up_ms is not None:
             x = catch_up(x, self.ring.queued() * OUT_RATE // self.rate, OUT_RATE * self.catch_up_ms // 1000)
@@ -332,19 +450,82 @@ class Playback:
             self.ring.push(resample(x, OUT_RATE, self.rate))
 
     def _cb(self, outdata, frames, time_info, status):
-        outdata[:, 0] = self.ring.read(frames)
+        self._stamp(status)
+        try:
+            outdata[:, 0] = self.ring.read(frames)
+        except Exception as e:  # e.g. a buffer of an unexpected shape after a device change
+            self._failed(e)
+            raise _sd().CallbackAbort from e
 
     async def pump(self, q: asyncio.Queue) -> None:
         while True:
             self.feed(await q.get())
 
-    def __enter__(self):
-        self.stream.start()
-        return self
 
-    def __exit__(self, *exc):
-        self.stream.stop()
-        self.stream.close()
+def reinit_portaudio(sd) -> None:
+    """Re-reads the device list: PortAudio enumerates devices once, at initialisation,
+    so a device that went away and came back is only found again after this. It
+    invalidates every open stream, so all streams must be closed first."""
+    if hasattr(sd, "_terminate") and hasattr(sd, "_initialize"):
+        sd._terminate()
+        sd._initialize()
+
+
+async def watch_streams(streams, emit=None, log=None, *, clock=time.monotonic, sleep=asyncio.sleep,
+                        backoff=None, give_up_s=None, every=None) -> None:
+    """Keeps the capture and playback streams of a live run alive. Every `every` s it
+    checks each stream (_Watched.problem). When one has stopped (an error, PortAudio
+    ending it, or no callback for STALL_S), it sends a non-fatal `error` event naming
+    the device, closes all streams, re-initialises PortAudio and reopens them all by
+    name, with backoff, while the translation sessions stay connected. Raises
+    DeviceLost if the streams cannot be reopened within `give_up_s`.
+
+    `emit(ev, **fields)` is the JSON emitter or None; `log(ev, **fields)` the events
+    log (engine-wide `device` lines) or None."""
+    emit = emit or (lambda ev, **f: None)
+    log = log or (lambda ev, **f: None)
+    backoff = REOPEN_BACKOFF_S if backoff is None else backoff
+    give_up_s = REOPEN_GIVE_UP_S if give_up_s is None else give_up_s
+    every = WATCH_S if every is None else every
+    streams = list(streams)
+    for st in streams:
+        log("device", state="open", name=st.name, kind=st.kind)
+    while True:
+        await sleep(every)
+        now = clock()
+        bad = [(st, why) for st in streams if (why := st.problem(now))]
+        if not bad:
+            continue
+        names = ", ".join(dict.fromkeys(st.name for st, _ in bad))
+        for st, why in bad:
+            log("device", state="lost", name=st.name, kind=st.kind, reason=why, xruns=st.xruns)
+        emit("error", fatal=False, text=f"{names} stopped; reopening")
+        lost_at, attempt = clock(), 0
+        while True:
+            for st in streams:
+                st.close()
+            try:
+                reinit_portaudio(_sd())
+                for st in streams:
+                    st.reopen()
+            except Exception as e:
+                waited = clock() - lost_at
+                reason = f"{type(e).__name__}: {e}"[:200]
+                log("device", state="reopen_failed", name=names, attempt=attempt + 1, reason=reason,
+                    after_s=round(waited, 1))
+                if waited >= give_up_s:
+                    for st in streams:
+                        st.close()
+                    log("device", state="gone", name=names, after_s=round(waited, 1))
+                    raise DeviceLost(f"{names} stopped and could not be reopened for {waited:.0f} s "
+                                     f"({reason})") from e
+                await sleep(backoff[min(attempt, len(backoff) - 1)])
+                attempt += 1
+                continue
+            break
+        took = round(clock() - lost_at, 1)
+        log("device", state="reopened", name=names, attempts=attempt + 1, after_s=took)
+        emit("error", fatal=False, text=f"{names} reopened after {took:g} s; translation continues")
 
 
 PASSTHROUGH_BLOCK_MS = 10

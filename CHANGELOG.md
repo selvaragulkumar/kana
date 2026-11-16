@@ -6,7 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-Nothing yet.
+## [0.2.0] - 2026-11-16
+
+### Fixed
+
+- **The engine survives audio device dropouts.** When a capture or playback stream stops mid-call (the meeting app drops and rejoins, a headset switches profile, a device goes away for a moment), the engine used to keep running deaf or mute until it was restarted; on the 2026-11-16 call translation stopped at 10:57:54 while the meeting went on. Now it notices within about 2 s, says "<device> stopped; reopening" (non-fatal), re-reads the device list and reopens all streams by name with backoff while the translation sessions stay connected, and exits fatally only if the device is still gone after about 60 s. Each step is a `device` line in the events log (docs/ENGINE.md, "Audio device dropouts").
+- **Transcript rows pair the right source with the right translation.** On the 2026-11-16 call only about 35–40 % of inbound rows did: run-on Japanese reached the pairer only at its next 。, 20–30 s after its translation, and took the translation that came next, which shifted every later row. Measured on the real model, Live Translate streams the source a chunk a second, each about 0.3 s ahead of its translation, and sends no turn signals (docs/research/transcription-timing.md). Pairing v2 (`kana/pairing.py`, spec docs/superpowers/specs/2026-11-16-pairing-v2.md) takes every chunk as it arrives and cuts rows where the English ends a sentence and the Japanese reaches a clause end; a row may hold one long turn and several English sentences, but a source is never shown beside a translation that is not its own. Both sides now appear as they are spoken instead of a sentence at a time. On three recorded sessions every checked pair is right (v1: about half).
+
+### Changed
+
+- A `transcript` event now carries one transcription chunk (or the part of one that went to its row) as it arrives, not a finished sentence. The fields are unchanged and `row_text` is still the whole side of the row, which is all the app uses; `app/fake_engine.py` streams rows the same way. The sentence-level pairer is kept as `kana/pairing_v1.py` for replay comparisons.
+- A saved row without its source yet is written after 30 s instead of 12 s, so a late source can still fill it.
+
+- **The mini bar carries the captions.** Minimised, kana is one 640 × 108 pt bar: the newest line you heard at 20 pt (two lines at most; a long turn scrolls up instead of being cut mid-sentence) with the previous line smaller and dimmed above it. Still hidden from screen sharing, draggable, and back where you left it; a spot saved for the old, smaller bar is moved fully onto the screen. Expand and close appear in place of the session dots on hover.
+- **Mic in the mini bar is a button.** It toggles talk like a tap of the talk key or a click on the panel's talk bar, and turns orange while you talk; disabled until a session is live. The mark is still Start / Stop and breathes while live.
+
+### Added
+
+- **English from the room is not re-voiced in your ears.** When an inbound utterance is clearly already the language you hear (for `--in en` against a non-Latin meeting language: at least 3 Latin words in its first chunks, outweighing any kana the Japanese transcriber wrote for the first word), it is still transcribed and paired but its audio is not played, and its `transcript` events carry `"echo": true` so the app can grey the row later. `--voice-own-language on` plays it as before. Each decision is logged in the events log (docs/ENGINE.md, "Own language coming back").
+- **Raw events log per call.** Next to the saved .md and .srt, `YYYY-MM-DD-HHMM.events.jsonl` records every server message kind (transcription chunks, turn signals, audio, usage, go_away, resumption), the session lifecycle with close reasons, utterances, keepalives, every transcript op and the engine's exit reason (docs/ENGINE.md, "Events log"). Not written with `--no-save`; no audio, handles or keys.
+- **Offline pairing replay.** `python -m kana.replay <file>.events.jsonl` re-feeds a call through the engine's text path and pairer and prints the rows (`--logged`: the rows the app showed). The pairing tests replay three recorded sessions.
+- **`tools/replay_tts.py`.** Synthesises a Japanese meeting with two `say` voices, runs the real engine on it silently (output to BlackHole 2ch) and reports when the transcriptions arrived.
+
+
+- `kana --render-minibar <dir>` (with `--lang ja`): offscreen stills of the mini bar idle, live, talking, on hover and with a long caption. `docs/images/minibar-*.png` come from it.
+
+### Removed
+
+- **The separate caption strip** and its **Captions** switch (••• menu and the menu-bar right-click menu). With the panel open the transcript is on screen; minimised, the mini bar shows the captions.
+
 
 ## [0.1.1] - 2026-11-13
 
@@ -90,6 +118,7 @@ App (`kana.app`, SwiftUI, macOS 14+):
 - **An idle direction no longer gets closed by the server.** With the voice gate closed nothing was sent, and after about 4 minutes of a silent meeting Gemini closed the inbound session ("1008 Session closed due to client inactivity"); the reconnect lost a second or two of speech and showed a warning. While a session is up, muted or not, the engine now sends 100 ms of zero-filled silence after every 20 s with nothing sent (never microphone audio while muted) (about 0.5 % of the gated audio, billed and counted in `sent_s`). It never counts as speech.
 - **Rows the model never translates no longer show typing dots forever.** When an utterance closes after 1.5 s of quiet with a row whose source is final and no translation, the engine sends a new `untranslated` event (`dir`, `row`), and the app shows a quiet grey "—" (tooltip "No translation") in place of the dots. This happened when the other person's Japanese reached the microphone on the outbound direction. As a backstop, the app settles a row the same way 10 s after its source was last updated once a newer row exists in that direction. A late translation still fills the row.
 
-[Unreleased]: https://github.com/selvaragulkumar/kana/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/selvaragulkumar/kana/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/selvaragulkumar/kana/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/selvaragulkumar/kana/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/selvaragulkumar/kana/releases/tag/v0.1.0

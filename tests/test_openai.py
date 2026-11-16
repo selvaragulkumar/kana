@@ -124,7 +124,10 @@ async def test_audio_and_transcript_deltas_reach_queue_and_events(server):
     assert d.audio_bytes == 2 * 9600
     assert d.transcript("in") == "こんにちは。"
     tr = rec.of("transcript")
-    assert {(t["kind"], t["text"]) for t in tr} == {("src", "こんにちは。"), ("dst", "Hello, everyone.")}
+    # pairing v2 gets every delta as it arrives; row_text is the whole side of the row
+    assert [(t["kind"], t["text"], t["row"], t["row_text"]) for t in tr] == [
+        ("src", "こんにちは。", 1, "こんにちは。"), ("dst", "Hello", 1, "Hello"),
+        ("dst", ", everyone.", 1, "Hello, everyone.")]
     task.cancel()
     await asyncio.gather(task, return_exceptions=True)
 

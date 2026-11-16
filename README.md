@@ -23,7 +23,7 @@
 <!--
   A demo GIF (docs/demo.gif) is planned. It must show, in 30-60 seconds: the panel next to a
   Meet call with both sessions live; an inbound Japanese sentence and its English with the
-  caption strip on; holding Right ⌥ to turn Talk on and an English sentence going out in Japanese;
+  mini bar showing captions; holding Right ⌥ to turn Talk on and an English sentence going out in Japanese;
   the delay readout and the cost meter. No real participants' faces or names.
 -->
 <p align="center">
@@ -40,7 +40,7 @@ your mic ───────────────────────�
 
 Two Gemini Live sessions run side by side. One interprets the meeting into your earphones. The other interprets you into the meeting, only while Talk is on. A menu-bar panel shows both transcripts, the delay and what the call has cost so far.
 
-**Status, 2026-11-13.** kana has carried its first real Google Meet call, both directions, with the author's own voice: outbound first audio about 1.2 s after speech onset, about ¥13 for the first four minutes. The log is in [docs/VERIFICATION.md](docs/VERIFICATION.md).
+**Status, 2026-11-16.** kana has carried two real calls: a first Google Meet call both ways, and an 85-minute Zoom customer meeting (about 1 s delay, ¥5.3 per minute of dense speech). Against an independent transcript of that meeting, two thirds of passages kept their meaning fully or with minor loss; numbers were right 61 times of 77. What went wrong and what changed is in [docs/VERIFICATION.md](docs/VERIFICATION.md).
 
 ## Who is this for
 
@@ -180,11 +180,12 @@ Zoom and Teams need the same two settings as Meet, but we have not tried them ye
 
 A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in use, and "fake engine" when testing with `app/fake_engine.py`. With the default model it shows nothing.
 
-**Captions.** Off by default. Turn them on in the ••• menu or from a right-click on the menu-bar icon. A small click-through strip at the bottom of the screen, at most 560 pt wide, shows the newest line you heard and, dimmed, the one before it. Each line fades 8 seconds after its last update. The strip stays above other apps and works while the panel is closed.
+**Mini bar and captions.** **−** collapses the panel into the mini bar, which is also where the captions are: the newest line you heard in large type (two lines at most; a long turn scrolls up) and, smaller and dimmed, the one before it. Click the mark to Start or Stop; it breathes while live. Click the mic to turn talk on or off, the same as a tap of the talk key; it turns orange while you talk and works once a session is live. The two dots are the incoming and outgoing sessions (hover them for the delay and the cost). Drag the bar anywhere; it stays above other apps and comes back where you left it. Double-click it, or hover and press its expand button, to get the panel back. While the panel is open there is no separate caption window: the transcript is right there.
 
-<p align="center"><img src="docs/images/captions.png" width="350" alt="The caption strip: the previous line dimmed, the newest line below it"></p>
+<p align="center"><img src="docs/images/minibar-live.png" width="560" alt="The mini bar during a live session: the kana mark, the previous line dimmed above the newest line, two green dots and the mic button"></p>
+<p align="center"><img src="docs/images/minibar-talking.png" width="560" alt="The mini bar while talking: the mic button is orange"></p>
 
-**Screen sharing.** The panel and the caption strip are left out of screen shares, recordings and screenshots by default. Turn on **Visible in screen share** in the ••• menu to show them.
+**Screen sharing.** The panel and the mini bar are left out of screen shares, recordings and screenshots by default. Turn on **Visible in screen share** in the ••• menu to show them.
 
 **Transcripts.** Each call is saved as Markdown and SRT unless you turn off **Save transcripts** in the ••• menu. **Open Last Transcript** and **Transcripts Folder** are in the same menu.
 
@@ -195,8 +196,6 @@ A dashed chip in the header shows "fallback model" when `gemini-3.8-live` is in 
 **Talk key.** Right ⌥ by default: hold to talk, tap to toggle. ••• › **Talk key** (also in Setup › Permissions) offers Right ⌘, Fn/🌐 and the old ⌃⌥Space, which only toggles. For Fn, set System Settings › Keyboard › "Press 🌐 key to" to "Do Nothing", or it opens the emoji picker. The talk key needs Accessibility access: press **Open Settings** in the panel and switch kana on under Privacy & Security › Accessibility. The talk bar works without it.
 
 **Pass-through.** While kana is open but not live, Meet still works like a normal call: the meeting plays in your earphones and your microphone goes to Meet, untranslated, through the same BlackHole devices. The pill reads "Not translating" and the talk bar says "Meet hears your mic directly · mute in Meet": your microphone is live to Meet then, so mute in Meet. **Start** swaps in the interpreter; **Stop** swaps it back. Turn it off with ••• › **Keep Meet audio on when not translating**; it needs both BlackHole drivers and microphone permission.
-
-**Mini bar.** **−** collapses the panel into a small bar. Click its mark to Start or Stop; it breathes while live. Double-click the bar, or its expand button, to get the panel back.
 
 **Quit.** The panel's **×** (or ⌘Q) quits kana, stopping a session cleanly first; so does **Quit kana** in the menu-bar menu. Open kana again from Applications or Spotlight.
 
@@ -340,7 +339,7 @@ kana/
 │   ├── events.py         JSON-lines protocol: events out, commands in
 │   └── ptt.py            terminal push-to-talk (space, q)
 ├── app/                  Swift menu-bar app
-│   ├── Sources/          panel, caption strip, Setup, Keychain, engine process, hotkey, brand
+│   ├── Sources/          panel, mini bar (captions), Setup, Keychain, engine process, hotkey, brand
 │   ├── Resources/Fonts/  Inter, Noto Sans JP and Space Grotesk (SIL OFL), bundled into the app
 │   ├── build.sh          builds kana.app with Command Line Tools only (--bundle-engine: with its own Python)
 │   ├── bundle_engine.sh  relocatable Python 3.13 + the engine, from python-build-standalone

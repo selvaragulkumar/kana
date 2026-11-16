@@ -10,9 +10,6 @@
 "%@: silence came back. Check Microphone access for kana." = "%@: silence came back. Check Microphone access for kana.";
 "%@: unexpected signal (%@)" = "%@: unexpected signal (%@)";
 
-/* CaptionStrip.swift */
-"Captions appear here. Drag the handle to move." = "Captions appear here. Drag the handle to move.";
-
 /* DriverInstaller.swift */
 "Could not download %@: %@" = "Could not download %@: %@";
 "%@ did not match its published checksum, so it was not installed." = "%@ did not match its published checksum, so it was not installed.";
@@ -79,8 +76,6 @@
 "Listening…" = "Listening…";
 "Not translating · mute in Meet" = "Not translating · mute in Meet";
 "Idle. Click the mark to start." = "Idle. Click the mark to start.";
-"Talking" = "Talking";
-"Not talking (%@)" = "Not talking (%@)";
 ", %.1f s delay" = ", %.1f s delay";
 "live" = "live";
 "est." = "est.";
@@ -93,7 +88,6 @@
 /* PanelView.swift */
 "Minimize" = "Minimize";
 "Quit kana" = "Quit kana";
-"Captions" = "Captions";
 "Visible in screen share" = "Visible in screen share";
 "Save transcripts" = "Save transcripts";
 "Keep Meet audio on when not translating" = "Keep Meet audio on when not translating";

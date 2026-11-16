@@ -57,10 +57,12 @@ because that would create a feedback loop.
 | `--save-dir DIR` | `~/Library/Application Support/kana` (Windows: `%LOCALAPPDATA%\kana`) | Transcripts are written to `DIR/transcripts/`. |
 | `--no-save` | | Saves no transcripts. |
 | `--passthrough` | | No translation, no network, no key. Copies the meeting (`--meet-spk`) to your earphones (`--spk`) and your microphone (`--mic`) to the meeting (`--meet-mic`), untranslated. See [Pass-through](#pass-through). |
+| `--voice-own-language off\|on` | `off` | Inbound speech that is already the language you hear (English spoken in the room reaching the remote microphone and coming back on the meeting audio). `off`: still transcribed and paired, marked `echo` in its `transcript` events, but its audio is not played. `on`: played like the rest (still marked). See [Own language coming back](#own-language-coming-back). |
 | `--json` | | Runs the JSON-lines protocol described below. |
 
-Exit codes: `0` is a clean exit and `2` is a fatal setup error, such as a missing key, a missing
-device or a device that fails to open.
+Exit codes: `0` is a clean exit and `2` is a fatal error, such as a missing key, a missing
+device or a device that fails to open at start-up, or a device that stopped mid-call and stayed
+gone for about 60 s (see Audio device dropouts).
 
 ## Pass-through
 
@@ -150,45 +152,77 @@ latest resumption handle.
 {"t": 1794481300.000, "ev": "session", "dir": "in", "state": "reconnecting", "detail": "go_away"}
 ```
 
-**`transcript`**: one finished sentence. `kind` is `src` for what was heard and `dst` for what
-the model spoke. A sentence is flushed when it ends with `. ? ! 。 ？ ！`, when the model ends its
-turn, when the connection drops, or when its utterance closes. `final` is always `true`.
-`row` is the transcript row the sentence belongs to (numbered from 1 per direction) and
-`row_text` is that side of the row after it was added, so the app sets it and never pairs.
+**`transcript`**: text added to a transcript row, as it streams. `kind` is `src` for what was
+heard and `dst` for what the model spoke. `text` is one transcription chunk as the model sent it
+(about a second of speech), or the part of a chunk that went to this row; `row` is the
+transcript row it belongs to (numbered from 1 per direction) and `row_text` is that whole side of
+the row after it was added, so the app sets it and never pairs or joins. `final` is always
+`true`: the text is never revised, only appended to. (Before pairing v2, 2026-11-16, an event
+carried one finished sentence; the fields are the same.)
 ```json
-{"t": 1794481308.975, "ev": "transcript", "dir": "in", "kind": "src", "text": "こんにちは。今日は天気がいいですね。", "row": 1, "row_text": "こんにちは。今日は天気がいいですね。", "final": true}
-{"t": 1794481309.378, "ev": "transcript", "dir": "in", "kind": "dst", "text": "Hello. Today the weather is nice, isn't it?", "row": 1, "row_text": "Hello. Today the weather is nice, isn't it?", "final": true}
+{"t": 1794481308.975, "ev": "transcript", "dir": "in", "kind": "src", "text": "今日は", "row": 1, "row_text": "今日は", "final": true}
+{"t": 1794481309.262, "ev": "transcript", "dir": "in", "kind": "dst", "text": "Today", "row": 1, "row_text": "Today", "final": true}
+{"t": 1794481309.981, "ev": "transcript", "dir": "in", "kind": "src", "text": "いい天気ですね。", "row": 1, "row_text": "今日はいい天気ですね。", "final": true}
+{"t": 1794481310.270, "ev": "transcript", "dir": "in", "kind": "dst", "text": " the weather is nice.", "row": 1, "row_text": "Today the weather is nice.", "final": true}
 ```
-A `src` event with `merge_into` moves a sentence that was shown as its own row: row `row` is
-removed and `row_text` is the new source side of row `merge_into`. This happens when the model
-translated a short tag such as "Right?" together with the sentence before it:
+A row whose source is already the language you hear (see
+[Own language coming back](#own-language-coming-back)) carries `"echo": true` on its
+`transcript` events from the moment that was decided; if the same utterance then turns out to
+be the meeting's language, its later events carry `"echo": false`. Rows that were never in
+question have no `echo` field. The field is additive: an app that does not know it shows the row
+as usual.
+```json
+{"t": 1794481320.114, "ev": "transcript", "dir": "in", "kind": "src", "text": "Can you share the screen?", "row": 7, "row_text": "Can you share the screen?", "final": true, "echo": true}
+```
+A `src` event with `merge_into` moves text that was shown as its own row: row `row` is removed
+and `row_text` is the new source side of row `merge_into`. Pairing v2 never sends it; the v1
+pairer did, when the model translated a short tag such as "Right?" together with the sentence
+before it, and the app still applies it:
 ```json
 {"t": 1794481312.004, "ev": "transcript", "dir": "out", "kind": "src", "text": "Right?", "row": 4, "merge_into": 3, "row_text": "I think it's sort of slow. Right?", "final": true}
 ```
 
 ### Pairing
 
-The model does not translate sentence by sentence, so the engine pairs sources and translations
-by timing and length (`kana/pairing.py`), not by order. When a translation arrives:
+The engine pairs what was heard with what the model said (`kana/pairing.py`, pairing v2; spec in
+`docs/superpowers/specs/2026-11-16-pairing-v2.md`). Live Translate streams the input
+transcription about one chunk a second while someone speaks, and the translation of each chunk
+follows about 0.3 s later; it sends no turn signals (`docs/research/transcription-timing.md`).
+So every chunk goes to the pairer the moment it arrives, and a translation chunk belongs with
+the source chunk just before it. A row is cut where the English ends a sentence.
 
-1. If the last row's translation has no sentence end yet, it continues that row.
-2. If no source is waiting, it is the second half of a split translation (the last row's
-   translation is still much shorter than its source and came under 4 s ago) or a row of its own.
-   A source that comes within 4 s and fits its length fills that row (the translation was early).
-3. While two or more sources wait, the oldest is short (3 words or 6 CJK characters at most), it
-   ended before the row above got its translation, both are in the same utterance, and the new
-   translation fits it badly by length but the next one better: it is folded into the row above.
-4. While two or more sources wait and the oldest is stale (3 s older than the measured lag, with
-   the next one ended at least a lag later and half a lag ago), and the translation is not a clear
-   length match for it: it is left untranslated (a dropped translation).
-5. If the row above is still short of its translation and this one completes it while fitting
-   the oldest waiting source badly, it is appended to the row above (a split).
-6. Otherwise it goes to the oldest waiting source.
+A translation chunk:
 
-A source with no sentence end (cut by a turn end or a reconnect) is continued by the next source.
-A row is final 12 s after its last change; a short source still waiting then is folded into the
-row above if that row's translation arrived after it. Nothing is dropped, and nothing is folded
-across utterances.
+1. continues the last row while that row's translation has not ended a sentence (often a row a
+   source chunk opened a moment before);
+2. also continues it after a sentence end when the latest source chunk went into that row after
+   the end, less than 2 s ago, or the row's source stops mid-clause (up to 160 CJK characters of
+   source): the model is still translating that source, in a second sentence. A source put
+   beside the wrong translation thus pulls its own translation after it: a row can grow, the
+   rows after it do not shift;
+3. otherwise opens a new row.
+
+A source chunk:
+
+1. is split over the rows at the end that have a translation and no source, in order and by
+   length, when there are two or more (a late source; translated less than 30 s ago);
+2. fills the last row when it has a translation and no source (an early translation);
+3. continues the last row while its translation has not ended a sentence, except after 3 s of
+   silence on both sides (new row), and except a source-only row that got no translation for
+   5 s and is at a clause end, which is left untranslated (new row);
+4. opens a new row when the last row's translation is done and its source ends at a clause end
+   (`、。？！`);
+5. otherwise finishes the last row with its text up to its first clause end, when it comes within
+   2.5 s of that row's translation and adds at most 12 CJK characters (a verb-final tail such as
+   `…ます。`), and opens a new row with the rest.
+
+A row can thus hold one long Japanese turn and several English sentences, and the Japanese of a
+row can show a moment before its English; a source is never shown beside a translation that is
+not its own. Nothing is dropped: every chunk lands, whole or split, in rows in arrival order.
+Spaces next to Japanese text are removed, and a space is added where an English chunk starts a
+new sentence. A row is final 12 s after its last change, or 30 s for a row with a translation
+and no source (a late source may still come). The previous sentence-level pairer is kept as
+`kana/pairing_v1.py` for replay comparisons.
 
 **`untranslated`**: row `row` has a final source and the model said nothing for it, for example
 because the speech was already in the target language (the other person's voice reaching your
@@ -382,6 +416,57 @@ inside speech are kept. On the latency benchmark this brings the first translate
 ([LATENCY.md](LATENCY.md)). `--catch-up off` plays everything back-to-back as before. Dumps
 (`--dump-in`, `--dump-out`) always hold the model's audio unchanged.
 
+## Audio device dropouts
+
+A capture or playback stream can stop mid-call: the meeting app drops and rejoins, a Bluetooth
+headset changes profile, a device's sample rate changes, CoreAudio removes a device for a moment.
+The engine watches its streams (`audio.watch_streams`, every 0.5 s). A stream counts as stopped
+when PortAudio ended it on its own, its callback raised, it is no longer active, or its callback
+has not run for 2 s. Then the engine:
+
+1. sends a non-fatal `error`: `{"fatal": false, "text": "BlackHole 16ch stopped; reopening"}`;
+2. closes every stream, re-initialises PortAudio (which lists devices only when it starts, so a
+   device that came back is invisible until then) and reopens all streams by device name, with
+   waits of 0.5, 1, 2, 4 and then 5 s between tries;
+3. when that works, sends a non-fatal `error` "BlackHole 16ch reopened after 3.5 s; translation
+   continues";
+4. if the streams still cannot be opened 60 s after the device stopped, sends a fatal `error`
+   ("BlackHole 16ch stopped and could not be reopened for 60 s (...)") and exits with code 2.
+
+The Live sessions stay connected throughout (their keepalive covers the silence), so translation
+resumes with the conversation's context. Translated audio that arrives while the earphones are
+being reopened is dropped rather than queued. Overflow and underflow flags are counted, never a
+reason to reopen. Each step is a `device` line in the events log. A device that is missing at
+start-up is still an immediate fatal error. The behaviour is tested with a fake sounddevice
+module (`tests/test_device_reopen.py`); no real device was unplugged.
+
+## Own language coming back
+
+In a meeting room the remote microphone can pick up the English spoken next to it, and Live
+Translate then re-voices that English in English in your earphones. For each inbound utterance
+(see Utterances and latency) the engine decides from its first input-transcription chunks
+whether it is already the language you hear: it is when the chunks so far have at least 3 Latin
+words and at most twice as many letters of another script as Latin words; it is not when they
+have 6 or more letters of another script (CJK, Hangul, Devanagari, ...) and more than twice as
+many as Latin words. A few kana are allowed because the inbound session transcribes as Japanese
+and often writes the first English word in kana (measured: "Okay" came out as オッケー, "Sorry" as
+さり). Until it is decided the utterance plays as usual. Measured on synthetic speech through the
+real model (`tools/replay_tts.py --script mixed`, recording in `tests/data/`): all three English
+utterances were recognised and all four Japanese ones not; 0.25, 0.25 and 1.0 s of the
+re-voiced English played before the decision, the remaining 2.75–4.0 s each did not.
+
+An utterance decided as your own language is still transcribed and paired; its rows carry
+`"echo": true` and, with `--voice-own-language off` (the default), the model's audio for it is
+not played (it still counts towards `recv_s` and cost, and still goes to `--dump-in`). If a
+chunk with 6 or more letters of the meeting's script follows in the same utterance (no pause
+between the two speakers), playback resumes and the row's later events say `"echo": false`. The next utterance
+is decided afresh. Each decision is an `echo` line in the events log.
+
+The check only runs when the two languages can be told apart by script: a listener language
+written in Latin script (`--in en`, `es`, `fr`, `de`, ...) against a meeting language that is
+not (`--out ja`, `zh`, `ko`, `hi`, ...), and only inbound. `--in en --out es`, or a Japanese
+listener, is not checked.
+
 ## Utterances and latency
 
 An **utterance** runs from a voice-activity onset until the next onset, or until 1.5 s pass with
@@ -402,7 +487,8 @@ utterance closes, its unfinished sentences are flushed into it and a `latency` e
 At start the engine creates `<save-dir>/transcripts/YYYY-MM-DD-HHMM.md` and `.srt`, named by
 local start time. If those names exist, it adds `-2`, `-3` and so on. The rows are the same
 rows the app shows (see Pairing). A row is appended and flushed once it is final, 12 s after its
-last change, and all rows when the run ends, so a crash loses at most the last 12 s.
+last change (30 s for a row still without its source), and all rows when the run ends, so a
+crash loses at most the last 30 s of rows; the events log beside them loses nothing.
 
 Markdown, with ↓ for inbound and ↑ for outbound:
 ```markdown
@@ -422,6 +508,61 @@ its last (at least 0.5 s long), and the text "source → translation":
 00:00:08,144 --> 00:00:13,850
 こんにちは。今日は天気がいいですね。 → Hello. Today the weather is nice, isn't it?
 ```
+
+### Events log (`.events.jsonl`)
+
+Beside the two files the engine writes `YYYY-MM-DD-HHMM.events.jsonl` (`kana/eventlog.py`), the
+raw record of the call: what the server sent and when, so a pairing can be replayed and diffed
+offline. It is written only when transcripts are saved (not with `--no-save`), flushed per line,
+and never holds audio, resumption handles or keys. It contains the transcribed text, so it is as
+private as the transcript.
+
+One JSON object per line: `t` (unix seconds, 3 decimals), `dir` (`in` or `out`; absent for
+engine-wide lines) and `ev`, plus small fields:
+
+| `ev` | Fields | When |
+|---|---|---|
+| `start` | `model`, `in_lang`, `out_lang`, `dirs`, `provider` | the engine started (engine-wide) |
+| `connected` | `n` (connection count), `resumed` | a session is up |
+| `input_transcription`, `output_transcription` | `text` (the chunk as sent), `fin` (only when the server set `finished`) | each transcription chunk |
+| `interim_input_transcription` | `text` | an interim input chunk, if the server sends one |
+| `audio` | `bytes`, `audible` | each audio chunk from the model (digital silence is `audible: false`) |
+| `turn_complete` | `reason` (if the server gave one) | the model ended a turn |
+| `generation_complete`, `interrupted`, `waiting_for_input` | | the model's other turn signals |
+| `usage` | `prompt`, `response`, `total` | a usage report: the server's token counts as sent |
+| `session_resumption_update` | `resumable`, `handle` (whether a new handle came, never the handle) | each resumption update |
+| `go_away` | `time_left` | the server announced a handover |
+| `setup_complete`, `voice_activity`, `voice_activity_detection_signal`, `tool_call` | | other server message kinds, by name |
+| `closed` | `reason` (`go_away`, `session closed`, `error: ...` with the close code, or `stopped`) | a connection ended |
+| `reconnecting` | `reason`, `delay` (s) | a reconnect is about to be tried |
+| `stream_end` | `why` (`vad` or `mute`) | the engine sent `audio_stream_end` |
+| `keepalive` | | a 100 ms silence keepalive was sent |
+| `utterance_open` | `seq`, `onset` (false when opened by text or audio with no onset) | an utterance started |
+| `utterance_close` | `seq`, `quiet` | an utterance closed (`quiet`: after 1.5 s of quiet) |
+| `device` | `state` (`open`, `lost`, `reopen_failed`, `reopened`, `gone`), `name`, and per state `kind`, `reason`, `xruns`, `attempt(s)`, `after_s` | an audio device's lifecycle (engine-wide; see Audio device dropouts) |
+| `transcript` | `kind`, `text`, `row`, `row_text`, `merge_into` | every `transcript` op the pairer emitted, as sent to the app |
+| `untranslated` | `row` | an `untranslated` event was sent |
+| `echo` | `seq` (utterance), `echo`, `play`, `words` or `why` | an inbound utterance was decided to be (or, with `echo: false` and `why`, no longer to be) the listener's own language |
+| `stopped` | | the direction stopped |
+| `exit` | `reason` (`quit`, `eof`, `stopped`, or the exception name, e.g. `KeyboardInterrupt`) | the engine is exiting (engine-wide) |
+
+```json
+{"t":1794795033.739,"dir":"in","ev":"input_transcription","text":"本日はお忙しいところ"}
+{"t":1794795033.968,"dir":"in","ev":"output_transcription","text":"Thank you very much"}
+{"t":1794795034.010,"dir":"in","ev":"audio","bytes":11520,"audible":true}
+```
+
+`kana/replay.py` replays one direction of such a file through the engine's own text path and
+pairer, at the logged times, and returns the rows and ops. It is the offline harness for pairing
+changes (see `tests/test_pairing_v2.py`); from the shell:
+
+```sh
+.venv/bin/python -m kana.replay ~/Library/Application\ Support/kana/transcripts/2026-11-16-1115.events.jsonl
+.venv/bin/python -m kana.replay <file> --logged   # the rows the app showed during the call
+```
+
+A replay seals rows only at logged events, not every 100 ms as the live engine does, so a row can
+be saved slightly later than it was live; the rows themselves are the same.
 
 ## Tests
 

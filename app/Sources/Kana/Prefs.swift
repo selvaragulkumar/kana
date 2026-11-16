@@ -12,9 +12,6 @@ final class Prefs: ObservableObject {
     @Published var visibleInShare: Bool {
         didSet { d.set(visibleInShare, forKey: "visibleInShare"); WindowPrivacy.applyAll() }
     }
-    @Published var captionsOn: Bool {
-        didSet { d.set(captionsOn, forKey: "captionsOn") }
-    }
     @Published var saveTranscripts: Bool {
         didSet { d.set(saveTranscripts, forKey: "saveTranscripts") }
     }
@@ -48,7 +45,6 @@ final class Prefs: ObservableObject {
 
     private init() {
         visibleInShare = d.bool(forKey: "visibleInShare")
-        captionsOn = d.object(forKey: "captionsOn") as? Bool ?? false   // off until the user turns it on
         saveTranscripts = d.object(forKey: "saveTranscripts") as? Bool ?? true
         lastTranscriptMD = d.string(forKey: "lastTranscriptMD")
         minimized = d.bool(forKey: "minimized")

@@ -75,7 +75,7 @@ Capture never blocks. Each direction's input queue holds at most 50 chunks (5 se
 
 Between the queue and the session sits the voice-activity gate (`--vad auto`, the default, in both directions). A 100 ms chunk counts as speech when its level is above both `--vad-threshold` and three times the quietest chunk of the previous 5 seconds, so steady background noise is learnt. At speech onset the last 300 ms are released too, so word starts are not clipped. After speech ends, 2 seconds more are sent (the model needs them to finish the sentence), then one end-of-audio marker. Silence in between is not sent and not billed.
 
-The same onsets drive the latency readout and saved transcripts. An utterance runs from a speech onset until the next onset or 1.5 seconds of quiet. When it closes, the engine emits a `latency` event (onset to first translated audio, and source transcript to translated transcript). Transcript rows are paired by timing and length in `kana/pairing.py`, not by order; the app shows them by row id and the same rows are appended to the saved Markdown and SRT files once final. The per-second `audio` event carries the median latency and the seconds the gate held back.
+The same onsets drive the latency readout and saved transcripts. An utterance runs from a speech onset until the next onset or 1.5 seconds of quiet. When it closes, the engine emits a `latency` event (onset to first translated audio, and source transcript to translated transcript). Transcript rows are paired in `kana/pairing.py` from each transcription chunk as it streams (a translation chunk belongs with the source chunk just before it; rows are cut at English sentence ends), not by sentence order; the app shows them by row id and the same rows are appended to the saved Markdown and SRT files once final. The per-second `audio` event carries the median latency and the seconds the gate held back.
 
 ## Why the routing cannot loop
 
@@ -110,6 +110,18 @@ A meeting lasts longer than a Live connection. Each `Direction.run()` loop handl
 | Partial sentences at a disconnect | Pending transcript text is flushed before reconnecting, so nothing already heard is lost from the transcript. |
 
 Audio that arrives while a direction is reconnecting is dropped, not queued. You may miss up to a second or two of speech during a reconnect.
+
+The audio devices have a lifetime of their own. A meeting app that drops and rejoins, a Bluetooth headset switching profile when the meeting app takes its microphone, or a sample-rate change can stop a PortAudio stream mid-call. Before 2026-11-16 nothing noticed: the stream simply stopped delivering and the engine went deaf, or mute, for the rest of the meeting.
+
+| Device event | What the engine does |
+|---|---|
+| A capture or playback stream stops: PortAudio ends it (its finished callback fires without the engine asking), the callback raises, the stream is no longer active, or its callback has not run for 2 s | `audio.watch_streams` (every 0.5 s) sends a non-fatal `error` naming the device ("BlackHole 16ch stopped; reopening"), closes all streams, re-reads the device list (PortAudio enumerates devices only when it starts, so a device that came back is found only after this) and reopens every stream by device name. The Live sessions are not touched; the outbound and inbound connections stay up and send their silence keepalives. |
+| The device is still missing | Retries after 0.5, 1, 2, 4 s, then every 5 s. Audio captured meanwhile does not exist; translated audio for the earphones is dropped, not queued. |
+| It comes back | Another non-fatal `error`, "… reopened after N s; translation continues". |
+| Still gone about 60 s after it stopped | The run ends with a fatal `error` ("… stopped and could not be reopened for 60 s …"), exit code 2. |
+| Input overflow, output underflow | Counted (`xruns` in the events log), never a reason to reopen. |
+
+Every step is a `device` line in the call's events log. A device missing at start-up is still an immediate fatal error: that is a setup problem, not a dropout.
 
 ## Test seams
 

@@ -5,7 +5,7 @@ import SwiftUI
 struct KanaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
-    // All windows are AppKit-owned (status item panel, caption strip); SwiftUI needs a scene.
+    // All windows are AppKit-owned (status item panel, mini bar); SwiftUI needs a scene.
     var body: some Scene {
         Settings { EmptyView() }
     }
@@ -17,7 +17,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkey: Hotkey!
     private var actions: AppActions!
     private var status: StatusController!
-    private var captions: CaptionController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Writing to a dead engine's stdin must not kill the app.
@@ -38,6 +37,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // `kana --render-intro <dir>`: intro, panel, bar and transition frames, offscreen.
         if let i = CommandLine.arguments.firstIndex(of: "--render-intro"), i + 1 < CommandLine.arguments.count {
             IntroRender.run(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
+            exit(0)
+        }
+        // `kana --render-minibar <dir>`: the mini bar (captions, mic) in its states, offscreen.
+        if let i = CommandLine.arguments.firstIndex(of: "--render-minibar"), i + 1 < CommandLine.arguments.count {
+            MiniBarRender.run(to: URL(fileURLWithPath: CommandLine.arguments[i + 1]))
             exit(0)
         }
         // `kana --render-setup <dir>`: the Setup page in its first-launch states, offscreen.
@@ -66,7 +70,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         self.hotkey = hotkey
         self.actions = actions
         status = StatusController(engine: engine, hotkey: hotkey, prefs: prefs, actions: actions)
-        captions = CaptionController(engine: engine, prefs: prefs)
         hotkey.install()
         engine.refreshDevices()
         engine.resumePassthrough()   // idle = pass-through, when the pref and Setup allow it
